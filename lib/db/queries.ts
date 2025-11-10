@@ -605,3 +605,65 @@ export async function getUsageMetrics(
   if (error) throw error;
   return data || [];
 }
+
+// =====================================================
+// USAGE STATS QUERIES
+// =====================================================
+
+/**
+ * Get creator's current usage statistics
+ * Used for quota checks and usage dashboards
+ */
+export async function getCreatorUsageStats(creatorId: string) {
+  const supabase = getServiceSupabase();
+
+  // Get video count and total storage
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('id, file_size_bytes')
+    .eq('creator_id', creatorId)
+    .eq('is_deleted', false);
+
+  const videoCount = videos?.length || 0;
+  const totalStorageBytes =
+    videos?.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0) || 0;
+
+  // Get AI message count for current month
+  const firstOfMonth = new Date();
+  firstOfMonth.setDate(1);
+  firstOfMonth.setHours(0, 0, 0, 0);
+
+  const { data: messages } = await supabase
+    .from('chat_messages')
+    .select('id, session:chat_sessions!inner(creator_id)')
+    .eq('session.creator_id', creatorId)
+    .gte('created_at', firstOfMonth.toISOString());
+
+  const aiMessageCount = messages?.length || 0;
+
+  // Get active student count
+  const { data: students } = await supabase
+    .from('students')
+    .select('id')
+    .eq('creator_id', creatorId)
+    .eq('is_active', true);
+
+  const studentCount = students?.length || 0;
+
+  // Get course count
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('id')
+    .eq('creator_id', creatorId)
+    .eq('is_deleted', false);
+
+  const courseCount = courses?.length || 0;
+
+  return {
+    videoCount,
+    totalStorageBytes,
+    aiMessageCount,
+    studentCount,
+    courseCount,
+  };
+}
