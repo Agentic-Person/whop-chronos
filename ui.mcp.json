@@ -1,26 +1,17 @@
 {
-  "$schema": "https://modelcontextprotocol.io/schema/mcp-config.json",
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/playwright-mcp-server"
-      ]
-    },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    }
-  }
+	"$schema": "https://modelcontextprotocol.io/schema/mcp-config.json",
+	"mcpServers": {
+		"playwright": {
+			"command": "npx",
+			"args": ["-y", "@executeautomation/playwright-mcp-server"]
+		},
+		"sequential-thinking": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+		},
+		"memory": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-memory"]
+		}
+	}
 }
