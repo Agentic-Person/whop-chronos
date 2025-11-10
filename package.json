@@ -1,12 +1,22 @@
 {
-	"name": "whop-nextjs-app-template",
-	"version": "0.2.0",
+	"name": "chronos",
+	"version": "0.1.0",
 	"private": true,
+	"description": "AI-powered video learning assistant for Whop creators in education and coaching",
 	"scripts": {
 		"dev": "whop-proxy --command 'next dev --turbopack'",
 		"build": "next build",
 		"start": "next start",
-		"lint": "biome lint"
+		"lint": "biome lint",
+		"type-check": "tsc --noEmit",
+		"format": "biome format --write .",
+		"check": "biome check --write .",
+		"verify-setup": "tsx scripts/verify-setup.ts",
+		"validate": "npm run type-check && npm run lint",
+		"db:migrate": "tsx scripts/run-migrations.ts",
+		"db:types": "supabase gen types typescript --linked > lib/db/types.ts",
+		"db:reset": "supabase db reset",
+		"db:push": "supabase db push"
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.68.0",
@@ -20,6 +30,7 @@
 		"@vercel/kv": "^3.0.0",
 		"@whop/react": "0.3.0",
 		"@whop/sdk": "0.0.3",
+		"clsx": "^2.1.1",
 		"date-fns": "^4.1.0",
 		"framer-motion": "^12.23.24",
 		"frosted-ui": "^0.0.1-canary.85",
@@ -30,7 +41,8 @@
 		"react": "19.2.0",
 		"react-countup": "^6.5.3",
 		"react-dom": "19.2.0",
-		"recharts": "^3.3.0"
+		"recharts": "^3.3.0",
+		"tailwind-merge": "^3.4.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.6",
@@ -41,6 +53,7 @@
 		"@whop-apps/dev-proxy": "0.0.1-canary.117",
 		"dotenv-cli": "^10.0.0",
 		"tailwindcss": "^4.1.14",
+		"tsx": "^4.19.2",
 		"typescript": "^5.9.3"
 	},
 	"packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531",

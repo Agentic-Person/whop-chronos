@@ -1,0 +1,76 @@
+# Vercel Ignore - Exclude unnecessary files from deployment
+
+# Documentation and Planning
+*.md
+!README.md
+docs/
+.claude/
+.private/
+
+# Development
+.env.local
+.env*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Dependencies (already handled by Vercel)
+node_modules/
+
+# Build artifacts (Vercel builds fresh)
+.next/
+out/
+dist/
+build/
+
+# Supabase (local development only)
+supabase/.branches/
+supabase/.temp/
+
+# Scripts
+scripts/
+
+# MCP Server (development tool, not needed in production)
+mcp/
+lib/whop/mcp.disabled/
+whop.mcp.json
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Large summary files
+*_SUMMARY.md
+*_COMPLETION_REPORT.md
+*_IMPLEMENTATION_*.md
+AGENT_*.md
+CHRONOS_*.md
+PROJECT_SUMMARY.md
+DEVELOPMENT_STATUS.md
+INFRASTRUCTURE_*.md
+SETUP.md
+ARCHITECTURE.md
+NEXT_AGENT_TASKS.md
