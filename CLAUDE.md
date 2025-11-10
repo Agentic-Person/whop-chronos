@@ -25,6 +25,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Deployment:** Vercel
 - **Monitoring:** Sentry
 
+## MCP Servers & CLI Tools
+
+**CRITICAL: Always use MCP servers when available for their respective services.**
+
+### Connected MCP Servers
+
+1. **Whop MCP Server** (mcp__whop__*)
+   - **MANDATORY** for ALL Whop-related operations
+   - Use for product management, memberships, users, company info
+   - Use for searching/listing/validating Whop resources
+   - Never use raw API calls when MCP server tools are available
+   - Examples: `mcp__whop__list_products`, `mcp__whop__get_membership`, `mcp__whop__validate_membership`
+
+2. **Supabase MCP Server** (mcp__supabase__*)
+   - Use for database operations, migrations, SQL execution
+   - Use for project management, type generation, advisors
+   - Use for Edge Functions deployment
+   - Examples: `mcp__supabase__execute_sql`, `mcp__supabase__apply_migration`, `mcp__supabase__list_tables`
+
+### Available CLIs
+
+- **Whop CLI** - For Whop app management and testing
+- **Supabase CLI** - For local development and migrations
+- **Vercel CLI** - For deployment and environment management
+
+### UI MCP Configuration (ui.mcp.json)
+
+**CRITICAL: Use UI MCP config for ALL UI building, designing, and layout work.**
+
+```bash
+claude --mcp-config ui.mcp.json
+```
+
+**Available UI MCP Servers:**
+
+1. **Playwright** ⭐ **MANDATORY for UI development** - Multi-browser testing (Chrome, Firefox, Safari)
+2. **Sequential Thinking** - Enhanced reasoning for UI architecture decisions
+3. **Memory** - Persist UI patterns and design decisions
+
+**When to use UI MCP config:**
+- **Building UI components** (MANDATORY - use Playwright while coding)
+- **Designing layouts** (test responsive behavior as you build)
+- **Component architecture** (plan with Sequential Thinking)
+- Component testing and visual QA
+- Cross-browser compatibility testing
+- Accessibility audits
+- Responsive design verification
+- Performance testing (Lighthouse scores)
+
+**Workflow for UI Development:**
+1. Start with `ui.mcp.json` configuration
+2. Build component code
+3. Use Playwright to test immediately in browser
+4. Verify responsive breakpoints (375px, 768px, 1440px)
+5. Check accessibility while developing
+6. Only consider component complete after browser testing
+
+See `docs/UI_MCP_GUIDE.md` for detailed usage instructions.
+
+### Integration Rules
+
+1. **For ANY Whop integration work**: MUST use Whop MCP server tools
+2. **For database operations**: Prefer Supabase MCP server over raw SQL
+3. **For questions about Whop**: Use MCP server to fetch real data
+4. **For building Whop features**: Reference MCP server capabilities first
+5. **For UI building, designing, and layout**: Use `ui.mcp.json` configuration with Playwright MCP
+   - **MANDATORY**: Use Playwright MCP while building UI components
+   - Test components as you build them (don't wait until after)
+   - Verify responsive behavior in real browsers
+   - Check accessibility during development
+6. **For UI testing and QA**: Use `ui.mcp.json` configuration
+
 ## Core Features (Streamlined MVP)
 
 1. **AI Chat with RAG** - Semantic search across video transcripts with timestamp citations
@@ -45,6 +117,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **PRIMARY DEVELOPMENT PATTERN**: Use Claude Code's Task tool with multiple agents running in parallel whenever features are independent.
 
+**UI DEVELOPMENT REQUIREMENT**: Always use `ui.mcp.json` configuration when building UI components. Use Playwright MCP to test components in real browsers as you develop them.
+
 ### Agent Orchestration Strategy
 
 Claude Code acts as the orchestrator. When building features:
@@ -52,6 +126,8 @@ Claude Code acts as the orchestrator. When building features:
 2. Each Task launches a specialized agent
 3. All agents work simultaneously
 4. I review all results and summarize progress
+
+**For UI agents**: Each agent MUST use Playwright MCP to verify their components work in real browsers before reporting completion.
 
 ### When to Use Parallel Agents
 

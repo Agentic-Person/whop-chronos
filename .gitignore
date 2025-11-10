@@ -80,6 +80,14 @@ supabase/.temp/
 # MCP (development only)
 .mcp/
 
+# Ignore all dot files and folders except essential ones
+.*
+!.gitignore
+!.env.example
+!.env.production.example
+!.mcp.json
+!.vercelignore
+
 # Large documentation files (not needed in repo)
 *_SUMMARY.md
 *_COMPLETION_REPORT.md
