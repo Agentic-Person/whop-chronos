@@ -28,7 +28,7 @@ This document details the complete project scaffolding and configuration for the
 - **pgvector** - Vector embeddings for RAG search
 
 ### AI Services
-- **Anthropic Claude 3.5 Sonnet** - AI chat responses
+- **Anthropic Claude 3.5 Haiku** - AI chat responses
 - **OpenAI** - Whisper (transcription) + Ada-002 (embeddings)
 
 ### Infrastructure

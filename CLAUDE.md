@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **UI:** Frosted UI (Whop's design system) + Tailwind CSS
 - **Charts:** Recharts for analytics and data visualization
 - **Database:** Supabase PostgreSQL with pgvector for vector embeddings
-- **AI:** Claude 3.5 Sonnet (RAG chat), OpenAI (Whisper + embeddings)
+- **AI:** Claude 3.5 Haiku (RAG chat), OpenAI (Whisper + embeddings)
 - **Storage:** Supabase Storage for videos
 - **Auth:** Whop OAuth
 - **Jobs:** Inngest for background video processing

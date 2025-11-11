@@ -82,7 +82,7 @@ export async function simpleRAGChat(
   });
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2048,
     temperature: 0.7,
     system: systemPrompt,
@@ -172,7 +172,7 @@ export async function conversationalRAGChat(
   });
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2048,
     temperature: 0.7,
     system: systemPrompt,
@@ -243,7 +243,7 @@ export async function courseAssistant(
   });
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2048,
     system: systemPrompt,
     messages: [{ role: 'user', content: question }],
@@ -312,7 +312,7 @@ export async function debuggingAssistant(
   });
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 3000, // More tokens for detailed debugging
     system: systemPrompt,
     messages: [{ role: 'user', content: question }],
@@ -361,7 +361,7 @@ export async function streamingRAGChat(
   });
 
   const stream = await anthropic.messages.stream({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2048,
     system: systemPrompt,
     messages: [{ role: 'user', content: question }],
@@ -412,7 +412,7 @@ export async function robustRAGChat(
       });
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 1024,
         system: 'You are a helpful learning assistant. The specific content was not found, so provide general guidance.',
         messages: [{ role: 'user', content: question }],
@@ -436,7 +436,7 @@ export async function robustRAGChat(
     });
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 2048,
       system: systemPrompt,
       messages: [{ role: 'user', content: question }],
@@ -498,7 +498,7 @@ export async function measureRAGPerformance(
   });
 
   await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2048,
     system: systemPrompt,
     messages: [{ role: 'user', content: question }],

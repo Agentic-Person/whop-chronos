@@ -43,7 +43,7 @@ Chronos is an innovative platform designed specifically for educational creators
 - Semantic search across all video transcripts
 - Contextual responses with timestamp citations
 - Clickable video references for instant navigation
-- Powered by Claude 3.5 Sonnet and OpenAI embeddings
+- Powered by Claude 3.5 Haiku and OpenAI embeddings
 
 ### 🎬 Video Processing Pipeline
 - Bulk video upload to Supabase Storage
@@ -99,7 +99,7 @@ Chronos is an innovative platform designed specifically for educational creators
 - **Rate Limiting:** Upstash
 
 ### AI & ML
-- **Chat:** Claude 3.5 Sonnet (Anthropic)
+- **Chat:** Claude 3.5 Haiku (Anthropic)
 - **Transcription:** OpenAI Whisper
 - **Embeddings:** OpenAI text-embedding-ada-002
 - **Vector Search:** pgvector (PostgreSQL extension)
@@ -531,7 +531,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Acknowledgments
 
 - **Whop** for the excellent platform and Frosted UI design system
-- **Anthropic** for Claude 3.5 Sonnet AI capabilities
+- **Anthropic** for Claude 3.5 Haiku AI capabilities
 - **OpenAI** for Whisper transcription and embeddings
 - **Supabase** for the amazing backend infrastructure
 - **Vercel** for seamless deployment and hosting
