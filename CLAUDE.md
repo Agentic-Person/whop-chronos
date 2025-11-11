@@ -367,6 +367,16 @@ Focus testing on:
 - Batch embedding generation when possible
 - Monitor AI API usage and set alerts
 
+## Git Commit Footer Convention
+
+All commits in this repository should end with:
+
+```
+Assisted by Jimmy Solutions Developer at Agentic Personnel LLC <Jimmy@AgenticPersonnel.com>
+```
+
+This replaces the standard Claude Code footer and properly attributes development work.
+
 ## References
 
 - Whop Developer Docs: https://docs.whop.com

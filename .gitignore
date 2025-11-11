@@ -79,6 +79,7 @@ supabase/.temp/
 
 # MCP (development only)
 .mcp/
+ui.mcp.json
 
 # Ignore all dot files and folders except essential ones
 .*
