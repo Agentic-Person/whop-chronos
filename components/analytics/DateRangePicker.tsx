@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Popover } from '@whop/react/components';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { Select } from '@whop/react/components';
 import { useAnalytics, DATE_RANGE_PRESETS, type DateRangePreset } from '@/lib/contexts/AnalyticsContext';
 
 export function DateRangePicker() {
   const { dateRange, setDateRange } = useAnalytics();
-  const [isOpen, setIsOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('30d');
 
-  const handlePresetClick = (preset: DateRangePreset) => {
+  const handlePresetChange = (value: string) => {
+    const preset = value as DateRangePreset;
     setSelectedPreset(preset);
 
     if (preset !== 'custom') {
@@ -43,7 +43,6 @@ export function DateRangePicker() {
       }
 
       setDateRange({ start, end });
-      setIsOpen(false);
     }
   };
 
@@ -53,72 +52,23 @@ export function DateRangePicker() {
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <Popover.Trigger asChild>
-        <Button variant="outline" size="2" className="gap-2">
-          <Calendar className="w-4 h-4" />
-          <span className="hidden sm:inline">{formatDateRange()}</span>
-          <span className="sm:hidden">{DATE_RANGE_PRESETS[selectedPreset].label}</span>
-        </Button>
-      </Popover.Trigger>
-      <Popover.Content align="end" className="w-80 p-4">
-        <div className="flex flex-col gap-3">
-          <h3 className="text-4 font-semibold text-gray-12">Select Date Range</h3>
-
-          <div className="flex flex-col gap-2">
-            {(Object.entries(DATE_RANGE_PRESETS) as [DateRangePreset, typeof DATE_RANGE_PRESETS[DateRangePreset]][]).map(
-              ([key, preset]) => (
-                <Button
-                  key={key}
-                  variant={selectedPreset === key ? 'solid' : 'ghost'}
-                  size="2"
-                  onClick={() => handlePresetClick(key)}
-                  className="justify-start"
-                >
-                  {preset.label}
-                </Button>
-              )
-            )}
-          </div>
-
-          {selectedPreset === 'custom' && (
-            <div className="border-t border-gray-a4 pt-3 mt-2">
-              <p className="text-3 text-gray-11 mb-2">Custom range selection</p>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="date"
-                  value={format(dateRange.start, 'yyyy-MM-dd')}
-                  onChange={(e) => {
-                    const newStart = new Date(e.target.value);
-                    setDateRange({ start: newStart, end: dateRange.end });
-                  }}
-                  className="px-3 py-2 rounded-md border border-gray-a6 bg-gray-a2 text-gray-12"
-                />
-                <input
-                  type="date"
-                  value={format(dateRange.end, 'yyyy-MM-dd')}
-                  onChange={(e) => {
-                    const newEnd = new Date(e.target.value);
-                    setDateRange({ start: dateRange.start, end: newEnd });
-                  }}
-                  className="px-3 py-2 rounded-md border border-gray-a6 bg-gray-a2 text-gray-12"
-                />
-              </div>
-            </div>
+    <div className="relative inline-flex items-center gap-2">
+      <Calendar className="w-4 h-4 text-gray-11 absolute left-3 pointer-events-none z-10" />
+      <Select.Root value={selectedPreset} onValueChange={handlePresetChange} size="2">
+        <Select.Trigger variant="surface" className="pl-9 min-w-[180px]" />
+        <Select.Content>
+          {(Object.entries(DATE_RANGE_PRESETS) as [DateRangePreset, typeof DATE_RANGE_PRESETS[DateRangePreset]][]).map(
+            ([key, preset]) => (
+              <Select.Item key={key} value={key}>
+                {preset.label}
+              </Select.Item>
+            )
           )}
-
-          <div className="border-t border-gray-a4 pt-3 mt-2">
-            <Button
-              variant="solid"
-              size="2"
-              onClick={() => setIsOpen(false)}
-              className="w-full"
-            >
-              Apply
-            </Button>
-          </div>
-        </div>
-      </Popover.Content>
-    </Popover>
+        </Select.Content>
+      </Select.Root>
+      <span className="text-xs text-gray-11 hidden md:inline ml-2">
+        {formatDateRange()}
+      </span>
+    </div>
   );
 }
