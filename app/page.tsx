@@ -1,31 +1,34 @@
-import { Button } from "@whop/react/components";
-import Link from "next/link";
+import { LandingNav } from '@/components/landing/LandingNav';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { FeatureGrid } from '@/components/landing/FeatureGrid';
+import { VideoDemo } from '@/components/landing/VideoDemo';
+import { InteractiveFAQ } from '@/components/landing/InteractiveFAQ';
+import { CTASection } from '@/components/landing/CTASection';
+import { Footer } from '@/components/landing/Footer';
 
 export default function Page() {
-	return (
-		<div className="py-12 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-2xl mx-auto rounded-3xl bg-gray-a2 p-4 border border-gray-a4">
-				<div className="text-center mt-8 mb-12">
-					<h1 className="text-8 font-bold text-gray-12 mb-4">
-						Welcome to Your Whop App
-					</h1>
-					<p className="text-4 text-gray-10">
-						Learn how to build your application on our docs
-					</p>
-				</div>
+  return (
+    <div className="min-h-screen bg-gray-1">
+      {/* Navigation */}
+      <LandingNav />
 
-				<div className="justify-center flex w-full">
-					<Link
-						href="https://docs.whop.com/apps"
-						className="w-full"
-						target="_blank"
-					>
-						<Button variant="classic" className="w-full" size="4">
-							Developer Docs
-						</Button>
-					</Link>
-				</div>
-			</div>
-		</div>
-	);
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Features Grid */}
+      <FeatureGrid />
+
+      {/* Video Demo */}
+      <VideoDemo />
+
+      {/* Interactive FAQ */}
+      <InteractiveFAQ />
+
+      {/* Final CTA */}
+      <CTASection />
+
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
 }
