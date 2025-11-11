@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@whop/react/components';
 import {
   LayoutDashboard,
-  Video,
-  Users,
+  BookOpen,
+  BarChart,
+  Activity,
   MessageSquare,
-  Settings,
   Menu,
   X,
 } from 'lucide-react';
@@ -16,11 +16,11 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Overview', href: '/dashboard/creator/overview', icon: LayoutDashboard },
-  { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
-  { name: 'Students', href: '/dashboard/creator/students', icon: Users },
+  { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
+  { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
+  { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart },
+  { name: 'Usage', href: '/dashboard/creator/usage', icon: Activity },
   { name: 'Chat', href: '/dashboard/creator/chat', icon: MessageSquare },
-  { name: 'Settings', href: '/dashboard/creator/settings', icon: Settings },
 ];
 
 export function DashboardNav() {

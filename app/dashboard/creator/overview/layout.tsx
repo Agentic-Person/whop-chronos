@@ -1,29 +1,25 @@
 import { ReactNode } from 'react';
-import { headers } from 'next/headers';
-import { whopsdk } from '@/lib/whop-sdk';
-import { DashboardNav } from '@/components/layout/DashboardNav';
+// import { headers } from 'next/headers';
+// import { whopsdk } from '@/lib/whop-sdk';
 import { AnalyticsProvider } from '@/lib/contexts/AnalyticsContext';
 
-export default async function CreatorDashboardLayout({
+export default async function OverviewLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  // Verify user and get creator info
-  const { userId } = await whopsdk.verifyUserToken(await headers());
-  const user = await whopsdk.users.retrieve(userId);
+  // BYPASS WHOP AUTH FOR TESTING
+  // TODO: Re-enable Whop authentication when ready for production
+  // const { userId } = await whopsdk.verifyUserToken(await headers());
+  // const user = await whopsdk.users.retrieve(userId);
 
-  // TODO: Fetch creator tier from database
-  const creatorTier = 'pro'; // Default for now
+  // Use test creator ID from seed data
+  const userId = '00000000-0000-0000-0000-000000000001'; // test.creator@example.com
+  const creatorTier = 'pro'; // From seed data
 
   return (
-    <div className="min-h-screen bg-gray-1">
-      <DashboardNav />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AnalyticsProvider creatorId={userId} tier={creatorTier}>
-          {children}
-        </AnalyticsProvider>
-      </main>
-    </div>
+    <AnalyticsProvider creatorId={userId} tier={creatorTier}>
+      {children}
+    </AnalyticsProvider>
   );
 }
