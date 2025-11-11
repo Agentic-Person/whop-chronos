@@ -13,8 +13,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-7 font-bold text-gray-12">Settings</h1>
-        <p className="text-3 text-gray-11 mt-1">Manage your account and preferences</p>
+        <h1 className="text-7 font-bold text-gray-12">Usage</h1>
+        <p className="text-3 text-gray-11 mt-1">Monitor your API usage and billing</p>
       </div>
 
       <div className="space-y-6">

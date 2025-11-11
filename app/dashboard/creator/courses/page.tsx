@@ -40,8 +40,8 @@ export default function VideosPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-7 font-bold text-gray-12">Videos</h1>
-          <p className="text-3 text-gray-11 mt-1">Manage your video library</p>
+          <h1 className="text-7 font-bold text-gray-12">Courses</h1>
+          <p className="text-3 text-gray-11 mt-1">Create and manage your courses</p>
         </div>
         <button className="px-4 py-2 bg-blue-9 text-white rounded-lg hover:bg-blue-10 transition-colors">
           Upload Video
