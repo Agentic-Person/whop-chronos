@@ -20,7 +20,8 @@
 		"db:push": "supabase db push",
 		"test:video-pipeline": "tsx scripts/test-video-pipeline.ts",
 		"test:analytics": "tsx scripts/test-analytics-dashboard.ts",
-		"test:all": "tsx scripts/test-all-integrations.ts"
+		"test:all": "tsx scripts/test-all-integrations.ts",
+		"process-landing-transcript": "dotenv -e .env.local -- tsx scripts/process-landing-transcript.ts"
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.68.0",

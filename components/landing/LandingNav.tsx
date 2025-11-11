@@ -38,7 +38,7 @@ export function LandingNav() {
       )}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <button
             onClick={scrollToTop}
@@ -61,16 +61,30 @@ export function LandingNav() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Button
-              variant="solid"
-              size="3"
-              className="bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10"
+            <button
               onClick={() => {
                 window.location.href = '/api/whop/oauth';
               }}
+              type="button"
+              className="relative overflow-hidden px-6 bg-gray-2 rounded-lg text-sm font-semibold text-gray-12 transition-all hover:bg-gray-3 border-2 flex items-center justify-center"
+              style={{ borderColor: '#F03C09', height: '40px' }}
             >
-              Sign in with Whop
-            </Button>
+              <div className="absolute inset-0 opacity-50" style={{
+                background: 'linear-gradient(90deg, transparent, rgba(240, 60, 9, 0.3), transparent)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 3s linear infinite'
+              }}></div>
+              <span className="relative flex items-center gap-2">
+                <span>Sign in with</span>
+                <Image
+                  src="/images/whop-logo-transp.png"
+                  alt="Whop"
+                  width={50}
+                  height={16}
+                  className="object-contain brightness-110"
+                />
+              </span>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}

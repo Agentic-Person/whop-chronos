@@ -14,9 +14,14 @@ interface Message {
 
 const initialMessages: Message[] = [
   {
+    role: 'user',
+    content: 'What is the first step?',
+  },
+  {
     role: 'assistant',
     content:
-      "Hi! I'm ChronosAI. I've watched the full \"How To Make $100,000 Per Month With Whop\" video and can answer any questions about it. Try asking me something!",
+      'The first step is to create your account on Whop [2:22]. The account setup process is incredibly simple and quick, taking just a few minutes. Once your account is created, you can immediately start setting up your store page and begin building your presence on the platform.',
+    timestamps: ['2:22'],
   },
 ];
 
@@ -25,10 +30,16 @@ export function InteractiveFAQ() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remainingQuestions, setRemainingQuestions] = useState<number>(2); // Start with 2 questions
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change (but not on initial load)
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -65,6 +76,12 @@ export function InteractiveFAQ() {
       }
 
       const data = await response.json();
+
+      // Update remaining questions from headers
+      const remaining = response.headers.get('X-RateLimit-Remaining');
+      if (remaining !== null) {
+        setRemainingQuestions(parseInt(remaining, 10));
+      }
 
       const assistantMessage: Message = {
         role: 'assistant',
@@ -294,7 +311,13 @@ export function InteractiveFAQ() {
                 <p className="text-xs text-red-11 mt-2 text-center">Error: {error}</p>
               )}
               <p className="text-xs text-gray-10 mt-2 text-center">
-                Live demo powered by Claude AI • Try asking specific questions!
+                {remainingQuestions > 0 ? (
+                  <>
+                    Live demo • {remainingQuestions} question{remainingQuestions !== 1 ? 's' : ''} remaining • Powered by Claude AI
+                  </>
+                ) : (
+                  <>Demo limit reached • Sign in to unlock unlimited questions</>
+                )}
               </p>
             </div>
           </div>
