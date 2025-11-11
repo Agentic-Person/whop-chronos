@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "AI-powered video learning assistant for Whop creators in education and coaching",
 	"scripts": {
-		"dev": "whop-proxy --command 'next dev --turbopack'",
+		"dev": "whop-proxy --command 'next dev --turbopack --port 3007'",
 		"build": "next build",
 		"start": "next start",
 		"lint": "biome lint",
@@ -14,9 +14,13 @@
 		"verify-setup": "tsx scripts/verify-setup.ts",
 		"validate": "npm run type-check && npm run lint",
 		"db:migrate": "tsx scripts/run-migrations.ts",
+		"db:seed": "tsx scripts/seed-database.ts",
 		"db:types": "supabase gen types typescript --linked > lib/db/types.ts",
 		"db:reset": "supabase db reset",
-		"db:push": "supabase db push"
+		"db:push": "supabase db push",
+		"test:video-pipeline": "tsx scripts/test-video-pipeline.ts",
+		"test:analytics": "tsx scripts/test-analytics-dashboard.ts",
+		"test:all": "tsx scripts/test-all-integrations.ts"
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.68.0",
@@ -48,6 +52,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.6",
+		"@playwright/test": "^1.56.1",
 		"@tailwindcss/postcss": "^4.1.14",
 		"@types/node": "^20.19.21",
 		"@types/react": "19.2.2",
