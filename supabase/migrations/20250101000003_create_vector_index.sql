@@ -78,5 +78,5 @@ COMMENT ON VIEW vector_index_stats IS 'Monitor vector embedding coverage';
 -- Analyze table for query planner optimization
 ANALYZE video_chunks;
 
--- Vacuum to reclaim space and update statistics
-VACUUM ANALYZE video_chunks;
+-- Note: VACUUM ANALYZE cannot run in migration transactions
+-- Run manually if needed: VACUUM ANALYZE video_chunks;

@@ -22,22 +22,21 @@ COMMENT ON COLUMN chat_messages.has_video_reference IS 'Whether this message con
 COMMENT ON COLUMN chat_messages.video_references IS 'Array of video IDs referenced in this message';
 
 -- Create indexes for analytics queries
-CREATE INDEX IF NOT EXISTS idx_chat_messages_creator_date
-ON chat_messages(creator_id, created_at DESC);
+-- Note: creator_id and student_id are in chat_sessions, not chat_messages
+-- Index on session_id for fast joins to chat_sessions
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_date
+ON chat_messages(session_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_chat_messages_student_session
-ON chat_messages(student_id, session_id, created_at);
-
-CREATE INDEX IF NOT EXISTS idx_chat_messages_role_creator
-ON chat_messages(role, creator_id)
+CREATE INDEX IF NOT EXISTS idx_chat_messages_role_session
+ON chat_messages(role, session_id)
 WHERE role = 'assistant';
 
 CREATE INDEX IF NOT EXISTS idx_chat_messages_video_refs
 ON chat_messages USING GIN(video_references)
 WHERE video_references IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_chat_messages_cost
-ON chat_messages(creator_id, created_at DESC, cost_usd)
+CREATE INDEX IF NOT EXISTS idx_chat_messages_cost_session
+ON chat_messages(session_id, created_at DESC, cost_usd)
 WHERE cost_usd IS NOT NULL;
 
 -- Add check constraint for valid roles
@@ -80,43 +79,47 @@ FOR EACH ROW
 EXECUTE FUNCTION update_has_video_reference();
 
 -- Create view for easy cost analytics queries
+-- Join through chat_sessions to get creator_id
 CREATE OR REPLACE VIEW chat_cost_analytics AS
 SELECT
-  creator_id,
-  DATE(created_at) as date,
-  model,
+  cs.creator_id,
+  DATE(cm.created_at) as date,
+  cm.model,
   COUNT(*) as message_count,
-  SUM(input_tokens) as total_input_tokens,
-  SUM(output_tokens) as total_output_tokens,
-  SUM(cost_usd) as total_cost,
-  AVG(cost_usd) as avg_cost_per_message,
-  AVG(response_time_ms) as avg_response_time_ms
-FROM chat_messages
-WHERE role = 'assistant' AND cost_usd IS NOT NULL
-GROUP BY creator_id, DATE(created_at), model
-ORDER BY creator_id, date DESC, model;
+  SUM(cm.input_tokens) as total_input_tokens,
+  SUM(cm.output_tokens) as total_output_tokens,
+  SUM(cm.cost_usd) as total_cost,
+  AVG(cm.cost_usd) as avg_cost_per_message,
+  AVG(cm.response_time_ms) as avg_response_time_ms
+FROM chat_messages cm
+INNER JOIN chat_sessions cs ON cs.id = cm.session_id
+WHERE cm.role = 'assistant' AND cm.cost_usd IS NOT NULL
+GROUP BY cs.creator_id, DATE(cm.created_at), cm.model
+ORDER BY cs.creator_id, date DESC, cm.model;
 
 -- Grant permissions (adjust as needed for your RLS policies)
 GRANT SELECT ON chat_cost_analytics TO authenticated;
 
 -- Create view for session analytics
+-- Join with chat_sessions to get creator_id and student_id
 CREATE OR REPLACE VIEW chat_session_analytics AS
 SELECT
-  session_id,
-  creator_id,
-  student_id,
+  cm.session_id,
+  cs.creator_id,
+  cs.student_id,
   COUNT(*) as message_count,
-  MIN(created_at) as session_start,
-  MAX(created_at) as session_end,
-  EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) as duration_seconds,
-  COUNT(CASE WHEN role = 'user' THEN 1 END) as user_messages,
-  COUNT(CASE WHEN role = 'assistant' THEN 1 END) as ai_messages,
-  SUM(CASE WHEN role = 'assistant' THEN cost_usd ELSE 0 END) as session_cost,
-  AVG(CASE WHEN role = 'assistant' THEN response_time_ms END) as avg_response_time_ms,
-  BOOL_OR(has_video_reference) as has_video_references
-FROM chat_messages
-WHERE session_id IS NOT NULL
-GROUP BY session_id, creator_id, student_id
+  MIN(cm.created_at) as session_start,
+  MAX(cm.created_at) as session_end,
+  EXTRACT(EPOCH FROM (MAX(cm.created_at) - MIN(cm.created_at))) as duration_seconds,
+  COUNT(CASE WHEN cm.role = 'user' THEN 1 END) as user_messages,
+  COUNT(CASE WHEN cm.role = 'assistant' THEN 1 END) as ai_messages,
+  SUM(CASE WHEN cm.role = 'assistant' THEN cm.cost_usd ELSE 0 END) as session_cost,
+  AVG(CASE WHEN cm.role = 'assistant' THEN cm.response_time_ms END) as avg_response_time_ms,
+  BOOL_OR(cm.has_video_reference) as has_video_references
+FROM chat_messages cm
+INNER JOIN chat_sessions cs ON cs.id = cm.session_id
+WHERE cm.session_id IS NOT NULL
+GROUP BY cm.session_id, cs.creator_id, cs.student_id
 ORDER BY session_start DESC;
 
 -- Grant permissions
