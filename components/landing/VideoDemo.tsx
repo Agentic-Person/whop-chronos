@@ -66,7 +66,7 @@ export function VideoDemo() {
           >
             <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl bg-gray-3 border border-gray-6">
               <iframe
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                src="https://www.youtube.com/embed/vMZHiBhr0SM"
                 title="How To Make $100,000 Per Month With Whop"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

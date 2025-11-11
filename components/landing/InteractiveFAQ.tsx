@@ -1,37 +1,168 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Loader2, PlayCircle } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  timestamps?: string[];
 }
 
-const demoMessages: Message[] = [
-  {
-    role: 'user',
-    content: 'How long does it take to set up a Whop account?',
-  },
+const initialMessages: Message[] = [
   {
     role: 'assistant',
-    content: 'Setting up your Whop account takes less than 5 minutes from start to finish. The platform has streamlined onboarding that enables you to get your first product live in just 4 minutes. The process is quick and intuitive, designed specifically for creators who want to start monetizing their content right away.',
-  },
-  {
-    role: 'user',
-    content: 'What makes Whop different from other platforms?',
-  },
-  {
-    role: 'assistant',
-    content: 'Whop consolidates courses, communities, products, and payments in one unified system. The platform has over 2 million weekly marketplace visitors and offers flexible, modular usage options. Unlike traditional course platforms, Whop is built specifically for modern creators with features like built-in community tools, flexible payment options, and seamless integration with tools like ChronosAI.',
+    content:
+      "Hi! I'm ChronosAI. I've watched the full \"How To Make $100,000 Per Month With Whop\" video and can answer any questions about it. Try asking me something!",
   },
 ];
 
 export function InteractiveFAQ() {
-  const [messages] = useState<Message[]>(demoMessages);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      role: 'user',
+      content: input.trim(),
+    };
+
+    // Add user message immediately
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/landing/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get response');
+      }
+
+      const data = await response.json();
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.response,
+        timestamps: data.timestamps || [],
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+
+      // Add error message
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Something went wrong'}. Please try again.`,
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTimestampClick = (timestamp: string) => {
+    // Scroll to video section
+    const videoSection = document.getElementById('demo');
+    if (videoSection) {
+      videoSection.scrollIntoView({ behavior: 'smooth' });
+
+      // Parse timestamp and seek video
+      setTimeout(() => {
+        const iframe = document.querySelector('iframe');
+        if (iframe?.src) {
+          const seconds = parseTimestampToSeconds(timestamp);
+          const baseUrl = iframe.src.split('?')[0];
+          iframe.src = `${baseUrl}?start=${seconds}&autoplay=1`;
+        }
+      }, 500);
+    }
+  };
+
+  const parseTimestampToSeconds = (timestamp: string): number => {
+    const parts = timestamp.split(':').map((p) => parseInt(p, 10));
+    if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    }
+    return parts[0] || 0;
+  };
+
+  const renderMessageContent = (message: Message) => {
+    if (!message.timestamps || message.timestamps.length === 0) {
+      return <p className="text-sm leading-relaxed">{message.content}</p>;
+    }
+
+    // Replace timestamps in brackets with clickable links
+    let content = message.content;
+    const timestampRegex = /\[(\d+:\d+(?::\d+)?)\]/g;
+
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = timestampRegex.exec(message.content)) !== null) {
+      // Add text before timestamp
+      if (match.index > lastIndex) {
+        parts.push(
+          <span key={`text-${lastIndex}`}>{content.slice(lastIndex, match.index)}</span>
+        );
+      }
+
+      // Add clickable timestamp
+      const timestamp = match[1];
+      parts.push(
+        <button
+          key={`timestamp-${match.index}`}
+          onClick={() => handleTimestampClick(timestamp)}
+          type="button"
+          className="inline-flex items-center gap-1 text-purple-11 hover:text-purple-10 font-medium underline decoration-dotted transition-colors"
+        >
+          <PlayCircle className="w-3 h-3" />
+          {timestamp}
+        </button>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(<span key={`text-${lastIndex}`}>{content.slice(lastIndex)}</span>);
+    }
+
+    return <div className="text-sm leading-relaxed">{parts}</div>;
+  };
 
   return (
     <section className="py-24 md:py-32 bg-gray-1">
@@ -47,7 +178,8 @@ export function InteractiveFAQ() {
             Ask ChronosAI Anything
           </h2>
           <p className="text-lg md:text-xl text-gray-11 max-w-3xl mx-auto">
-            Experience how Chronos answers student questions instantly with AI-powered responses backed by your video content.
+            Try the live demo! Ask questions about the video above and get instant AI-powered
+            answers with clickable timestamps.
           </p>
         </motion.div>
 
@@ -72,7 +204,7 @@ export function InteractiveFAQ() {
               </div>
               <div>
                 <h3 className="text-white font-semibold text-lg">ChronosAI Assistant</h3>
-                <p className="text-purple-2 text-sm">Always ready to help your students</p>
+                <p className="text-purple-2 text-sm">Live demo - fully functional!</p>
               </div>
             </div>
 
@@ -83,7 +215,7 @@ export function InteractiveFAQ() {
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.2 }}
+                  transition={{ duration: 0.3 }}
                   className={cn(
                     'flex gap-3',
                     message.role === 'user' ? 'justify-end' : 'justify-start'
@@ -103,7 +235,7 @@ export function InteractiveFAQ() {
                         : 'bg-gray-3 border border-gray-6 text-gray-12'
                     )}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {renderMessageContent(message)}
                   </div>
 
                   {message.role === 'user' && (
@@ -113,27 +245,56 @@ export function InteractiveFAQ() {
                   )}
                 </motion.div>
               ))}
+
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-3 justify-start"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-9 to-blue-9 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="max-w-[75%] rounded-2xl px-5 py-4 shadow-lg bg-gray-3 border border-gray-6">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-11" />
+                      <span className="text-sm text-gray-11">Thinking...</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
 
-            {/* Input (Demo Mode - Disabled) */}
+            {/* Input (Functional) */}
             <div className="border-t border-gray-6 p-4 bg-gray-2">
-              <div className="flex gap-3">
+              <form onSubmit={handleSubmit} className="flex gap-3">
                 <input
                   type="text"
-                  placeholder="This is a demo. Sign in to try the real assistant..."
-                  disabled
-                  className="flex-1 bg-gray-3 border border-gray-6 rounded-xl px-4 py-3 text-gray-11 text-sm placeholder:text-gray-9 cursor-not-allowed"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask about the video... (e.g., 'How do I start on Whop?')"
+                  disabled={isLoading}
+                  className="flex-1 bg-gray-3 border border-gray-6 rounded-xl px-4 py-3 text-gray-12 text-sm placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-purple-9 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
-                  disabled
-                  type="button"
-                  className="bg-gray-6 text-gray-9 rounded-xl px-6 py-3 font-medium cursor-not-allowed"
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                  className="bg-gradient-to-r from-purple-9 to-blue-9 text-white rounded-xl px-6 py-3 font-medium hover:from-purple-10 hover:to-blue-10 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-purple-9 disabled:hover:to-blue-9"
                 >
-                  <Send className="w-5 h-5" />
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
                 </button>
-              </div>
+              </form>
+              {error && (
+                <p className="text-xs text-red-11 mt-2 text-center">Error: {error}</p>
+              )}
               <p className="text-xs text-gray-10 mt-2 text-center">
-                Sign in with Whop to experience the full AI assistant
+                Live demo powered by Claude AI • Try asking specific questions!
               </p>
             </div>
           </div>
