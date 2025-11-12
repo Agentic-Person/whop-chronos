@@ -10,7 +10,7 @@
  */
 
 import { inngest } from './client';
-import { createClient } from '@/lib/db/client';
+import { getServiceSupabase } from '@/lib/db/client';
 import { chunkTranscript, getChunkingStats, validateChunks } from '@/lib/video/chunking';
 import { generateEmbeddings } from '@/lib/video/embeddings';
 import type { TranscriptSegment } from '@/lib/video/chunking';
@@ -44,7 +44,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 1: Validate video exists and get current status
     const video = await step.run('validate-video', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       const { data, error } = await supabase
         .from('videos')
@@ -79,7 +79,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 2: Update status to processing
     await step.run('update-status-processing', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       await supabase
         .from('videos')
@@ -122,7 +122,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 4: Store chunks in database (without embeddings first)
     await step.run('store-chunks', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       console.log(`[Embeddings] Storing ${chunks.length} chunks for video ${video_id}`);
 
@@ -154,7 +154,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 5: Update status to embedding
     await step.run('update-status-embedding', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       await supabase
         .from('videos')
@@ -182,7 +182,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 7: Update chunks with embeddings
     await step.run('update-chunks-with-embeddings', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       console.log(`[Embeddings] Storing embeddings in database`);
 
@@ -212,7 +212,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 8: Update usage metrics
     await step.run('update-usage-metrics', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       const today = new Date().toISOString().split('T')[0];
 
@@ -265,7 +265,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 9: Update video status to completed
     await step.run('update-status-completed', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       await supabase
         .from('videos')
@@ -319,7 +319,7 @@ export const handleEmbeddingFailure = inngest.createFunction(
     console.error(`[Embeddings] Failed to generate embeddings for video ${videoId}:`, error);
 
     // Update video status to failed
-    const supabase = createClient();
+    const supabase = getServiceSupabase();
     await supabase
       .from('videos')
       .update({
@@ -349,7 +349,7 @@ export const batchReprocessEmbeddings = inngest.createFunction(
     console.log(`[Embeddings] Batch reprocessing ${video_ids.length} videos`);
 
     const results = await step.run('reprocess-videos', async () => {
-      const supabase = createClient();
+      const supabase = getServiceSupabase();
 
       const processed: string[] = [];
       const failed: string[] = [];

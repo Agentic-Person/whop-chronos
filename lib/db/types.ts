@@ -122,6 +122,9 @@ export interface Database {
           created_at: string;
           updated_at: string;
           is_deleted: boolean;
+          source_type: 'youtube' | 'upload';
+          youtube_video_id: string | null;
+          youtube_channel_id: string | null;
         };
         Insert: {
           id?: string;
@@ -143,6 +146,9 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           is_deleted?: boolean;
+          source_type?: 'youtube' | 'upload';
+          youtube_video_id?: string | null;
+          youtube_channel_id?: string | null;
         };
         Update: {
           id?: string;
@@ -164,6 +170,9 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           is_deleted?: boolean;
+          source_type?: 'youtube' | 'upload';
+          youtube_video_id?: string | null;
+          youtube_channel_id?: string | null;
         };
       };
       video_chunks: {

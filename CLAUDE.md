@@ -82,7 +82,7 @@ claude --mcp-config ui.mcp.json
 5. Check accessibility while developing
 6. Only consider component complete after browser testing
 
-See `docs/UI_MCP_GUIDE.md` for detailed usage instructions.
+See `docs/mcp/UI_MCP_GUIDE.md` for detailed usage instructions.
 
 ### Integration Rules
 

@@ -1,41 +1,99 @@
 /**
- * Chat API Route
+ * Enhanced RAG Chat API Route
  *
- * POST /api/chat - Send a message and get AI response
- * Supports both streaming and non-streaming responses
+ * POST /api/chat - Send a message and get AI response with streaming
+ *
+ * This endpoint uses the enhanced RAG infrastructure with:
+ * - Advanced vector search with ranking (lib/rag/search.ts)
+ * - Context builder with token management (lib/rag/context-builder.ts)
+ * - Session management with auto-creation (lib/rag/sessions.ts)
+ * - Comprehensive cost tracking (lib/rag/cost-calculator.ts)
+ * - Message persistence (lib/rag/messages.ts)
  */
 
 import { NextRequest } from 'next/server';
-import { getServiceSupabase } from '@/lib/db/client';
-import { searchVideoChunks } from '@/lib/video/vector-search';
+import Anthropic from '@anthropic-ai/sdk';
+
+// RAG Infrastructure
+import { enhancedSearch, searchWithinCourse, searchCreatorContent } from '@/lib/rag/search';
+import { buildContext, buildSystemPrompt, estimateTokens } from '@/lib/rag/context-builder';
 import {
-  generateStreamingRAGResponse,
-  generateRAGResponse,
-  type ChatMessage,
-} from '@/lib/ai/claude';
-import { checkRateLimit, formatRateLimitError } from '@/lib/ai/rate-limit';
-import { trackMessageCost } from '@/lib/ai/cost-tracker';
-import { getCachedResponse, cacheResponse } from '@/lib/ai/cache';
+  getOrCreateSession,
+  generateAndSetTitle,
+  touchSession,
+  getSession
+} from '@/lib/rag/sessions';
+import { createMessage, getMessages } from '@/lib/rag/messages';
+import {
+  calculateCompleteCost,
+  formatCost,
+  type CostBreakdown
+} from '@/lib/rag/cost-calculator';
+
+// AI Integration
 import { createSSEStream, createStreamingResponse } from '@/lib/ai/streaming';
-import { extractVideoReferences } from '@/lib/ai/prompts';
+
+// Database
+import { getServiceSupabase } from '@/lib/db/client';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
+// Claude 3.5 Haiku model
+const CLAUDE_MODEL = 'claude-3-5-haiku-20241022';
+const MAX_OUTPUT_TOKENS = 4096;
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
+
 interface ChatRequest {
   message: string;
+  sessionId?: string; // Optional - will auto-create if not provided
+  creatorId: string;
+  studentId?: string; // Optional for anonymous/demo mode
+  courseId?: string; // Optional - restrict search to course videos
+  stream?: boolean; // Default: true
+}
+
+interface ChatResponse {
+  content: string;
   sessionId: string;
-  stream?: boolean;
-  videoIds?: string[]; // Optional: restrict search to specific videos
+  videoReferences: Array<{
+    video_id: string;
+    video_title: string;
+    timestamp: number;
+    timestamp_formatted: string;
+    chunk_text: string;
+    relevance_score: number;
+  }>;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+    embedding_queries: number;
+    total_tokens: number;
+    cost_breakdown: CostBreakdown;
+    cost_formatted: string;
+  };
+  cached: boolean;
 }
 
 /**
  * POST /api/chat
+ * Send a chat message and receive AI response with video references
  */
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ChatRequest;
-    const { message, sessionId, stream = true, videoIds } = body;
+    const {
+      message,
+      sessionId,
+      creatorId,
+      studentId,
+      courseId,
+      stream = true
+    } = body;
 
     // Validate request
     if (!message || !message.trim()) {
@@ -45,240 +103,185 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!sessionId) {
+    if (!creatorId) {
       return Response.json(
-        { error: 'Session ID is required' },
+        { error: 'Creator ID is required' },
         { status: 400 }
       );
     }
 
-    // Get session and validate
+    console.log(`[Chat API] Processing message for creator ${creatorId}, session ${sessionId || 'NEW'}`);
+
+    // Get or create session
     const supabase = getServiceSupabase();
+    let session;
 
-    const { data: session, error: sessionError } = await supabase
-      .from('chat_sessions')
-      .select(`
-        *,
-        student:students!inner(id, whop_user_id, creator_id, is_active),
-        creator:creators!inner(id, subscription_tier, is_active)
-      `)
-      .eq('id', sessionId)
-      .single();
+    if (sessionId) {
+      // Load existing session
+      session = await getSession(sessionId, false);
 
-    if (sessionError || !session) {
-      return Response.json(
-        { error: 'Invalid session' },
-        { status: 404 }
-      );
-    }
-
-    // Check if student and creator are active
-    if (!session.student.is_active || !session.creator.is_active) {
-      return Response.json(
-        { error: 'Account is inactive' },
-        { status: 403 }
-      );
-    }
-
-    const studentId = session.student.id;
-    const creatorId = session.creator.id;
-    const tier = session.creator.subscription_tier as 'basic' | 'pro' | 'enterprise';
-
-    // Check rate limits
-    const rateLimitCheck = await checkRateLimit(studentId, creatorId, tier);
-
-    if (!rateLimitCheck.allowed) {
-      return Response.json(
-        {
-          error: 'Rate limit exceeded',
-          message: formatRateLimitError(rateLimitCheck),
-          rateLimitInfo: {
-            limitedBy: rateLimitCheck.limitedBy,
-            student: rateLimitCheck.student,
-            creator: rateLimitCheck.creator,
-          },
-        },
-        { status: 429 }
-      );
-    }
-
-    // Check cache first (only for non-streaming)
-    if (!stream) {
-      // Perform vector search
-      const searchResults = await searchVideoChunks(message, {
-        match_count: 5,
-        similarity_threshold: 0.7,
-        filter_video_ids: videoIds || session.context_video_ids || null,
-      });
-
-      const cachedResponse = await getCachedResponse(message, searchResults);
-
-      if (cachedResponse) {
-        // Save user message
-        await supabase.from('chat_messages').insert({
-          session_id: sessionId,
-          role: 'user',
-          content: message,
-        });
-
-        // Save cached assistant response
-        await supabase.from('chat_messages').insert({
-          session_id: sessionId,
-          role: 'assistant',
-          content: cachedResponse.content,
-          video_references: cachedResponse.videoReferences || [],
-          model: cachedResponse.model,
-          metadata: { cached: true },
-        });
-
-        // Update session timestamp
-        await supabase
-          .from('chat_sessions')
-          .update({ last_message_at: new Date().toISOString() })
-          .eq('id', sessionId);
-
-        return Response.json({
-          content: cachedResponse.content,
-          videoReferences: cachedResponse.videoReferences,
-          cached: true,
-        });
+      if (!session) {
+        return Response.json(
+          { error: 'Session not found' },
+          { status: 404 }
+        );
       }
+
+      // Verify session belongs to this creator
+      if (session.creator_id !== creatorId) {
+        return Response.json(
+          { error: 'Unauthorized access to session' },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Create new session
+      if (!studentId) {
+        return Response.json(
+          { error: 'Student ID required for new session' },
+          { status: 400 }
+        );
+      }
+
+      session = await getOrCreateSession(studentId, creatorId);
+      console.log(`[Chat API] Created new session: ${session.id}`);
     }
-
-    // Get conversation history
-    const { data: messages } = await supabase
-      .from('chat_messages')
-      .select('role, content')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true })
-      .limit(10); // Last 10 messages for context
-
-    const conversationHistory: ChatMessage[] = (messages || []).map((m: any) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    }));
 
     // Perform vector search
-    const searchResults = await searchVideoChunks(message, {
-      match_count: 5,
-      similarity_threshold: 0.7,
-      filter_video_ids: videoIds || session.context_video_ids || null,
+    console.log(`[Chat API] Performing vector search for: "${message.substring(0, 50)}..."`);
+
+    let searchResults;
+    if (courseId) {
+      // Search within specific course
+      searchResults = await searchWithinCourse(courseId, message, {
+        match_count: 5,
+        similarity_threshold: 0.7,
+        boost_viewed_by_student: studentId || undefined,
+      });
+    } else {
+      // Search all creator's content
+      searchResults = await searchCreatorContent(creatorId, message, {
+        match_count: 5,
+        similarity_threshold: 0.7,
+        boost_viewed_by_student: studentId || undefined,
+      });
+    }
+
+    console.log(`[Chat API] Found ${searchResults.length} relevant chunks`);
+
+    if (searchResults.length === 0) {
+      // No relevant context found
+      const noContextResponse = "I couldn't find any relevant information in the video content to answer your question. Could you try rephrasing or asking about a different topic covered in the course?";
+
+      // Save user message
+      await createMessage({
+        session_id: session.id,
+        role: 'user',
+        content: message,
+      });
+
+      // Save assistant response
+      await createMessage({
+        session_id: session.id,
+        role: 'assistant',
+        content: noContextResponse,
+        video_references: [],
+        token_count: estimateTokens(message + noContextResponse),
+        model: CLAUDE_MODEL,
+      });
+
+      return Response.json({
+        content: noContextResponse,
+        sessionId: session.id,
+        videoReferences: [],
+        usage: {
+          input_tokens: 0,
+          output_tokens: 0,
+          embedding_queries: 1, // Query embedding was generated
+          total_tokens: 0,
+          cost_breakdown: calculateCompleteCost({ embedding_queries: 1 }),
+          cost_formatted: formatCost(calculateCompleteCost({ embedding_queries: 1 }).total_cost),
+        },
+        cached: false,
+      });
+    }
+
+    // Build context from search results
+    const context = buildContext(searchResults, {
+      max_tokens: 8000,
+      format: 'markdown',
+      include_timestamps: true,
+      include_video_titles: true,
+      deduplicate_content: true,
     });
 
-    console.log(`Found ${searchResults.length} relevant video chunks for query`);
+    console.log(`[Chat API] Built context: ${context.total_chunks} chunks, ${context.total_tokens} tokens`);
+
+    // Build system prompt
+    const systemPrompt = buildSystemPrompt(context, `
+You are an AI learning assistant helping students understand video course content.
+
+Important guidelines:
+- ONLY use information from the provided video transcripts
+- Cite specific videos and timestamps when referencing information
+- Format citations as: [Video Title @ timestamp]
+- If information isn't in the transcripts, clearly state that
+- Be concise, helpful, and educational
+- Use markdown formatting for better readability
+`);
+
+    // Get recent conversation history (last 5 messages)
+    const recentMessages = await getMessages(session.id, { limit: 10 });
+    const conversationHistory = recentMessages
+      .slice(-5) // Last 5 messages (10 messages = 5 pairs)
+      .map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
+
+    // Estimate input tokens
+    const inputTokens =
+      estimateTokens(systemPrompt) +
+      conversationHistory.reduce((sum, msg) => sum + estimateTokens(msg.content), 0) +
+      estimateTokens(message);
+
+    console.log(`[Chat API] Estimated input tokens: ${inputTokens}`);
 
     // Save user message
-    await supabase.from('chat_messages').insert({
-      session_id: sessionId,
+    await createMessage({
+      session_id: session.id,
       role: 'user',
       content: message,
     });
 
-    // Generate response (streaming or non-streaming)
+    // Generate AI response (streaming or non-streaming)
     if (stream) {
-      // Streaming response
-      const streamGenerator = generateStreamingRAGResponse(
+      // === STREAMING RESPONSE ===
+      return handleStreamingResponse(
+        session.id,
         message,
+        systemPrompt,
+        conversationHistory,
         searchResults,
-        conversationHistory
+        context,
+        inputTokens,
+        creatorId
       );
-
-      // Collect full response for database storage
-      let fullContent = '';
-      let inputTokens = 0;
-      let outputTokens = 0;
-
-      async function* enhancedStream() {
-        for await (const chunk of streamGenerator) {
-          yield chunk;
-
-          if (chunk.type === 'content' && chunk.content) {
-            fullContent += chunk.content;
-          }
-
-          if (chunk.type === 'done' && chunk.usage) {
-            inputTokens = chunk.usage.inputTokens;
-            outputTokens = chunk.usage.outputTokens;
-
-            // Save assistant message and track cost
-            const videoReferences = extractVideoReferences(fullContent, searchResults);
-
-            await supabase.from('chat_messages').insert({
-              session_id: sessionId,
-              role: 'assistant',
-              content: fullContent,
-              video_references: videoReferences,
-              token_count: inputTokens + outputTokens,
-              model: process.env['ANTHROPIC_MODEL'] || 'claude-3-5-haiku-20241022',
-            });
-
-            // Track cost
-            await trackMessageCost(
-              creatorId,
-              inputTokens,
-              outputTokens,
-              process.env['ANTHROPIC_MODEL'] || 'claude-3-5-haiku-20241022'
-            );
-
-            // Update session timestamp
-            await supabase
-              .from('chat_sessions')
-              .update({ last_message_at: new Date().toISOString() })
-              .eq('id', sessionId);
-          }
-        }
-      }
-
-      const sseStream = createSSEStream(enhancedStream());
-      return createStreamingResponse(sseStream);
+    } else {
+      // === NON-STREAMING RESPONSE ===
+      return handleNonStreamingResponse(
+        session.id,
+        message,
+        systemPrompt,
+        conversationHistory,
+        searchResults,
+        context,
+        inputTokens,
+        creatorId
+      );
     }
-
-    // Non-streaming response
-    const response = await generateRAGResponse(
-      message,
-      searchResults,
-      conversationHistory
-    );
-
-    // Save assistant message
-    await supabase.from('chat_messages').insert({
-      session_id: sessionId,
-      role: 'assistant',
-      content: response.content,
-      video_references: response.videoReferences || [],
-      token_count: response.inputTokens + response.outputTokens,
-      model: response.model,
-    });
-
-    // Track cost
-    await trackMessageCost(
-      creatorId,
-      response.inputTokens,
-      response.outputTokens,
-      response.model
-    );
-
-    // Cache the response
-    await cacheResponse(message, searchResults, response);
-
-    // Update session timestamp
-    await supabase
-      .from('chat_sessions')
-      .update({ last_message_at: new Date().toISOString() })
-      .eq('id', sessionId);
-
-    return Response.json({
-      content: response.content,
-      videoReferences: response.videoReferences,
-      usage: {
-        inputTokens: response.inputTokens,
-        outputTokens: response.outputTokens,
-        cost: response.cost,
-      },
-      cached: false,
-    });
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.error('[Chat API] Error:', error);
 
     return Response.json(
       {
@@ -288,6 +291,302 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Handle streaming response
+ */
+async function handleStreamingResponse(
+  sessionId: string,
+  userMessage: string,
+  systemPrompt: string,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  searchResults: any[],
+  context: any,
+  inputTokens: number,
+  creatorId: string
+): Promise<Response> {
+  let fullContent = '';
+  let outputTokens = 0;
+
+  async function* streamGenerator() {
+    try {
+      // Start Claude streaming
+      const stream = await anthropic.messages.stream({
+        model: CLAUDE_MODEL,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.7,
+        system: systemPrompt,
+        messages: [
+          ...conversationHistory,
+          { role: 'user', content: userMessage },
+        ],
+      });
+
+      // Stream content chunks
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta') {
+          if (event.delta.type === 'text_delta') {
+            const chunk = event.delta.text;
+            fullContent += chunk;
+
+            yield {
+              type: 'content' as const,
+              content: chunk,
+            };
+          }
+        }
+      }
+
+      // Get final message with usage stats
+      const finalMessage = await stream.finalMessage();
+      outputTokens = finalMessage.usage.output_tokens;
+
+      // Calculate cost
+      const costBreakdown = calculateCompleteCost({
+        model: CLAUDE_MODEL,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        embedding_queries: 1, // One query embedding
+      });
+
+      console.log(`[Chat API] Stream complete: ${outputTokens} output tokens, cost: ${formatCost(costBreakdown.total_cost)}`);
+
+      // Extract video references from response
+      const videoReferences = context.sources.map((source: any) => ({
+        video_id: source.video_id,
+        video_title: source.video_title,
+        video_url: source.video_url,
+        timestamps: source.timestamps,
+      }));
+
+      // Save assistant message
+      await createMessage({
+        session_id: sessionId,
+        role: 'assistant',
+        content: fullContent,
+        video_references: videoReferences,
+        token_count: inputTokens + outputTokens,
+        model: CLAUDE_MODEL,
+        metadata: {
+          cost_usd: costBreakdown.total_cost,
+          chunks_used: context.total_chunks,
+        },
+      });
+
+      // Update session timestamp
+      await touchSession(sessionId);
+
+      // Track cost in usage metrics (if creator ID provided)
+      if (creatorId) {
+        await trackCostInDatabase(creatorId, costBreakdown);
+      }
+
+      // Generate session title if this is the first message
+      const supabase = getServiceSupabase();
+      const { data: session } = await supabase
+        .from('chat_sessions')
+        .select('title')
+        .eq('id', sessionId)
+        .single();
+
+      if (!session?.title) {
+        await generateAndSetTitle(sessionId, userMessage);
+      }
+
+      // Send final metadata
+      yield {
+        type: 'done' as const,
+        usage: {
+          inputTokens: inputTokens,
+          outputTokens: outputTokens,
+        },
+        cost: costBreakdown,
+        videoReferences: videoReferences,
+      };
+    } catch (error) {
+      console.error('[Chat API] Streaming error:', error);
+      yield {
+        type: 'error' as const,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  const sseStream = createSSEStream(streamGenerator());
+  return createStreamingResponse(sseStream);
+}
+
+/**
+ * Handle non-streaming response
+ */
+async function handleNonStreamingResponse(
+  sessionId: string,
+  userMessage: string,
+  systemPrompt: string,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  searchResults: any[],
+  context: any,
+  inputTokens: number,
+  creatorId: string
+): Promise<Response> {
+  // Generate response
+  const response = await anthropic.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: MAX_OUTPUT_TOKENS,
+    temperature: 0.7,
+    system: systemPrompt,
+    messages: [
+      ...conversationHistory,
+      { role: 'user', content: userMessage },
+    ],
+  });
+
+  // Extract text content
+  const content = response.content
+    .filter(block => block.type === 'text')
+    .map(block => (block as { type: 'text'; text: string }).text)
+    .join('\n');
+
+  const outputTokens = response.usage.output_tokens;
+
+  // Calculate cost
+  const costBreakdown = calculateCompleteCost({
+    model: CLAUDE_MODEL,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
+    embedding_queries: 1,
+  });
+
+  console.log(`[Chat API] Response complete: ${outputTokens} output tokens, cost: ${formatCost(costBreakdown.total_cost)}`);
+
+  // Extract video references
+  const videoReferences = context.sources.map((source: any) => {
+    const firstTimestamp = source.timestamps[0];
+    return {
+      video_id: source.video_id,
+      video_title: source.video_title,
+      timestamp: firstTimestamp.start,
+      timestamp_formatted: formatTimestamp(firstTimestamp.start),
+      chunk_text: searchResults.find(r => r.video_id === source.video_id)?.chunk_text.substring(0, 150) || '',
+      relevance_score: searchResults.find(r => r.video_id === source.video_id)?.rank_score || 0,
+    };
+  });
+
+  // Save assistant message
+  await createMessage({
+    session_id: sessionId,
+    role: 'assistant',
+    content: content,
+    video_references: videoReferences,
+    token_count: inputTokens + outputTokens,
+    model: CLAUDE_MODEL,
+    metadata: {
+      cost_usd: costBreakdown.total_cost,
+      chunks_used: context.total_chunks,
+    },
+  });
+
+  // Update session timestamp
+  await touchSession(sessionId);
+
+  // Track cost in database
+  if (creatorId) {
+    await trackCostInDatabase(creatorId, costBreakdown);
+  }
+
+  // Generate session title if this is the first message
+  const supabase = getServiceSupabase();
+  const { data: session } = await supabase
+    .from('chat_sessions')
+    .select('title')
+    .eq('id', sessionId)
+    .single();
+
+  if (!session?.title) {
+    await generateAndSetTitle(sessionId, userMessage);
+  }
+
+  const responseData: ChatResponse = {
+    content,
+    sessionId,
+    videoReferences,
+    usage: {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      embedding_queries: 1,
+      total_tokens: inputTokens + outputTokens,
+      cost_breakdown: costBreakdown,
+      cost_formatted: formatCost(costBreakdown.total_cost),
+    },
+    cached: false,
+  };
+
+  return Response.json(responseData);
+}
+
+/**
+ * Track cost in database (usage_metrics table)
+ */
+async function trackCostInDatabase(creatorId: string, costBreakdown: CostBreakdown): Promise<void> {
+  const supabase = getServiceSupabase();
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    // Check if entry exists for today
+    const { data: existing } = await supabase
+      .from('usage_metrics')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .eq('date', today)
+      .single();
+
+    if (existing) {
+      // Update existing entry
+      await supabase
+        .from('usage_metrics')
+        .update({
+          ai_credits_used: existing.ai_credits_used + 1,
+          chat_messages_sent: existing.chat_messages_sent + 1,
+          metadata: {
+            ...existing.metadata,
+            total_input_tokens: (existing.metadata?.total_input_tokens || 0) + costBreakdown.input_tokens,
+            total_output_tokens: (existing.metadata?.total_output_tokens || 0) + costBreakdown.output_tokens,
+            total_ai_cost_usd: (existing.metadata?.total_ai_cost_usd || 0) + costBreakdown.total_cost,
+          },
+        })
+        .eq('creator_id', creatorId)
+        .eq('date', today);
+    } else {
+      // Create new entry
+      await supabase.from('usage_metrics').insert({
+        creator_id: creatorId,
+        date: today,
+        ai_credits_used: 1,
+        chat_messages_sent: 1,
+        metadata: {
+          total_input_tokens: costBreakdown.input_tokens,
+          total_output_tokens: costBreakdown.output_tokens,
+          total_ai_cost_usd: costBreakdown.total_cost,
+          model: CLAUDE_MODEL,
+        },
+      });
+    }
+
+    console.log(`[Cost Tracking] Tracked ${formatCost(costBreakdown.total_cost)} for creator ${creatorId}`);
+  } catch (error) {
+    console.error('[Cost Tracking] Failed to track cost:', error);
+    // Don't throw - cost tracking failure shouldn't break the app
+  }
+}
+
+/**
+ * Format timestamp as MM:SS
+ */
+function formatTimestamp(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -305,39 +604,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const supabase = getServiceSupabase();
+    // Get session with messages
+    const session = await getSession(sessionId, true);
 
-    // Get session
-    const { data: session, error: sessionError } = await supabase
-      .from('chat_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
-
-    if (sessionError || !session) {
+    if (!session) {
       return Response.json(
         { error: 'Session not found' },
         { status: 404 }
       );
     }
 
-    // Get messages
-    const { data: messages, error: messagesError } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: true });
-
-    if (messagesError) {
-      throw messagesError;
-    }
-
-    return Response.json({
-      session,
-      messages: messages || [],
-    });
+    return Response.json(session);
   } catch (error) {
-    console.error('Chat history error:', error);
+    console.error('[Chat API] Error fetching history:', error);
 
     return Response.json(
       {

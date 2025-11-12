@@ -81,7 +81,7 @@ export function CTASection() {
               size="4"
               className="bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10 px-12 py-6 text-xl font-bold shadow-2xl hover:shadow-purple-9/50 transition-all hover:scale-105"
               onClick={() => {
-                window.location.href = '/api/whop/oauth';
+                window.location.href = '/api/whop/auth/login';
               }}
             >
               Sign in with Whop

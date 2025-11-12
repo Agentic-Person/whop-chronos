@@ -33,6 +33,17 @@ const PUBLIC_API_ROUTES = ["/api/health", "/api/status"];
 export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
+	// ============================================================================
+	// DEV MODE BYPASS - Skip auth in development
+	// ============================================================================
+	const isDevelopment = process.env.NODE_ENV === "development";
+	const devBypass = process.env.DEV_BYPASS_AUTH === "true";
+
+	if (isDevelopment && devBypass) {
+		// In dev mode with bypass enabled, allow all routes
+		return NextResponse.next();
+	}
+
 	// Check if route is public
 	const isPublicRoute = PUBLIC_ROUTES.some((route) =>
 		pathname.startsWith(route),

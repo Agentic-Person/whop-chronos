@@ -34,9 +34,11 @@ export function DashboardNav() {
           {/* Logo */}
           <div className="flex items-center gap-8">
             <Link href="/dashboard/creator/overview" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-9 to-purple-9 flex items-center justify-center">
-                <span className="text-white font-bold text-4">C</span>
-              </div>
+              <img
+                src="/images/chronos_icon_128.png"
+                alt="Chronos"
+                className="h-8 w-8 object-contain flex-shrink-0"
+              />
               <span className="font-semibold text-5 text-gray-12 hidden sm:inline">
                 Chronos
               </span>

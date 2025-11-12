@@ -69,9 +69,9 @@ interface ErrorResponse {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ProcessingStatusResponse | ErrorResponse>> {
-  const videoId = params.id;
+  const { id: videoId } = await params;
 
   try {
     // Validate video ID
@@ -242,9 +242,9 @@ function getNextSteps(status: VideoRow['status']): string[] {
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const videoId = params.id;
+  const { id: videoId } = await params;
 
   try {
     const supabase = getServiceSupabase();

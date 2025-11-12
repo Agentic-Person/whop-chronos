@@ -45,15 +45,11 @@ export function LandingNav() {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             type="button"
           >
-            <div className="relative w-8 h-8">
-              <Image
-                src="/images/chronos_icon.png"
-                alt="Chronos AI"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
+            <img
+              src="/images/chronos_icon_128.png"
+              alt="Chronos AI"
+              className="h-8 w-8 object-contain flex-shrink-0"
+            />
             <span className="font-bold text-lg text-gray-12 hidden sm:inline">
               CHRONOS AI
             </span>
@@ -63,7 +59,7 @@ export function LandingNav() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={() => {
-                window.location.href = '/api/whop/oauth';
+                window.location.href = '/api/whop/auth/login';
               }}
               type="button"
               className="relative overflow-hidden px-6 bg-gray-2 rounded-lg text-sm font-semibold text-gray-12 transition-all hover:bg-gray-3 border-2 flex items-center justify-center"
@@ -120,7 +116,7 @@ export function LandingNav() {
                 size="3"
                 className="w-full bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10"
                 onClick={() => {
-                  window.location.href = '/api/whop/oauth';
+                  window.location.href = '/api/whop/auth/login';
                   setMobileMenuOpen(false);
                 }}
               >

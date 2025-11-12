@@ -9,7 +9,8 @@ Chronos uses multiple MCP (Model Context Protocol) configurations for different 
 **Purpose**: Production development with Whop and Supabase integration
 
 **MCP Servers**:
-- **Whop** - Product management, memberships, OAuth, webhooks
+- **Whop** - Custom MCP server for API operations (product management, memberships, OAuth, webhooks)
+- **Whop Docs** - Official Whop documentation MCP server (search and read Whop docs)
 - **Supabase** - Database operations, migrations, Edge Functions
 
 **Usage**:
@@ -27,6 +28,7 @@ claude --mcp-config .mcp.json
 - API endpoint development
 - Webhook handler implementation
 - Membership and tier management
+- Looking up Whop API documentation and examples
 
 ---
 
@@ -92,7 +94,14 @@ claude --mcp-config ui.mcp.json
 ```json
 {
   "mcpServers": {
-    "whop": { ... },
+    "whop": { 
+      "command": "...",
+      "args": ["..."],
+      "env": { "WHOP_API_KEY": "...", "WHOP_APP_ID": "..." }
+    },
+    "whop-docs": {
+      "url": "https://docs.whop.com/mcp"
+    },
     "supabase": { ... }
   }
 }
@@ -113,6 +122,28 @@ claude --mcp-config ui.mcp.json
 
 ---
 
+## Understanding Whop MCP Servers
+
+Chronos uses **two different Whop MCP servers** for different purposes:
+
+### 1. `whop` - Custom API Server
+- **Type**: Local command-based server
+- **Purpose**: Direct API operations (list products, get memberships, validate access, etc.)
+- **Tools**: `mcp__whop__list_products`, `mcp__whop__get_membership`, `mcp__whop__validate_membership`
+- **Setup**: Requires local installation (see [WHOP_MCP_SETUP.md](./WHOP_MCP_SETUP.md))
+- **Use when**: You need to interact with Whop's API directly
+
+### 2. `whop-docs` - Official Documentation Server
+- **Type**: URL-based server (no installation needed)
+- **Purpose**: Search and read Whop's official documentation
+- **Tools**: Documentation search and retrieval tools
+- **Setup**: Just add the URL to `.mcp.json` (already configured)
+- **Use when**: You need to look up API documentation, examples, or best practices
+
+**Best Practice**: Use `whop-docs` to understand how to use Whop APIs, then use the `whop` server to actually interact with them.
+
+---
+
 ## Common Workflows
 
 ### Workflow 1: Build Feature with Whop
@@ -121,15 +152,19 @@ claude --mcp-config ui.mcp.json
 # Step 1: Use main config
 claude --mcp-config .mcp.json
 
-# Step 2: Build feature using Whop MCP tools
+# Step 2: Look up Whop documentation (if needed)
+"Use whop-docs MCP to find documentation on OAuth flow"
+"Search whop-docs for webhook event types"
+
+# Step 3: Build feature using Whop API MCP tools
 "Use mcp__whop__list_products to see available products"
 "Implement membership validation using mcp__whop__validate_membership"
 
-# Step 3: Test in UI
+# Step 4: Test in UI
 # Exit and restart
 claude --mcp-config ui.mcp.json
 
-# Step 4: Test the feature
+# Step 5: Test the feature
 "Test the membership flow with Puppeteer at localhost:3000"
 ```
 
@@ -176,6 +211,7 @@ claude --mcp-config ui.mcp.json
 - Whop API credentials in `.env.local`
 - Supabase project configured
 - Environment variables set
+- **Whop MCP Server installed** (see [Whop MCP Setup Guide](./WHOP_MCP_SETUP.md) for installation instructions)
 
 **For UI Config (ui.mcp.json)**:
 - Dev server running (`npm run dev`)
@@ -243,8 +279,9 @@ curl http://localhost:3000
 
 ## Resources
 
-- **Main MCP Guide**: See CLAUDE.md for Whop/Supabase MCP usage
-- **UI MCP Guide**: See `docs/UI_MCP_GUIDE.md` for UI testing details
+- **Main MCP Guide**: See `CLAUDE.md` for Whop/Supabase MCP usage
+- **UI MCP Guide**: See `docs/mcp/UI_MCP_GUIDE.md` for UI testing details
+- **Whop MCP Setup**: See `docs/mcp/WHOP_MCP_SETUP.md` for setting up Whop MCP server on a new computer
 - **MCP Protocol**: https://modelcontextprotocol.io/
 
 ---

@@ -316,6 +316,32 @@ npm run start
 
 ---
 
+## MCP Server Setup
+
+This project uses Model Context Protocol (MCP) servers for AI-assisted development. The Whop MCP server provides Claude Code with direct access to Whop's API for product management, memberships, and OAuth operations.
+
+### Setting Up Whop MCP Server
+
+**Important:** The Whop MCP server requires local installation and configuration. See the complete setup guide:
+
+📖 **[Whop MCP Setup Guide](./docs/mcp/WHOP_MCP_SETUP.md)**
+
+**Quick Setup Steps:**
+1. Install/clone the Whop MCP server to `~/.mcp/servers/whop/` (or `C:\Users\<username>\.mcp\servers\whop\` on Windows)
+2. Install dependencies: `npm install` in the server directory
+3. Configure `.mcp.json` with correct paths for your system
+4. Set environment variables: `WHOP_API_KEY` and `WHOP_APP_ID`
+5. Restart Claude Code to load the MCP server
+
+**Configuration Files:**
+- `.mcp.json` - Main MCP configuration (Whop + Supabase)
+- `.mcp.json.example` - Template with placeholders for new setups
+- `ui.mcp.json` - UI testing MCP configuration (Playwright, Puppeteer)
+
+For detailed instructions, troubleshooting, and cross-platform setup, see [docs/mcp/WHOP_MCP_SETUP.md](./docs/mcp/WHOP_MCP_SETUP.md).
+
+---
+
 ## Security Considerations
 
 ### Environment Variables

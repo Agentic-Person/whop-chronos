@@ -33,9 +33,11 @@ export function Header({
           )}
 
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-blue-600">
-              <span className="text-lg font-bold text-white">C</span>
-            </div>
+            <img
+              src="/images/chronos_icon_128.png"
+              alt="Chronos"
+              className="h-8 w-8 object-contain flex-shrink-0"
+            />
             <span className="hidden text-xl font-bold md:inline-block">
               Chronos
             </span>

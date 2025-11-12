@@ -58,7 +58,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/api/whop/oauth"
+                  href="/api/whop/auth/login"
                   className="text-sm text-gray-11 hover:text-purple-11 transition-colors"
                 >
                   Get Started
