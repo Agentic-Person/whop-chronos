@@ -6,12 +6,13 @@ import { X, Link, Loader, CheckCircle, AlertCircle } from 'lucide-react';
 interface VideoUrlUploaderProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete?: (videoId: string) => void;
+  onComplete?: (video: { id: string; title: string; thumbnail?: string; duration?: number } | string) => void;
   creatorId: string;
   chapterId?: string;
 }
 
 type UploadStatus = 'idle' | 'fetching' | 'uploading' | 'pending' | 'transcribing' | 'processing' | 'embedding' | 'completed' | 'failed';
+type ImportTab = 'youtube' | 'whop';
 
 export default function VideoUrlUploader({
   isOpen,
@@ -19,6 +20,7 @@ export default function VideoUrlUploader({
   onComplete,
   creatorId,
 }: VideoUrlUploaderProps) {
+  const [activeTab, setActiveTab] = useState<ImportTab>('youtube');
   const [videoUrl, setVideoUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [videoDuration, setVideoDuration] = useState('');
@@ -26,10 +28,15 @@ export default function VideoUrlUploader({
   const [error, setError] = useState<{ message: string; canRetry: boolean } | null>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
 
+  // Whop-specific state
+  const [whopLessonId, setWhopLessonId] = useState('');
+
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
+      setActiveTab('youtube');
       setVideoUrl('');
+      setWhopLessonId('');
       setVideoTitle('');
       setVideoDuration('');
       setStatus('idle');
@@ -53,7 +60,34 @@ export default function VideoUrlUploader({
 
           if (data.status === 'completed') {
             if (onComplete) {
-              onComplete(currentVideoId);
+              // Fetch full video data before calling onComplete
+              try {
+                const videoResponse = await fetch(`/api/video/${currentVideoId}`);
+                if (videoResponse.ok) {
+                  const videoData = await videoResponse.json();
+                  if (videoData.success && videoData.data) {
+                    // Pass full video object with CourseBuilder-expected structure
+                    onComplete({
+                      id: videoData.data.id,
+                      title: videoData.data.title,
+                      thumbnail: videoData.data.thumbnailUrl,
+                      duration: videoData.data.duration,
+                    });
+                  } else {
+                    // Fallback: pass just the ID if data structure is unexpected
+                    console.warn('Unexpected video data structure:', videoData);
+                    onComplete(currentVideoId);
+                  }
+                } else {
+                  // Fallback: pass just the ID if endpoint fails
+                  console.error('Failed to fetch video data:', await videoResponse.text());
+                  onComplete(currentVideoId);
+                }
+              } catch (fetchError) {
+                console.error('Error fetching video data:', fetchError);
+                // Fallback: pass just the ID if fetch fails
+                onComplete(currentVideoId);
+              }
             }
           } else if (data.status === 'failed') {
             setError({
@@ -111,7 +145,7 @@ export default function VideoUrlUploader({
     }
   };
 
-  const handleImport = async () => {
+  const handleYouTubeImport = async () => {
     if (!videoUrl.trim()) {
       setError({ message: 'Please enter a video URL', canRetry: false });
       return;
@@ -156,6 +190,90 @@ export default function VideoUrlUploader({
         message: err instanceof Error ? err.message : 'Import failed',
         canRetry: true,
       });
+    }
+  };
+
+  const handleWhopImport = async () => {
+    if (!whopLessonId.trim()) {
+      setError({ message: 'Please enter a Whop lesson ID', canRetry: false });
+      return;
+    }
+
+    setError(null);
+    setStatus('processing');
+
+    try {
+      // Import Whop lesson video
+      const importResponse = await fetch('/api/video/whop/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: whopLessonId.trim(),
+          creatorId,
+        }),
+      });
+
+      if (!importResponse.ok) {
+        const errorData = await importResponse.json();
+        throw new Error(errorData.error || 'Failed to import video from Whop');
+      }
+
+      const importData = await importResponse.json();
+
+      if (!importData.success) {
+        throw new Error(importData.error || 'Failed to import video from Whop');
+      }
+
+      const { video } = importData;
+
+      setCurrentVideoId(video.id);
+      setVideoTitle(video.title);
+
+      // Check if video needs processing (YouTube embeds) or is ready (Mux)
+      if (video.source_type === 'youtube') {
+        setStatus('pending');
+      } else {
+        // Mux video is immediately ready - fetch full data and call onComplete
+        setStatus('completed');
+        if (onComplete) {
+          try {
+            const videoResponse = await fetch(`/api/video/${video.id}`);
+            if (videoResponse.ok) {
+              const videoData = await videoResponse.json();
+              if (videoData.success && videoData.data) {
+                onComplete({
+                  id: videoData.data.id,
+                  title: videoData.data.title,
+                  thumbnail: videoData.data.thumbnailUrl,
+                  duration: videoData.data.duration,
+                });
+              } else {
+                onComplete(video.id);
+              }
+            } else {
+              onComplete(video.id);
+            }
+          } catch (fetchError) {
+            console.error('Error fetching Whop video data:', fetchError);
+            onComplete(video.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Whop import error:', err);
+      setStatus('failed');
+      setError({
+        message: err instanceof Error ? err.message : 'Whop import failed',
+        canRetry: true,
+      });
+    }
+  };
+
+  const handleImport = () => {
+    if (activeTab === 'youtube') {
+      return handleYouTubeImport();
+    } else {
+      return handleWhopImport();
     }
   };
 
@@ -227,6 +345,32 @@ export default function VideoUrlUploader({
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Tabs */}
+          <div className="flex gap-2 p-1 bg-gray-3 rounded-lg">
+            <button
+              onClick={() => setActiveTab('youtube')}
+              disabled={isProcessing}
+              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'youtube'
+                  ? 'bg-gray-12 text-gray-1'
+                  : 'text-gray-11 hover:text-gray-12'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              YouTube URL
+            </button>
+            <button
+              onClick={() => setActiveTab('whop')}
+              disabled={isProcessing}
+              className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'whop'
+                  ? 'bg-gray-12 text-gray-1'
+                  : 'text-gray-11 hover:text-gray-12'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Whop Lesson
+            </button>
+          </div>
+
           {/* Error Display */}
           {error && (
             <div className="flex items-start gap-3 p-4 bg-red-3 border border-red-6 rounded-lg">
@@ -257,36 +401,66 @@ export default function VideoUrlUploader({
             </div>
           )}
 
-          {/* URL Input */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-12">
-              Video URL <span className="text-red-11">*</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={videoUrl}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://youtube.com/watch?v=..."
-                disabled={isProcessing}
-                className="flex-1 px-3 py-2 bg-gray-3 border border-gray-6 rounded-lg text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-purple-7 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button
-                onClick={handleFetchMetadata}
-                disabled={!videoUrl.trim() || isProcessing}
-                className="px-4 py-2 bg-gray-4 text-gray-12 rounded-lg hover:bg-gray-5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {status === 'fetching' ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Fetch Info'
-                )}
-              </button>
+          {/* YouTube URL Input */}
+          {activeTab === 'youtube' && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-12">
+                Video URL <span className="text-red-11">*</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=..."
+                  disabled={isProcessing}
+                  className="flex-1 px-3 py-2 bg-gray-3 border border-gray-6 rounded-lg text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-purple-7 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <button
+                  onClick={handleFetchMetadata}
+                  disabled={!videoUrl.trim() || isProcessing}
+                  className="px-4 py-2 bg-gray-4 text-gray-12 rounded-lg hover:bg-gray-5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {status === 'fetching' ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Fetch Info'
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-11">
+                Paste a YouTube video URL to automatically fetch title and duration
+              </p>
             </div>
-            <p className="text-xs text-gray-11">
-              Paste a YouTube video URL to automatically fetch title and duration
-            </p>
-          </div>
+          )}
+
+          {/* Whop Lesson Input */}
+          {activeTab === 'whop' && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-12">
+                Whop Lesson ID <span className="text-red-11">*</span>
+              </label>
+              <input
+                type="text"
+                value={whopLessonId}
+                onChange={(e) => {
+                  setWhopLessonId(e.target.value);
+                  setError(null);
+                }}
+                placeholder="les_xxxxxxxxxx"
+                disabled={isProcessing}
+                className="w-full px-3 py-2 bg-gray-3 border border-gray-6 rounded-lg text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-purple-7 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-gray-11">
+                Import videos from your Whop course lessons (Mux videos or YouTube/Loom embeds)
+              </p>
+              <div className="mt-2 p-3 bg-blue-3 border border-blue-6 rounded-lg">
+                <p className="text-xs text-blue-11">
+                  <strong>Note:</strong> Whop SDK integration required. This feature currently shows an implementation guide.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Video Title */}
           <div className="space-y-2">
@@ -342,7 +516,12 @@ export default function VideoUrlUploader({
           </button>
           <button
             onClick={handleImport}
-            disabled={!videoUrl.trim() || isProcessing || status === 'completed'}
+            disabled={
+              (activeTab === 'youtube' && !videoUrl.trim()) ||
+              (activeTab === 'whop' && !whopLessonId.trim()) ||
+              isProcessing ||
+              status === 'completed'
+            }
             className="px-6 py-2 bg-purple-9 text-white rounded-lg hover:bg-purple-10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
           >
             {isProcessing ? (
@@ -351,7 +530,7 @@ export default function VideoUrlUploader({
                 {status === 'processing' ? 'Importing...' : 'Processing...'}
               </>
             ) : (
-              'Import Video'
+              `Import ${activeTab === 'youtube' ? 'YouTube' : 'Whop'} Video`
             )}
           </button>
         </div>

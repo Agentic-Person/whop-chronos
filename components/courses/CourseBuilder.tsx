@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, Plus, GripVertical, MoreVertical, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, GripVertical, MoreVertical, Trash2, Loader2 } from 'lucide-react';
+import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 import AddLessonDialog from './AddLessonDialog';
 import VideoLibraryPicker from './VideoLibraryPicker';
 import VideoUploader from './VideoUploader';
@@ -12,6 +13,7 @@ interface Chapter {
   name: string;
   lessons: Lesson[];
   isExpanded: boolean;
+  display_order: number;
 }
 
 interface Lesson {
@@ -21,6 +23,7 @@ interface Lesson {
   videoId?: string;
   thumbnail?: string;
   duration?: number;
+  lesson_order: number;
 }
 
 interface Course {
@@ -37,41 +40,167 @@ interface CourseBuilderProps {
 }
 
 export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
-  const [chapters, setChapters] = useState<Chapter[]>([
-    { id: '1', name: 'Chapter 1', lessons: [], isExpanded: true },
-  ]);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>('1');
+  const { creatorId } = useAnalytics();
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [showAddLessonDialog, setShowAddLessonDialog] = useState(false);
   const [addLessonToChapterId, setAddLessonToChapterId] = useState<string | null>(null);
   const [lessonCreationMode, setLessonCreationMode] = useState<'url' | 'insert' | 'upload' | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedChapter = chapters.find((c) => c.id === selectedChapterId);
   const selectedLesson = selectedChapter?.lessons.find((l) => l.id === selectedLessonId);
 
-  const addChapter = () => {
-    const newChapterId = (chapters.length + 1).toString();
-    setChapters([
-      ...chapters,
-      {
-        id: newChapterId,
-        name: `Chapter ${newChapterId}`,
+  // Load chapters and lessons from database
+  useEffect(() => {
+    async function loadCourseData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch modules for this course
+        const modulesRes = await fetch(`/api/courses/${course.id}/modules`);
+        if (!modulesRes.ok) {
+          throw new Error('Failed to load course modules');
+        }
+
+        const modulesData = await modulesRes.json();
+        const modules = modulesData.data.modules || [];
+
+        // Fetch lessons for each module
+        const chaptersWithLessons = await Promise.all(
+          modules.map(async (module: any) => {
+            const lessonsRes = await fetch(`/api/modules/${module.id}/lessons`);
+            if (!lessonsRes.ok) {
+              console.error(`Failed to load lessons for module ${module.id}`);
+              return {
+                id: module.id,
+                name: module.title,
+                lessons: [],
+                isExpanded: true,
+                display_order: module.display_order,
+              };
+            }
+
+            const lessonsData = await lessonsRes.json();
+            const lessons = lessonsData.data.lessons || [];
+
+            return {
+              id: module.id,
+              name: module.title,
+              lessons: lessons.map((lesson: any) => ({
+                id: lesson.id,
+                type: 'video' as const,
+                title: lesson.title,
+                videoId: lesson.video_id,
+                thumbnail: lesson.video?.thumbnail_url,
+                duration: lesson.video?.duration_seconds,
+                lesson_order: lesson.lesson_order,
+              })),
+              isExpanded: true,
+              display_order: module.display_order,
+            };
+          })
+        );
+
+        // Sort by display_order
+        chaptersWithLessons.sort((a, b) => a.display_order - b.display_order);
+
+        setChapters(chaptersWithLessons);
+
+        // Set first chapter as selected if none selected
+        if (!selectedChapterId && chaptersWithLessons.length > 0) {
+          setSelectedChapterId(chaptersWithLessons[0].id);
+        }
+      } catch (err) {
+        console.error('Error loading course data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load course data');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadCourseData();
+  }, [course.id]);
+
+  const addChapter = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const nextOrder = chapters.length > 0
+        ? Math.max(...chapters.map(c => c.display_order)) + 1
+        : 1;
+
+      const response = await fetch(`/api/courses/${course.id}/modules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `Chapter ${chapters.length + 1}`,
+          description: '',
+          display_order: nextOrder,
+          creator_id: creatorId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create chapter');
+      }
+
+      const data = await response.json();
+      const newChapter: Chapter = {
+        id: data.data.id,
+        name: data.data.title,
         lessons: [],
         isExpanded: true,
-      },
-    ]);
+        display_order: data.data.display_order,
+      };
+
+      setChapters([...chapters, newChapter]);
+    } catch (err) {
+      console.error('Error adding chapter:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add chapter');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const deleteChapter = (chapterId: string) => {
+  const deleteChapter = async (chapterId: string) => {
     if (chapters.length === 1) {
       alert('Cannot delete the last chapter');
       return;
     }
-    if (confirm('Are you sure you want to delete this chapter?')) {
+    if (!confirm('Are you sure you want to delete this chapter? All lessons will be removed.')) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const response = await fetch(`/api/modules/${chapterId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creator_id: creatorId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete chapter');
+      }
+
       setChapters(chapters.filter((c) => c.id !== chapterId));
       if (selectedChapterId === chapterId) {
-        setSelectedChapterId(chapters[0].id);
+        const remainingChapters = chapters.filter((c) => c.id !== chapterId);
+        setSelectedChapterId(remainingChapters.length > 0 ? remainingChapters[0].id : null);
       }
+    } catch (err) {
+      console.error('Error deleting chapter:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete chapter');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -99,58 +228,171 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
     setLessonCreationMode(type);
   };
 
-  const handleVideoSelected = (video: any) => {
+  const handleVideoSelected = async (video: any) => {
     if (!addLessonToChapterId) return;
 
-    const newLesson: Lesson = {
-      id: Date.now().toString(),
-      type: 'video',
-      title: video.title,
-      videoId: video.id,
-      thumbnail: video.thumbnail,
-      duration: video.duration,
-    };
+    try {
+      setIsSaving(true);
+      setError(null);
 
-    setChapters(
-      chapters.map((c) =>
-        c.id === addLessonToChapterId
-          ? { ...c, lessons: [...c.lessons, newLesson] }
-          : c
-      )
-    );
+      const chapter = chapters.find((c) => c.id === addLessonToChapterId);
+      if (!chapter) return;
 
-    setLessonCreationMode(null);
-    setAddLessonToChapterId(null);
-    setSelectedLessonId(newLesson.id);
+      const nextOrder = chapter.lessons.length > 0
+        ? Math.max(...chapter.lessons.map(l => l.lesson_order)) + 1
+        : 1;
+
+      const response = await fetch(`/api/modules/${addLessonToChapterId}/lessons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_id: video.id,
+          title: video.title,
+          lesson_order: nextOrder,
+          creator_id: creatorId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add lesson');
+      }
+
+      const data = await response.json();
+      const newLesson: Lesson = {
+        id: data.data.id,
+        type: 'video',
+        title: video.title,
+        videoId: video.id,
+        thumbnail: video.thumbnail,
+        duration: video.duration,
+        lesson_order: nextOrder,
+      };
+
+      setChapters(
+        chapters.map((c) =>
+          c.id === addLessonToChapterId
+            ? { ...c, lessons: [...c.lessons, newLesson] }
+            : c
+        )
+      );
+
+      setLessonCreationMode(null);
+      setAddLessonToChapterId(null);
+      setSelectedLessonId(newLesson.id);
+    } catch (err) {
+      console.error('Error adding lesson:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add lesson');
+      // Don't clear the dialog on error so user can retry
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleVideoUploaded = (video: any) => {
+  const handleVideoUploaded = async (video: any) => {
     if (!addLessonToChapterId) return;
 
-    const newLesson: Lesson = {
-      id: Date.now().toString(),
-      type: 'video',
-      title: video.title,
-      videoId: video.id,
-      thumbnail: video.thumbnail,
-      duration: video.duration,
-    };
+    try {
+      setIsSaving(true);
+      setError(null);
 
-    setChapters(
-      chapters.map((c) =>
-        c.id === addLessonToChapterId
-          ? { ...c, lessons: [...c.lessons, newLesson] }
-          : c
-      )
-    );
+      const chapter = chapters.find((c) => c.id === addLessonToChapterId);
+      if (!chapter) return;
 
-    setLessonCreationMode(null);
-    setAddLessonToChapterId(null);
-    setSelectedLessonId(newLesson.id);
+      // Handle both string (legacy) and object (new) formats
+      let videoData;
+      if (typeof video === 'string') {
+        // Legacy format: video is just an ID, fetch full data
+        const videoResponse = await fetch(`/api/video/${video}`);
+        if (!videoResponse.ok) {
+          throw new Error('Failed to fetch video data');
+        }
+        const videoResult = await videoResponse.json();
+        if (videoResult.success && videoResult.data) {
+          videoData = {
+            id: videoResult.data.id,
+            title: videoResult.data.title,
+            thumbnail: videoResult.data.thumbnailUrl,
+            duration: videoResult.data.duration,
+          };
+        } else {
+          throw new Error('Invalid video data structure');
+        }
+      } else {
+        // New format: video is already a full object
+        videoData = video;
+      }
+
+      const nextOrder = chapter.lessons.length > 0
+        ? Math.max(...chapter.lessons.map(l => l.lesson_order)) + 1
+        : 1;
+
+      const response = await fetch(`/api/modules/${addLessonToChapterId}/lessons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_id: videoData.id,
+          title: videoData.title,
+          lesson_order: nextOrder,
+          creator_id: creatorId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add lesson');
+      }
+
+      const data = await response.json();
+      const newLesson: Lesson = {
+        id: data.data.id,
+        type: 'video',
+        title: videoData.title,
+        videoId: videoData.id,
+        thumbnail: videoData.thumbnail,
+        duration: videoData.duration,
+        lesson_order: nextOrder,
+      };
+
+      setChapters(
+        chapters.map((c) =>
+          c.id === addLessonToChapterId
+            ? { ...c, lessons: [...c.lessons, newLesson] }
+            : c
+        )
+      );
+
+      setLessonCreationMode(null);
+      setAddLessonToChapterId(null);
+      setSelectedLessonId(newLesson.id);
+    } catch (err) {
+      console.error('Error adding lesson:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add lesson');
+      // Don't clear the dialog on error so user can retry
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const deleteLesson = (chapterId: string, lessonId: string) => {
-    if (confirm('Are you sure you want to delete this lesson?')) {
+  const deleteLesson = async (chapterId: string, lessonId: string) => {
+    if (!confirm('Are you sure you want to delete this lesson?')) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const response = await fetch(`/api/modules/${chapterId}/lessons/${lessonId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creator_id: creatorId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete lesson');
+      }
+
       setChapters(
         chapters.map((c) =>
           c.id === chapterId
@@ -161,21 +403,65 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
       if (selectedLessonId === lessonId) {
         setSelectedLessonId(null);
       }
+    } catch (err) {
+      console.error('Error deleting lesson:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete lesson');
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="h-screen flex flex-col bg-gray-1">
+        <div className="border-b border-gray-6 px-6 py-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-11 hover:text-gray-12 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back</span>
+          </button>
+          <h1 className="text-xl font-semibold text-gray-12 mt-2">{course.name}</h1>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 text-blue-9 animate-spin mx-auto mb-4" />
+            <p className="text-gray-11">Loading course data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-1">
       {/* Header */}
       <div className="border-b border-gray-6 px-6 py-4">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-11 hover:text-gray-12 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
-        </button>
-        <h1 className="text-xl font-semibold text-gray-12 mt-2">{course.name}</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-gray-11 hover:text-gray-12 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </button>
+            <h1 className="text-xl font-semibold text-gray-12 mt-2">{course.name}</h1>
+          </div>
+          {isSaving && (
+            <div className="flex items-center gap-2 text-blue-11">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Saving...</span>
+            </div>
+          )}
+        </div>
+        {error && (
+          <div className="mt-2 px-3 py-2 bg-red-3 border border-red-6 rounded text-red-11 text-sm">
+            {error}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex overflow-hidden">
@@ -308,7 +594,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
             setLessonCreationMode(null);
             setAddLessonToChapterId(null);
           }}
-          creatorId="e5f9d8c7-4b3a-4e2d-9f1a-8c7b6a5d4e3f"
+          creatorId={creatorId}
         />
       )}
 
