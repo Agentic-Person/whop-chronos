@@ -77,8 +77,9 @@ Thumbs.db
 supabase/.branches/
 supabase/.temp/
 
-# MCP (development only)
+# MCP (development only - NEVER commit these, contain secrets)
 .mcp/
+.mcp.json
 ui.mcp.json
 
 # Ignore all dot files and folders except essential ones
@@ -86,7 +87,6 @@ ui.mcp.json
 !.gitignore
 !.env.example
 !.env.production.example
-!.mcp.json
 !.vercelignore
 
 # Large documentation files (not needed in repo)
