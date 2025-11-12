@@ -272,8 +272,15 @@ export async function validateWhopUser(token: string) {
 ## Development Commands
 
 ```bash
-# Development
+# Development (requires TWO terminals)
+
+# Terminal 1: Start Next.js dev server
 npm run dev
+
+# Terminal 2: Start Inngest Dev Server (REQUIRED for background jobs)
+npx inngest-cli dev -u http://localhost:3007/api/inngest
+
+# Inngest Dashboard: http://localhost:8288
 
 # Build
 npm run build
@@ -286,7 +293,13 @@ npm run type-check
 
 # Linting (uses Biome)
 npm run lint
+
+# Utility Scripts
+npx tsx scripts/trigger-embeddings.ts    # Manually trigger embeddings for stuck videos
+npx tsx scripts/check-database.ts        # Check video statuses and database state
 ```
+
+**IMPORTANT:** The Inngest Dev Server MUST be running for video processing to work. If you see videos stuck in 'transcribing' status, ensure the Inngest Dev Server is running in a separate terminal.
 
 ## Environment Variables
 
