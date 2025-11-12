@@ -391,6 +391,183 @@ Assisted by Jimmy Solutions Developer at Agentic Personnel LLC <Jimmy@AgenticPer
 
 This replaces the standard Claude Code footer and properly attributes development work.
 
+## Video Integration Architecture
+
+### Supported Video Sources
+
+Chronos supports 4 video import methods with automatic transcript extraction:
+
+1. **YouTube** - FREE transcript via youtubei.js API
+   - Cost: $0 (completely free)
+   - Import time: 2-5 seconds
+   - Storage: No storage needed (embed only)
+   - Best for: Public educational content, tutorials
+
+2. **Loom** - FREE transcript via Loom API
+   - Cost: $0 (completely free)
+   - Import time: 2-5 seconds
+   - Storage: No storage needed (embed only)
+   - Best for: Screen recordings, quick tutorials
+
+3. **Whop** - Import from existing Whop courses (Mux/YouTube/Loom)
+   - Cost: $0.005/min for Mux transcription (YouTube/Loom embeds are free)
+   - Import time: 5-10 seconds
+   - Storage: Hosted by Whop/Mux
+   - Best for: Private member content, existing Whop courses
+
+4. **Direct Upload** - Upload any video file with Whisper transcription
+   - Cost: $0.006/min (Whisper) + $0.021/GB/month (storage)
+   - Import time: 2-5 minutes per hour of video
+   - Storage: Supabase Storage with quotas
+   - Best for: Maximum flexibility, internal content
+
+### Video Players
+
+Location: `components/video/`
+
+- **MuxVideoPlayer.tsx** - HLS streaming for Mux-hosted videos
+  - Features: Adaptive bitrate, analytics tracking, custom controls
+
+- **LoomPlayer.tsx** - Iframe embed for Loom videos
+  - Features: Native Loom player, responsive, analytics integration
+
+- **VideoPlayer.tsx** (YouTube) - react-youtube for YouTube embeds
+  - Features: YouTube iframe API, progress tracking, responsive
+
+- **HTML5 Player** - Native player for uploaded videos
+  - Features: Standard controls, Supabase Storage integration
+
+All players include:
+- Watch session tracking
+- Progress milestone events (10%, 25%, 50%, 75%, 90%, completion)
+- View count tracking
+- Engagement analytics
+
+### Video Import Interface
+
+**Component:** `VideoSourceSelector`
+**Location:** `components/video/VideoSourceSelector.tsx`
+
+Unified 4-tab interface for all video imports:
+- Tab 1: YouTube - URL validation, metadata preview, instant import
+- Tab 2: Loom - URL validation, Loom API metadata, instant import
+- Tab 3: Whop - Browse products, select lessons, bulk import
+- Tab 4: Upload - Drag-drop, chunked upload, progress tracking
+
+**Features:**
+- Real-time import progress
+- Preview before import
+- Error handling and recovery
+- Analytics integration
+- Storage quota enforcement
+
+### Analytics Dashboard
+
+**Location:** `/dashboard/creator/analytics/videos`
+
+**Features:**
+- 8 Recharts visualizations
+- Cost breakdown by source
+- Engagement metrics
+- Storage usage tracking
+- CSV export
+- Date range filtering
+
+**Charts:**
+1. Metric Cards (4) - Views, watch time, completion, video count
+2. Views Over Time - Line chart with daily breakdown
+3. Completion Rates - Horizontal bar chart, top 10 videos
+4. Cost Breakdown - Pie chart by source (FREE vs PAID)
+5. Storage Usage - Area chart with quota warnings
+6. Student Engagement - Heatmap (7 days × 6 time blocks)
+7. Top Videos - Sortable table with search
+8. Export Button - CSV download
+
+### Database Schema
+
+**New Tables (Phase 1-3):**
+
+1. **module_lessons** - Course structure
+   - Links modules to videos
+   - Lesson ordering
+   - Creator ownership
+
+2. **video_analytics_events** - Granular tracking
+   - Event types: play, pause, seek, ended
+   - Timestamp tracking
+   - Session association
+
+3. **video_watch_sessions** - Session management
+   - Start/end time
+   - Total watch time
+   - Furthest point reached
+   - Completion status
+
+**Enhanced Tables:**
+
+4. **videos** - Added columns for multi-source support
+   - `source_type`: 'youtube' | 'loom' | 'whop' | 'upload'
+   - `youtube_video_id`: YouTube video ID
+   - `loom_video_id`: Loom video ID
+   - `mux_asset_id`: Mux asset ID
+   - `mux_playback_id`: Mux playback ID
+   - `embed_type`: 'youtube' | 'loom' | 'mux'
+
+### API Endpoints
+
+**Course Management:**
+- `POST /api/courses` - Create course
+- `GET /api/courses/[id]/modules` - List modules
+- `POST /api/courses/[id]/modules` - Create module
+- `POST /api/modules/[id]/lessons` - Create lesson
+- `DELETE /api/modules/[id]/lessons/[lessonId]` - Delete lesson
+
+**Video Import:**
+- `POST /api/video/youtube/import` - Import YouTube video
+- `POST /api/video/loom/import` - Import Loom video
+- `GET /api/video/loom/metadata` - Preview Loom video
+- `POST /api/video/whop/import` - Import Whop lesson
+- `POST /api/video/upload` - Upload file
+
+**Analytics:**
+- `GET /api/analytics/videos/dashboard` - Dashboard data (8 queries)
+- `GET /api/analytics/videos/[id]` - Video-specific analytics
+- `POST /api/analytics/video-event` - Track event
+- `GET /api/analytics/usage/creator/[id]` - Usage stats
+
+### Storage Quotas
+
+**Tier-based limits:**
+
+| Plan | Storage | Video Limit | Upload Limit/Month |
+|------|---------|-------------|-------------------|
+| Basic | 1GB | 50 videos | 20 uploads |
+| Pro | 10GB | 500 videos | 100 uploads |
+| Enterprise | 100GB | Unlimited | Unlimited |
+
+**Quota Enforcement:**
+- Real-time usage tracking
+- Warnings at 75%, 90%
+- Upload rejection at 100%
+- Dashboard visualization
+- Upgrade prompts
+
+### Cost Optimization
+
+**Recommendations:**
+1. Use YouTube when possible (100% free)
+2. Use Loom for screencasts (100% free)
+3. Use Whop for private content (minimal cost)
+4. Only upload when necessary (highest cost)
+
+**Cost Tracking:**
+- Per-video cost calculation
+- Source breakdown in analytics
+- Total cost reporting
+- Savings vs all-upload approach
+
+---
+
 ## References
 
 - Whop Developer Docs: https://docs.whop.com

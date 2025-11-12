@@ -58,7 +58,7 @@ interface ProgressData {
 export default function StudentCourseViewerPage() {
   const params = useParams();
   const router = useRouter();
-  const courseId = params.courseId as string;
+  const courseId = params.id as string;
 
   // Temporary hardcoded student ID (replace with real auth)
   const TEMP_STUDENT_ID = 'temp-student-123';
