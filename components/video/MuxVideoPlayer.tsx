@@ -2,17 +2,23 @@
 
 import MuxPlayer from '@mux/mux-player-react';
 import { useState, useEffect, useRef } from 'react';
+import { VideoAnalyticsTracker } from '@/lib/video/player-analytics';
 
 interface MuxVideoPlayerProps {
   playbackId: string;
   videoId: string;
   title?: string;
+  studentId?: string;
+  creatorId?: string;
+  courseId?: string;
+  moduleId?: string;
   onStart?: () => void;
   onProgress?: (percent: number, currentTime: number) => void;
   onComplete?: () => void;
   onTimeUpdate?: (watchTime: number) => void;
   autoPlay?: boolean;
   className?: string;
+  enableAnalytics?: boolean;
 }
 
 /**
@@ -41,24 +47,49 @@ export default function MuxVideoPlayer({
   playbackId,
   videoId,
   title,
+  studentId,
+  creatorId,
+  courseId,
+  moduleId,
   onStart,
   onProgress,
   onComplete,
   onTimeUpdate,
   autoPlay = false,
   className = '',
+  enableAnalytics = true,
 }: MuxVideoPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [milestonesReached, setMilestonesReached] = useState<Set<number>>(new Set());
   const playerRef = useRef<HTMLVideoElement>(null);
   const lastTimeUpdateRef = useRef<number>(0);
+  const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Initialize analytics tracker
+  useEffect(() => {
+    if (enableAnalytics && creatorId) {
+      analyticsRef.current = new VideoAnalyticsTracker({
+        videoId,
+        creatorId,
+        studentId,
+        courseId,
+        moduleId,
+        sourceType: 'mux',
+      });
+    }
+
+    return () => {
+      analyticsRef.current = null;
+    };
+  }, [videoId, creatorId, studentId, courseId, moduleId, enableAnalytics]);
 
   // Reset state when video changes
   useEffect(() => {
     setHasStarted(false);
     setMilestonesReached(new Set());
     setError(null);
+    analyticsRef.current?.reset();
   }, [playbackId, videoId]);
 
   /**
@@ -69,6 +100,7 @@ export default function MuxVideoPlayer({
     if (!hasStarted) {
       setHasStarted(true);
       onStart?.();
+      analyticsRef.current?.trackStart();
     }
   };
 
@@ -92,6 +124,7 @@ export default function MuxVideoPlayer({
       if (percentComplete >= milestone && !milestonesReached.has(milestone)) {
         setMilestonesReached((prev) => new Set([...prev, milestone]));
         onProgress?.(milestone, currentTime);
+        analyticsRef.current?.trackProgress(percentComplete, currentTime);
 
         // Check for completion at 90% milestone
         if (milestone === 90) {
@@ -105,6 +138,7 @@ export default function MuxVideoPlayer({
     if (now - lastTimeUpdateRef.current >= 5000) {
       lastTimeUpdateRef.current = now;
       onTimeUpdate?.(Math.floor(currentTime));
+      analyticsRef.current?.updateWatchTime();
     }
   };
 
@@ -117,6 +151,7 @@ export default function MuxVideoPlayer({
     if (!milestonesReached.has(90)) {
       onComplete?.();
     }
+    analyticsRef.current?.trackComplete();
   };
 
   /**

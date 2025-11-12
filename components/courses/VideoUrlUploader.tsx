@@ -67,11 +67,12 @@ export default function VideoUrlUploader({
                   const videoData = await videoResponse.json();
                   if (videoData.success && videoData.data) {
                     // Pass full video object with CourseBuilder-expected structure
+                    // Note: API returns thumbnailUrl, but CourseBuilder expects thumbnail
                     onComplete({
                       id: videoData.data.id,
                       title: videoData.data.title,
-                      thumbnail: videoData.data.thumbnailUrl,
-                      duration: videoData.data.duration,
+                      thumbnail: videoData.data.thumbnailUrl || null,
+                      duration: videoData.data.duration || 0,
                     });
                   } else {
                     // Fallback: pass just the ID if data structure is unexpected
@@ -241,11 +242,12 @@ export default function VideoUrlUploader({
             if (videoResponse.ok) {
               const videoData = await videoResponse.json();
               if (videoData.success && videoData.data) {
+                // Note: API returns thumbnailUrl, but CourseBuilder expects thumbnail
                 onComplete({
                   id: videoData.data.id,
                   title: videoData.data.title,
-                  thumbnail: videoData.data.thumbnailUrl,
-                  duration: videoData.data.duration,
+                  thumbnail: videoData.data.thumbnailUrl || null,
+                  duration: videoData.data.duration || 0,
                 });
               } else {
                 onComplete(video.id);

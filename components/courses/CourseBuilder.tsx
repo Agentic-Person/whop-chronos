@@ -567,9 +567,83 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
               <p>No lesson selected</p>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-12 mb-6">{selectedLesson?.title}</h2>
-              <p className="text-gray-11">Lesson content editor would go here...</p>
+            <div className="max-w-4xl mx-auto space-y-6">
+              <h2 className="text-2xl font-bold text-gray-12">{selectedLesson?.title}</h2>
+
+              {/* Video Preview Section */}
+              {selectedLesson?.videoId && (
+                <div className="border border-gray-6 rounded-lg overflow-hidden">
+                  {/* Video Thumbnail/Player */}
+                  <div className="relative aspect-video bg-gray-3">
+                    {selectedLesson.thumbnail ? (
+                      <img
+                        src={selectedLesson.thumbnail}
+                        alt={selectedLesson.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-gray-5 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <svg className="w-8 h-8 text-gray-9" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-gray-11">No thumbnail available</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Video Metadata */}
+                  <div className="p-4 bg-gray-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-11">
+                        {selectedLesson.duration && (
+                          <div className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>
+                              {Math.floor(selectedLesson.duration / 60)}:{(selectedLesson.duration % 60).toString().padStart(2, '0')}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span>Video ID: {selectedLesson.videoId.substring(0, 8)}...</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          window.open(`/api/video/${selectedLesson.videoId}`, '_blank');
+                        }}
+                        className="px-3 py-1.5 text-sm text-blue-11 hover:text-blue-12 hover:bg-blue-3 rounded transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Placeholder for Future Features */}
+              <div className="border border-dashed border-gray-6 rounded-lg p-8 text-center">
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-lg font-semibold text-gray-12 mb-2">Lesson Editor Coming Soon</h3>
+                  <p className="text-sm text-gray-11 mb-4">
+                    Full lesson editor with rich text, file attachments, and drip-feeding settings will be available here.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center text-xs text-gray-10">
+                    <span className="px-2 py-1 bg-gray-3 rounded">Rich Text Editor</span>
+                    <span className="px-2 py-1 bg-gray-3 rounded">File Attachments</span>
+                    <span className="px-2 py-1 bg-gray-3 rounded">Drip Feeding</span>
+                    <span className="px-2 py-1 bg-gray-3 rounded">Content Blocks</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

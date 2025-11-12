@@ -1,17 +1,23 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { VideoAnalyticsTracker } from '@/lib/video/player-analytics';
 
 interface LoomPlayerProps {
   loomVideoId: string;
   videoId: string;
   title?: string;
+  studentId?: string;
+  creatorId?: string;
+  courseId?: string;
+  moduleId?: string;
   onStart?: () => void;
   onProgress?: (percent: number) => void;
   onComplete?: () => void;
   onTimeUpdate?: (watchTime: number) => void;
   autoPlay?: boolean;
   className?: string;
+  enableAnalytics?: boolean;
 }
 
 /**
@@ -46,12 +52,17 @@ export default function LoomPlayer({
   loomVideoId,
   videoId,
   title,
+  studentId,
+  creatorId,
+  courseId,
+  moduleId,
   onStart,
   onProgress,
   onComplete,
   onTimeUpdate,
   autoPlay = false,
   className = '',
+  enableAnalytics = true,
 }: LoomPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -60,6 +71,25 @@ export default function LoomPlayer({
   const currentTimeRef = useRef<number>(0);
   const durationRef = useRef<number>(0);
   const lastTimeUpdateRef = useRef<number>(0);
+  const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Initialize analytics tracker
+  useEffect(() => {
+    if (enableAnalytics && creatorId) {
+      analyticsRef.current = new VideoAnalyticsTracker({
+        videoId,
+        creatorId,
+        studentId,
+        courseId,
+        moduleId,
+        sourceType: 'loom',
+      });
+    }
+
+    return () => {
+      analyticsRef.current = null;
+    };
+  }, [videoId, creatorId, studentId, courseId, moduleId, enableAnalytics]);
 
   // Build Loom embed URL
   const embedUrl = `https://www.loom.com/embed/${loomVideoId}?hide_owner=true&hideEmbedTopBar=true${autoPlay ? '&autoplay=1' : ''}`;
@@ -87,6 +117,7 @@ export default function LoomPlayer({
             if (!hasStarted) {
               setHasStarted(true);
               onStart?.();
+              analyticsRef.current?.trackStart();
             }
             break;
 
@@ -114,6 +145,7 @@ export default function LoomPlayer({
           case 'ended':
             // Video ended
             onComplete?.();
+            analyticsRef.current?.trackComplete();
             break;
 
           default:
@@ -146,6 +178,7 @@ export default function LoomPlayer({
       if (percentComplete >= milestone && !milestonesReached.has(milestone)) {
         setMilestonesReached((prev) => new Set([...prev, milestone]));
         onProgress?.(milestone);
+        analyticsRef.current?.trackProgress(percentComplete, currentTime);
 
         // Check for completion at 90% milestone
         if (milestone === 90) {
@@ -159,6 +192,7 @@ export default function LoomPlayer({
     if (now - lastTimeUpdateRef.current >= 5000) {
       lastTimeUpdateRef.current = now;
       onTimeUpdate?.(Math.floor(currentTime));
+      analyticsRef.current?.updateWatchTime();
     }
   };
 
@@ -176,6 +210,7 @@ export default function LoomPlayer({
     setError(null);
     currentTimeRef.current = 0;
     durationRef.current = 0;
+    analyticsRef.current?.reset();
   }, [loomVideoId, videoId]);
 
   if (error) {

@@ -2,8 +2,9 @@
 
 import { lazy, Suspense } from 'react';
 import YouTube, { YouTubeProps } from 'react-youtube';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Database } from '@/lib/db/types';
+import { VideoAnalyticsTracker } from '@/lib/video/player-analytics';
 
 // Lazy load player components for better performance
 const MuxVideoPlayer = lazy(() => import('./MuxVideoPlayer'));
@@ -14,6 +15,9 @@ type Video = Database['public']['Tables']['videos']['Row'];
 interface VideoPlayerProps {
   video: Video;
   studentId?: string;
+  creatorId?: string; // For analytics tracking
+  courseId?: string; // For analytics tracking
+  moduleId?: string; // For analytics tracking
   onProgress?: (currentTime: number) => void;
   onComplete?: () => void;
   onPlay?: () => void;
@@ -21,6 +25,7 @@ interface VideoPlayerProps {
   onTimeUpdate?: (watchTime: number) => void;
   autoplay?: boolean;
   className?: string;
+  enableAnalytics?: boolean; // Default: true
 }
 
 /**
@@ -43,10 +48,14 @@ interface VideoPlayerProps {
  * @param onTimeUpdate - Callback fired for watch time updates
  * @param autoplay - Whether to autoplay the video (default: false)
  * @param className - Additional CSS classes for the container
+ * @param enableAnalytics - Whether to track analytics (default: true)
  */
 export default function VideoPlayer({
   video,
   studentId,
+  creatorId,
+  courseId,
+  moduleId,
   onProgress,
   onComplete,
   onPlay,
@@ -54,6 +63,7 @@ export default function VideoPlayer({
   onTimeUpdate,
   autoplay = false,
   className = '',
+  enableAnalytics = true,
 }: VideoPlayerProps) {
   /**
    * Loading fallback for lazy-loaded components
@@ -89,12 +99,17 @@ export default function VideoPlayer({
       return (
         <YouTubePlayer
           video={video}
+          studentId={studentId}
+          creatorId={creatorId || video.creator_id}
+          courseId={courseId}
+          moduleId={moduleId}
           onProgress={onProgress}
           onComplete={onComplete}
           onPlay={onPlay}
           onPause={onPause}
           autoplay={autoplay}
           className={className}
+          enableAnalytics={enableAnalytics}
         />
       );
 
@@ -108,6 +123,10 @@ export default function VideoPlayer({
             playbackId={video.mux_playback_id}
             videoId={video.id}
             title={video.title}
+            studentId={studentId}
+            creatorId={creatorId || video.creator_id}
+            courseId={courseId}
+            moduleId={moduleId}
             onStart={onPlay}
             onProgress={(percent, currentTime) => {
               onProgress?.(currentTime);
@@ -116,6 +135,7 @@ export default function VideoPlayer({
             onTimeUpdate={onTimeUpdate}
             autoPlay={autoplay}
             className={className}
+            enableAnalytics={enableAnalytics}
           />
         </Suspense>
       );
@@ -130,6 +150,10 @@ export default function VideoPlayer({
             loomVideoId={video.embed_id}
             videoId={video.id}
             title={video.title}
+            studentId={studentId}
+            creatorId={creatorId || video.creator_id}
+            courseId={courseId}
+            moduleId={moduleId}
             onStart={onPlay}
             onProgress={(percent) => {
               // Loom only provides percent, not current time
@@ -138,6 +162,7 @@ export default function VideoPlayer({
             onTimeUpdate={onTimeUpdate}
             autoPlay={autoplay}
             className={className}
+            enableAnalytics={enableAnalytics}
           />
         </Suspense>
       );
@@ -146,6 +171,10 @@ export default function VideoPlayer({
       return (
         <HTML5VideoPlayer
           video={video}
+          studentId={studentId}
+          creatorId={creatorId || video.creator_id}
+          courseId={courseId}
+          moduleId={moduleId}
           onProgress={onProgress}
           onComplete={onComplete}
           onPlay={onPlay}
@@ -153,6 +182,7 @@ export default function VideoPlayer({
           onTimeUpdate={onTimeUpdate}
           autoplay={autoplay}
           className={className}
+          enableAnalytics={enableAnalytics}
         />
       );
 
@@ -171,14 +201,38 @@ export default function VideoPlayer({
  */
 function YouTubePlayer({
   video,
+  studentId,
+  creatorId,
+  courseId,
+  moduleId,
   onProgress,
   onComplete,
   onPlay,
   onPause,
   autoplay = false,
   className = '',
-}: Omit<VideoPlayerProps, 'studentId' | 'onTimeUpdate'>) {
+  enableAnalytics = true,
+}: Omit<VideoPlayerProps, 'onTimeUpdate'>) {
   const [error, setError] = useState<string | null>(null);
+  const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Initialize analytics tracker
+  useEffect(() => {
+    if (enableAnalytics && creatorId) {
+      analyticsRef.current = new VideoAnalyticsTracker({
+        videoId: video.id,
+        creatorId,
+        studentId,
+        courseId,
+        moduleId,
+        sourceType: 'youtube',
+      });
+    }
+
+    return () => {
+      analyticsRef.current = null;
+    };
+  }, [video.id, creatorId, studentId, courseId, moduleId, enableAnalytics]);
 
   const opts: YouTubeProps['opts'] = {
     width: '100%',
@@ -196,19 +250,33 @@ function YouTubePlayer({
     const playerState = event.data;
 
     if (playerState === 1) {
+      // Playing
       onPlay?.();
+      analyticsRef.current?.trackStart();
     } else if (playerState === 2) {
+      // Paused
       onPause?.();
+      const currentTime = player.getCurrentTime();
+      analyticsRef.current?.trackPause(currentTime);
     }
 
     if (playerState === 1 && onProgress) {
       const currentTime = player.getCurrentTime();
+      const duration = player.getDuration();
+
       onProgress(currentTime);
+
+      // Track progress milestones
+      if (duration > 0) {
+        const percentComplete = (currentTime / duration) * 100;
+        analyticsRef.current?.trackProgress(percentComplete, currentTime);
+      }
     }
   };
 
   const handleEnd = () => {
     onComplete?.();
+    analyticsRef.current?.trackComplete();
   };
 
   const handleError = (event: any) => {
@@ -245,6 +313,10 @@ function YouTubePlayer({
  */
 function HTML5VideoPlayer({
   video,
+  studentId,
+  creatorId,
+  courseId,
+  moduleId,
   onProgress,
   onComplete,
   onPlay,
@@ -252,10 +324,30 @@ function HTML5VideoPlayer({
   onTimeUpdate,
   autoplay = false,
   className = '',
-}: Omit<VideoPlayerProps, 'studentId'>) {
+  enableAnalytics = true,
+}: Omit<VideoPlayerProps, 'video'> & { video: Video }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
   const lastTimeUpdateRef = useRef<number>(0);
+  const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Initialize analytics tracker
+  useEffect(() => {
+    if (enableAnalytics && creatorId) {
+      analyticsRef.current = new VideoAnalyticsTracker({
+        videoId: video.id,
+        creatorId,
+        studentId,
+        courseId,
+        moduleId,
+        sourceType: 'upload',
+      });
+    }
+
+    return () => {
+      analyticsRef.current = null;
+    };
+  }, [video.id, creatorId, studentId, courseId, moduleId, enableAnalytics]);
 
   const videoUrl = video.url || video.storage_path;
 
@@ -274,26 +366,40 @@ function HTML5VideoPlayer({
 
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const currentTime = e.currentTarget.currentTime;
+    const duration = e.currentTarget.duration;
+
     onProgress?.(currentTime);
+
+    // Track progress milestones
+    if (duration > 0) {
+      const percentComplete = (currentTime / duration) * 100;
+      analyticsRef.current?.trackProgress(percentComplete, currentTime);
+    }
 
     // Update watch time every 5 seconds to reduce API calls
     const now = Date.now();
     if (onTimeUpdate && now - lastTimeUpdateRef.current >= 5000) {
       lastTimeUpdateRef.current = now;
       onTimeUpdate(Math.floor(currentTime));
+      analyticsRef.current?.updateWatchTime();
     }
   };
 
   const handleVideoPlay = () => {
     onPlay?.();
+    analyticsRef.current?.trackStart();
   };
 
   const handleVideoPause = () => {
     onPause?.();
+    if (videoRef.current) {
+      analyticsRef.current?.trackPause(videoRef.current.currentTime);
+    }
   };
 
   const handleVideoEnded = () => {
     onComplete?.();
+    analyticsRef.current?.trackComplete();
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
