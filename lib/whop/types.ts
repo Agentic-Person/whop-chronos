@@ -220,6 +220,72 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
 };
 
 // ============================================================================
+// Courses & Lessons (MOOCs)
+// ============================================================================
+
+export type WhopLessonType = 'text' | 'video' | 'pdf' | 'multi' | 'quiz' | 'knowledge_check';
+export type WhopEmbedType = 'youtube' | 'loom' | 'vimeo' | 'wistia';
+export type WhopLessonVisibility = 'visible' | 'hidden';
+
+export interface WhopMuxAsset {
+  id: string;
+  playbackId: string;
+  signedPlaybackId: string | null;
+  thumbnailUrl: string | null;
+  signedThumbnailToken: string | null;
+  signedVideoToken: string | null;
+  signedStoryboardToken: string | null;
+  durationSeconds: number;
+  status: 'created' | 'ready' | 'uploading';
+  finishedUploadingAt: number | null;
+}
+
+export interface WhopLesson {
+  id: string;
+  title: string;
+  lessonType: WhopLessonType;
+  visibility: WhopLessonVisibility;
+  order: number;
+  content: string | null;
+  chapterId: string;
+
+  // Video embeds (YouTube, Loom, Vimeo)
+  embedType: WhopEmbedType | null;
+  embedId: string | null;
+
+  // Mux video hosting
+  muxAssetId: string | null;
+  muxAsset: WhopMuxAsset | null;
+
+  // Lesson availability
+  daysFromCourseStartUntilUnlock: number | null;
+
+  created_at: number;
+  updated_at: number;
+}
+
+export interface WhopChapter {
+  id: string;
+  title: string;
+  courseId: string;
+  order: number;
+  lessons: WhopLesson[];
+  created_at: number;
+}
+
+export interface WhopCourse {
+  id: string;
+  title: string;
+  description: string | null;
+  companyId: string;
+  experienceId: string;
+  visibility: 'visible' | 'hidden';
+  chapters: WhopChapter[];
+  created_at: number;
+  updated_at: number;
+}
+
+// ============================================================================
 // API Error Types
 // ============================================================================
 

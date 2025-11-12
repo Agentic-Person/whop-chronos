@@ -276,6 +276,39 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
 }
 
 // ============================================================================
+// Courses & Lessons Operations
+// ============================================================================
+
+/**
+ * List all courses for a company
+ * Note: This uses the Whop SDK/GraphQL API since REST endpoints are not well documented
+ */
+export async function listCourses(companyId?: string): Promise<any[]> {
+  // This would use Whop SDK when available
+  // For now, return empty array - need to implement GraphQL query
+  console.warn('listCourses: Whop SDK integration needed for course listing');
+  return [];
+}
+
+/**
+ * Get a specific lesson by ID
+ * Note: This uses the Whop SDK/GraphQL API
+ */
+export async function getLesson(lessonId: string): Promise<any> {
+  // This would use Whop SDK when available
+  console.warn('getLesson: Whop SDK integration needed');
+  return null;
+}
+
+/**
+ * List lessons for a specific chapter
+ */
+export async function listLessonsForChapter(chapterId: string): Promise<any[]> {
+  console.warn('listLessonsForChapter: Whop SDK integration needed');
+  return [];
+}
+
+// ============================================================================
 // MCP Server Integration (when available)
 // ============================================================================
 
