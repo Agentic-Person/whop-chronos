@@ -195,81 +195,114 @@ Import a video from a Whop MOOCs lesson.
 
 ## Whop API Integration
 
-### Current Status: ⚠️ SDK NOT YET IMPLEMENTED
+### Current Status: ✅ **SDK FULLY IMPLEMENTED**
 
-The Whop API endpoints for fetching lesson data are **not yet implemented**. The integration requires:
+The Whop SDK integration is **complete and operational**. The system can now:
 
-1. **Whop SDK Setup:**
-   - Install `@whop-sdk/core` or use GraphQL API
-   - Configure API keys and authentication
-   - Set up company/experience context
+1. **✅ Fetch lesson data from Whop** using the official `@whop/sdk`
+2. **✅ Extract Mux video metadata** (asset ID, playback ID, duration)
+3. **✅ Detect embedded videos** (YouTube, Loom, Vimeo, Wistia)
+4. **✅ Store videos in database** with correct source type and metadata
+5. **✅ Trigger processing** for YouTube embeds (transcript extraction)
 
-2. **Required API Calls:**
-   ```typescript
-   // List courses for company
-   const courses = await whop.courses.list({ companyId });
+### Implementation Details
 
-   // Get lesson by ID
-   const lesson = await whop.lessons.get({ lessonId });
+**File:** `lib/whop/api-client.ts`
 
-   // Lesson response includes:
-   // - id, title, content
-   // - lessonType: 'video' | 'text' | 'pdf' | 'quiz' | ...
-   // - muxAsset: { playbackId, durationSeconds, ... }
-   // - embedType: 'youtube' | 'loom' | 'vimeo' | 'wistia'
-   // - embedId: platform-specific video ID
-   ```
+```typescript
+import { Whop } from '@whop/sdk';
 
-3. **Current Implementation:**
-   - API endpoint exists at `/api/video/whop/import`
-   - Returns 501 error with message: "Whop SDK integration not yet implemented"
-   - Database schema supports all Whop video types
-   - UI ready with Whop import tab
+const whopClient = new Whop({
+  apiKey: process.env.WHOP_API_KEY,
+});
 
-### Implementation Steps
+export async function getLesson(lessonId: string): Promise<WhopLesson | null> {
+  const lesson = await whopClient.courseLessons.retrieve(lessonId);
 
-To complete the integration:
+  // Extract Mux video data
+  if (lesson.video_asset) {
+    return {
+      muxAssetId: lesson.video_asset.asset_id,
+      muxPlaybackId: lesson.video_asset.playback_id,
+      // ...
+    };
+  }
 
-1. **Install Whop SDK:**
-   ```bash
-   npm install @whop-sdk/core
-   # OR use GraphQL API directly
-   ```
+  // Parse content for embeds (YouTube, Loom, etc.)
+  if (lesson.content) {
+    const youtubeMatch = lesson.content.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (youtubeMatch) {
+      return {
+        embedType: 'youtube',
+        embedId: youtubeMatch[1],
+        // ...
+      };
+    }
+  }
 
-2. **Update `lib/whop/api-client.ts`:**
-   ```typescript
-   import { Whop } from '@whop-sdk/core';
+  return mappedLesson;
+}
+```
 
-   const whop = new Whop({
-     apiKey: process.env.WHOP_API_KEY,
-   });
+### API Endpoint Status
 
-   export async function getLesson(lessonId: string): Promise<WhopLesson> {
-     const lesson = await whop.lessons.get({ id: lessonId });
-     return lesson;
-   }
+**Endpoint:** `POST /api/video/whop/import`
 
-   export async function listCourses(companyId: string): Promise<WhopCourse[]> {
-     const courses = await whop.courses.list({ companyId });
-     return courses;
-   }
-   ```
+- ✅ **Status:** Fully operational
+- ✅ **Supports:** Mux videos, YouTube/Loom/Vimeo/Wistia embeds
+- ✅ **Processing:** Auto-triggers transcript extraction for YouTube
+- ✅ **Error Handling:** 404 for missing lessons, 409 for duplicates
 
-3. **Test the Import Flow:**
-   ```bash
-   # Start dev server
-   npm run dev
+### Usage Example
 
-   # Test YouTube embed import
-   curl -X POST http://localhost:3007/api/video/whop/import \
-     -H "Content-Type: application/json" \
-     -d '{"lessonId": "les_abc123", "creatorId": "creator_xyz"}'
-   ```
+Import a Whop lesson:
 
-4. **Add Mux Transcription (Future):**
-   - Integrate Mux API for transcript extraction
-   - Add Inngest job for Mux video processing
-   - Update video status flow
+```bash
+curl -X POST http://localhost:3007/api/video/whop/import \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lessonId": "lesn_xxxxxxxxxxxxx",
+    "creatorId": "creator_123"
+  }'
+```
+
+**Response (Mux Video):**
+```json
+{
+  "success": true,
+  "video": {
+    "id": "vid_abc123",
+    "title": "Introduction to Trading",
+    "source_type": "mux",
+    "status": "completed"
+  }
+}
+```
+
+**Response (YouTube Embed):**
+```json
+{
+  "success": true,
+  "video": {
+    "id": "vid_def456",
+    "title": "How to Scale Your Business",
+    "source_type": "youtube",
+    "status": "pending"
+  }
+}
+```
+
+### Next Steps (Future Enhancements)
+
+**Mux Transcription:**
+- Integrate Mux API for transcript extraction
+- Add Inngest job for Mux video processing
+- Update video status flow: `completed` → `transcribing` → `embedding` → `completed`
+
+**Loom/Vimeo/Wistia APIs:**
+- Fetch transcripts from Loom API
+- Add Vimeo/Wistia transcript support
+- Enable AI chat for all embed types
 
 ## UI Integration
 

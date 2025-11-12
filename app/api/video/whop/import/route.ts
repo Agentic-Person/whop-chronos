@@ -20,7 +20,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/db/client';
 import { getLesson } from '@/lib/whop/api-client';
-import { WhopLesson } from '@/lib/whop/types';
 import { inngest } from '@/inngest/client';
 
 /**
@@ -85,18 +84,17 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
     console.log('[Whop Import API] Starting import for lesson:', lessonId);
     console.log('[Whop Import API] Creator ID:', creatorId);
 
-    // Step 1: Fetch lesson data from Whop
-    // NOTE: This requires Whop SDK/GraphQL implementation
+    // Step 1: Fetch lesson data from Whop using SDK
     const lesson = await getLesson(lessonId);
 
     if (!lesson) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Whop SDK integration not yet implemented. Cannot fetch lesson data.',
-          code: 'SDK_NOT_IMPLEMENTED',
+          error: 'Lesson not found or could not be retrieved from Whop.',
+          code: 'LESSON_NOT_FOUND',
         },
-        { status: 501 }
+        { status: 404 }
       );
     }
 
@@ -183,22 +181,22 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
         creator_id: creatorId,
         source_type: videoData.source_type,
         title: videoData.title,
-        description: videoData.description,
-        duration_seconds: videoData.duration_seconds,
-        thumbnail_url: videoData.thumbnail_url,
+        description: videoData.description ?? null,
+        duration_seconds: videoData.duration_seconds ?? null,
+        thumbnail_url: videoData.thumbnail_url ?? null,
         whop_lesson_id: videoData.whop_lesson_id,
-        mux_asset_id: videoData.mux_asset_id || null,
-        mux_playback_id: videoData.mux_playback_id || null,
-        embed_type: videoData.embed_type || null,
-        embed_id: videoData.embed_id || null,
-        youtube_video_id: videoData.youtube_video_id || null,
-        status: videoData.source_type === 'youtube' ? 'pending' : 'completed',
+        mux_asset_id: videoData.mux_asset_id ?? null,
+        mux_playback_id: videoData.mux_playback_id ?? null,
+        embed_type: videoData.embed_type ?? null,
+        embed_id: videoData.embed_id ?? null,
+        youtube_video_id: videoData.youtube_video_id ?? null,
+        status: (videoData.source_type === 'youtube' ? 'pending' : 'completed') as 'pending' | 'completed',
         metadata: {
           whop_import: true,
           lesson_type: lesson.lessonType,
           imported_at: new Date().toISOString(),
         },
-      })
+      } as any) // Type assertion - database types may need regeneration
       .select('id, title, source_type, status')
       .single();
 
@@ -223,11 +221,19 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       throw new Error('Failed to create video record - no data returned');
     }
 
+    // Type assertion since Supabase types may not be fully generated
+    const videoRecord = video as {
+      id: string;
+      title: string;
+      source_type: string;
+      status: string;
+    };
+
     console.log('[Whop Import API] Video saved to database:', {
-      id: video.id,
-      title: video.title,
-      source_type: video.source_type,
-      status: video.status,
+      id: videoRecord.id,
+      title: videoRecord.title,
+      source_type: videoRecord.source_type,
+      status: videoRecord.status,
     });
 
     // Step 4: Trigger processing if needed
@@ -239,7 +245,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       await inngest.send({
         name: 'video/youtube.import',
         data: {
-          video_id: video.id,
+          video_id: videoRecord.id,
           creator_id: creatorId,
           youtube_video_id: videoData.youtube_video_id,
         },
@@ -254,10 +260,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       {
         success: true,
         video: {
-          id: video.id,
-          title: video.title,
-          source_type: video.source_type,
-          status: video.status,
+          id: videoRecord.id,
+          title: videoRecord.title,
+          source_type: videoRecord.source_type,
+          status: videoRecord.status,
         },
       },
       { status: 200 }

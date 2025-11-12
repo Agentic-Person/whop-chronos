@@ -5,12 +5,17 @@
  * Provides type-safe interfaces for all Whop operations
  */
 
+import { Whop } from '@whop/sdk';
 import {
   WhopUser,
   WhopMembership,
   WhopProduct,
   WhopCompany,
   WhopApiError,
+  WhopLesson,
+  WhopEmbedType,
+  WhopLessonType,
+  WhopLessonVisibility,
   type MembershipStatus,
 } from './types';
 
@@ -276,36 +281,149 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
 }
 
 // ============================================================================
+// Whop SDK Instance
+// ============================================================================
+
+let whopClient: Whop | null = null;
+
+function getWhopClient(): Whop {
+  if (!whopClient) {
+    if (!WHOP_API_KEY) {
+      throw new WhopApiError('Whop API key not configured', 500, 'MISSING_API_KEY');
+    }
+
+    whopClient = new Whop({
+      apiKey: WHOP_API_KEY,
+    });
+  }
+
+  return whopClient;
+}
+
+// ============================================================================
 // Courses & Lessons Operations
 // ============================================================================
 
 /**
  * List all courses for a company
- * Note: This uses the Whop SDK/GraphQL API since REST endpoints are not well documented
  */
-export async function listCourses(companyId?: string): Promise<any[]> {
-  // This would use Whop SDK when available
-  // For now, return empty array - need to implement GraphQL query
-  console.warn('listCourses: Whop SDK integration needed for course listing');
-  return [];
+export async function listCourses(): Promise<any[]> {
+  try {
+    const client = getWhopClient();
+    const coursePage = await client.courses.list();
+    const courses: any[] = [];
+    for await (const course of coursePage) {
+      courses.push(course);
+    }
+    return courses;
+  } catch (error) {
+    console.error('Failed to list courses:', error);
+    throw new WhopApiError('Failed to list courses', 500, 'COURSE_LIST_ERROR');
+  }
 }
 
 /**
  * Get a specific lesson by ID
- * Note: This uses the Whop SDK/GraphQL API
+ * Returns lesson data including video assets and content
  */
-export async function getLesson(lessonId: string): Promise<any> {
-  // This would use Whop SDK when available
-  console.warn('getLesson: Whop SDK integration needed');
-  return null;
+export async function getLesson(lessonId: string): Promise<WhopLesson | null> {
+  try {
+    const client = getWhopClient();
+    const lesson = await client.courseLessons.retrieve(lessonId);
+
+    if (!lesson) {
+      return null;
+    }
+
+    // Parse lesson content for embedded videos
+    let embedType: WhopEmbedType | null = null;
+    let embedId: string | null = null;
+
+    if (lesson.content) {
+      // Try to extract YouTube embed
+      const youtubeMatch = lesson.content.match(/(?:youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (youtubeMatch?.[1]) {
+        embedType = 'youtube';
+        embedId = youtubeMatch[1];
+      }
+
+      // Try to extract Loom embed
+      const loomMatch = lesson.content.match(/loom\.com\/embed\/([a-zA-Z0-9]+)/);
+      if (loomMatch?.[1]) {
+        embedType = 'loom';
+        embedId = loomMatch[1];
+      }
+
+      // Try to extract Vimeo embed
+      const vimeoMatch = lesson.content.match(/vimeo\.com\/video\/(\d+)/);
+      if (vimeoMatch?.[1]) {
+        embedType = 'vimeo';
+        embedId = vimeoMatch[1];
+      }
+
+      // Try to extract Wistia embed
+      const wistiaMatch = lesson.content.match(/fast\.wistia\.net\/embed\/iframe\/([a-zA-Z0-9]+)/);
+      if (wistiaMatch?.[1]) {
+        embedType = 'wistia';
+        embedId = wistiaMatch[1];
+      }
+    }
+
+    // Map SDK response to our WhopLesson type
+    const mappedLesson: WhopLesson = {
+      id: lesson.id,
+      title: lesson.title,
+      lessonType: lesson.lesson_type as WhopLessonType,
+      visibility: lesson.visibility as WhopLessonVisibility,
+      order: lesson.order,
+      content: lesson.content,
+      chapterId: '', // Not available in retrieve response
+      embedType,
+      embedId,
+      muxAssetId: lesson.video_asset?.asset_id || null,
+      muxAsset: lesson.video_asset ? {
+        id: lesson.video_asset.id,
+        playbackId: lesson.video_asset.playback_id || '',
+        signedPlaybackId: null,
+        thumbnailUrl: null,
+        signedThumbnailToken: null,
+        signedVideoToken: null,
+        signedStoryboardToken: null,
+        durationSeconds: 0, // Not available in SDK response
+        status: 'ready',
+        finishedUploadingAt: null,
+      } : null,
+      daysFromCourseStartUntilUnlock: lesson.days_from_course_start_until_unlock,
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    };
+
+    return mappedLesson;
+  } catch (error) {
+    console.error('Failed to get lesson:', error);
+    if (error instanceof Error && error.message.includes('404')) {
+      return null;
+    }
+    throw new WhopApiError('Failed to fetch lesson', 500, 'LESSON_FETCH_ERROR');
+  }
 }
 
 /**
  * List lessons for a specific chapter
  */
 export async function listLessonsForChapter(chapterId: string): Promise<any[]> {
-  console.warn('listLessonsForChapter: Whop SDK integration needed');
-  return [];
+  try {
+    const client = getWhopClient();
+    const lessonPage = await client.courseLessons.list({ chapter_id: chapterId });
+    const lessons: any[] = [];
+    for await (const lesson of lessonPage) {
+      lessons.push(lesson);
+    }
+    return lessons;
+  } catch (error) {
+    console.error('Failed to list lessons for chapter:', error);
+    throw new WhopApiError('Failed to list lessons', 500, 'LESSON_LIST_ERROR');
+  }
 }
 
 // ============================================================================
