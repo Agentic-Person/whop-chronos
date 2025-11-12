@@ -43,17 +43,20 @@ $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 -- =====================================================
 
 -- Creators can view their own profile
+DROP POLICY IF EXISTS "Creators can view own profile" ON creators;
 CREATE POLICY "Creators can view own profile"
   ON creators FOR SELECT
   USING (id = public.get_creator_id() OR public.is_service_role());
 
 -- Creators can update their own profile
+DROP POLICY IF EXISTS "Creators can update own profile" ON creators;
 CREATE POLICY "Creators can update own profile"
   ON creators FOR UPDATE
   USING (id = public.get_creator_id())
   WITH CHECK (id = public.get_creator_id());
 
 -- Service role can insert creators (during signup)
+DROP POLICY IF EXISTS "Service role can insert creators" ON creators;
 CREATE POLICY "Service role can insert creators"
   ON creators FOR INSERT
   WITH CHECK (public.is_service_role());
@@ -63,20 +66,24 @@ CREATE POLICY "Service role can insert creators"
 -- =====================================================
 
 -- Students can view their own profile
+DROP POLICY IF EXISTS "Students can view own profile" ON students;
 CREATE POLICY "Students can view own profile"
   ON students FOR SELECT
   USING (id = public.get_student_id() OR creator_id = public.get_creator_id() OR public.is_service_role());
 
 -- Creators can view their students
+DROP POLICY IF EXISTS "Creators can view their students" ON students;
 CREATE POLICY "Creators can view their students"
   ON students FOR SELECT
   USING (creator_id = public.get_creator_id());
 
 -- Service role can manage students
+DROP POLICY IF EXISTS "Service role can insert students" ON students;
 CREATE POLICY "Service role can insert students"
   ON students FOR INSERT
   WITH CHECK (public.is_service_role());
 
+DROP POLICY IF EXISTS "Service role can update students" ON students;
 CREATE POLICY "Service role can update students"
   ON students FOR UPDATE
   USING (public.is_service_role())
@@ -87,11 +94,13 @@ CREATE POLICY "Service role can update students"
 -- =====================================================
 
 -- Creators can view their own videos
+DROP POLICY IF EXISTS "Creators can view own videos" ON videos;
 CREATE POLICY "Creators can view own videos"
   ON videos FOR SELECT
   USING (creator_id = public.get_creator_id() OR public.is_service_role());
 
 -- Students can view videos from their creator
+DROP POLICY IF EXISTS "Students can view creator videos" ON videos;
 CREATE POLICY "Students can view creator videos"
   ON videos FOR SELECT
   USING (
@@ -104,15 +113,18 @@ CREATE POLICY "Students can view creator videos"
   );
 
 -- Creators can manage their videos
+DROP POLICY IF EXISTS "Creators can insert videos" ON videos;
 CREATE POLICY "Creators can insert videos"
   ON videos FOR INSERT
   WITH CHECK (creator_id = public.get_creator_id());
 
+DROP POLICY IF EXISTS "Creators can update own videos" ON videos;
 CREATE POLICY "Creators can update own videos"
   ON videos FOR UPDATE
   USING (creator_id = public.get_creator_id())
   WITH CHECK (creator_id = public.get_creator_id());
 
+DROP POLICY IF EXISTS "Creators can delete own videos" ON videos;
 CREATE POLICY "Creators can delete own videos"
   ON videos FOR DELETE
   USING (creator_id = public.get_creator_id());
@@ -122,6 +134,7 @@ CREATE POLICY "Creators can delete own videos"
 -- =====================================================
 
 -- Creators can view chunks from their videos
+DROP POLICY IF EXISTS "Creators can view own video chunks" ON video_chunks;
 CREATE POLICY "Creators can view own video chunks"
   ON video_chunks FOR SELECT
   USING (
@@ -134,6 +147,7 @@ CREATE POLICY "Creators can view own video chunks"
   );
 
 -- Students can view chunks from their creator's videos
+DROP POLICY IF EXISTS "Students can view creator video chunks" ON video_chunks;
 CREATE POLICY "Students can view creator video chunks"
   ON video_chunks FOR SELECT
   USING (
@@ -147,6 +161,7 @@ CREATE POLICY "Students can view creator video chunks"
   );
 
 -- Service role can manage chunks (for background processing)
+DROP POLICY IF EXISTS "Service role can manage video chunks" ON video_chunks;
 CREATE POLICY "Service role can manage video chunks"
   ON video_chunks FOR ALL
   USING (public.is_service_role())
@@ -157,11 +172,13 @@ CREATE POLICY "Service role can manage video chunks"
 -- =====================================================
 
 -- Creators can view their courses
+DROP POLICY IF EXISTS "Creators can view own courses" ON courses;
 CREATE POLICY "Creators can view own courses"
   ON courses FOR SELECT
   USING (creator_id = public.get_creator_id() OR public.is_service_role());
 
 -- Students can view published courses from their creator
+DROP POLICY IF EXISTS "Students can view published courses" ON courses;
 CREATE POLICY "Students can view published courses"
   ON courses FOR SELECT
   USING (
@@ -175,6 +192,7 @@ CREATE POLICY "Students can view published courses"
   );
 
 -- Creators can manage their courses
+DROP POLICY IF EXISTS "Creators can manage courses" ON courses;
 CREATE POLICY "Creators can manage courses"
   ON courses FOR ALL
   USING (creator_id = public.get_creator_id())
@@ -185,6 +203,7 @@ CREATE POLICY "Creators can manage courses"
 -- =====================================================
 
 -- Inherit course access policies
+DROP POLICY IF EXISTS "Course access determines module access for SELECT" ON course_modules;
 CREATE POLICY "Course access determines module access for SELECT"
   ON course_modules FOR SELECT
   USING (
@@ -207,6 +226,7 @@ CREATE POLICY "Course access determines module access for SELECT"
     OR public.is_service_role()
   );
 
+DROP POLICY IF EXISTS "Creators can manage course modules" ON course_modules;
 CREATE POLICY "Creators can manage course modules"
   ON course_modules FOR ALL
   USING (
@@ -229,16 +249,19 @@ CREATE POLICY "Creators can manage course modules"
 -- =====================================================
 
 -- Students can view their own chat sessions
+DROP POLICY IF EXISTS "Students can view own chat sessions" ON chat_sessions;
 CREATE POLICY "Students can view own chat sessions"
   ON chat_sessions FOR SELECT
   USING (student_id = public.get_student_id() OR public.is_service_role());
 
 -- Creators can view chat sessions for their students
+DROP POLICY IF EXISTS "Creators can view student chat sessions" ON chat_sessions;
 CREATE POLICY "Creators can view student chat sessions"
   ON chat_sessions FOR SELECT
   USING (creator_id = public.get_creator_id());
 
 -- Students can create and update their own sessions
+DROP POLICY IF EXISTS "Students can manage own chat sessions" ON chat_sessions;
 CREATE POLICY "Students can manage own chat sessions"
   ON chat_sessions FOR ALL
   USING (student_id = public.get_student_id())
@@ -249,6 +272,7 @@ CREATE POLICY "Students can manage own chat sessions"
 -- =====================================================
 
 -- Inherit chat session access policies
+DROP POLICY IF EXISTS "Session access determines message access" ON chat_messages;
 CREATE POLICY "Session access determines message access"
   ON chat_messages FOR SELECT
   USING (
@@ -263,6 +287,7 @@ CREATE POLICY "Session access determines message access"
     OR public.is_service_role()
   );
 
+DROP POLICY IF EXISTS "Students can create messages in own sessions" ON chat_messages;
 CREATE POLICY "Students can create messages in own sessions"
   ON chat_messages FOR INSERT
   WITH CHECK (
@@ -274,6 +299,7 @@ CREATE POLICY "Students can create messages in own sessions"
   );
 
 -- Service role can create assistant messages
+DROP POLICY IF EXISTS "Service role can create messages" ON chat_messages;
 CREATE POLICY "Service role can create messages"
   ON chat_messages FOR INSERT
   WITH CHECK (public.is_service_role());
@@ -283,6 +309,7 @@ CREATE POLICY "Service role can create messages"
 -- =====================================================
 
 -- Creators can view analytics for their videos
+DROP POLICY IF EXISTS "Creators can view own video analytics" ON video_analytics;
 CREATE POLICY "Creators can view own video analytics"
   ON video_analytics FOR SELECT
   USING (
@@ -295,6 +322,7 @@ CREATE POLICY "Creators can view own video analytics"
   );
 
 -- Service role can manage analytics (background jobs)
+DROP POLICY IF EXISTS "Service role can manage video analytics" ON video_analytics;
 CREATE POLICY "Service role can manage video analytics"
   ON video_analytics FOR ALL
   USING (public.is_service_role())
@@ -305,11 +333,13 @@ CREATE POLICY "Service role can manage video analytics"
 -- =====================================================
 
 -- Creators can view their own usage metrics
+DROP POLICY IF EXISTS "Creators can view own usage metrics" ON usage_metrics;
 CREATE POLICY "Creators can view own usage metrics"
   ON usage_metrics FOR SELECT
   USING (creator_id = public.get_creator_id() OR public.is_service_role());
 
 -- Service role can manage usage metrics
+DROP POLICY IF EXISTS "Service role can manage usage metrics" ON usage_metrics;
 CREATE POLICY "Service role can manage usage metrics"
   ON usage_metrics FOR ALL
   USING (public.is_service_role())

@@ -55,6 +55,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_report_schedules_updated_at ON report_schedules;
 CREATE TRIGGER update_report_schedules_updated_at
 BEFORE UPDATE ON report_schedules
 FOR EACH ROW
@@ -66,11 +67,13 @@ ALTER TABLE report_schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE report_history ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Creators can only access their own schedules
+DROP POLICY IF EXISTS report_schedules_creator_policy ON report_schedules;
 CREATE POLICY report_schedules_creator_policy ON report_schedules
   FOR ALL
   USING (creator_id = auth.uid());
 
 -- Policy: Creators can only access their own report history
+DROP POLICY IF EXISTS report_history_creator_policy ON report_history;
 CREATE POLICY report_history_creator_policy ON report_history
   FOR ALL
   USING (creator_id = auth.uid());

@@ -27,11 +27,15 @@ CREATE INDEX IF NOT EXISTS idx_videos_youtube_video_id ON videos(youtube_video_i
 -- YouTube videos: youtube_video_id must exist, storage_path can be null
 -- Uploaded videos: storage_path must exist, youtube_video_id must be null
 
-ALTER TABLE videos
-ADD CONSTRAINT videos_source_validation CHECK (
-  (source_type = 'youtube' AND youtube_video_id IS NOT NULL AND storage_path IS NULL) OR
-  (source_type = 'upload' AND storage_path IS NOT NULL AND youtube_video_id IS NULL)
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'videos_source_validation') THEN
+    ALTER TABLE videos
+    ADD CONSTRAINT videos_source_validation CHECK (
+      (source_type = 'youtube' AND youtube_video_id IS NOT NULL AND storage_path IS NULL) OR
+      (source_type = 'upload' AND storage_path IS NOT NULL AND youtube_video_id IS NULL)
+    );
+  END IF;
+END $$;
 
 -- =====================================================
 -- COMMENTS

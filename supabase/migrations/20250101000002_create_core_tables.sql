@@ -23,9 +23,9 @@ CREATE TABLE IF NOT EXISTS creators (
   is_active BOOLEAN NOT NULL DEFAULT true
 );
 
-CREATE INDEX idx_creators_whop_company_id ON creators(whop_company_id);
-CREATE INDEX idx_creators_subscription_tier ON creators(subscription_tier);
-CREATE INDEX idx_creators_is_active ON creators(is_active);
+CREATE INDEX IF NOT EXISTS idx_creators_whop_company_id ON creators(whop_company_id);
+CREATE INDEX IF NOT EXISTS idx_creators_subscription_tier ON creators(subscription_tier);
+CREATE INDEX IF NOT EXISTS idx_creators_is_active ON creators(is_active);
 
 COMMENT ON TABLE creators IS 'Whop creators/company owners using the platform';
 COMMENT ON COLUMN creators.whop_company_id IS 'Unique Whop company identifier';
@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS students (
   is_active BOOLEAN NOT NULL DEFAULT true
 );
 
-CREATE INDEX idx_students_whop_user_id ON students(whop_user_id);
-CREATE INDEX idx_students_whop_membership_id ON students(whop_membership_id);
-CREATE INDEX idx_students_creator_id ON students(creator_id);
-CREATE INDEX idx_students_is_active ON students(is_active);
+CREATE INDEX IF NOT EXISTS idx_students_whop_user_id ON students(whop_user_id);
+CREATE INDEX IF NOT EXISTS idx_students_whop_membership_id ON students(whop_membership_id);
+CREATE INDEX IF NOT EXISTS idx_students_creator_id ON students(creator_id);
+CREATE INDEX IF NOT EXISTS idx_students_is_active ON students(is_active);
 
 COMMENT ON TABLE students IS 'Students with active Whop memberships';
 COMMENT ON COLUMN students.whop_membership_id IS 'Active Whop membership ID for access control';
@@ -86,10 +86,10 @@ CREATE TABLE IF NOT EXISTS videos (
   is_deleted BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE INDEX idx_videos_creator_id ON videos(creator_id);
-CREATE INDEX idx_videos_status ON videos(status);
-CREATE INDEX idx_videos_created_at ON videos(created_at DESC);
-CREATE INDEX idx_videos_is_deleted ON videos(is_deleted) WHERE is_deleted = false;
+CREATE INDEX IF NOT EXISTS idx_videos_creator_id ON videos(creator_id);
+CREATE INDEX IF NOT EXISTS idx_videos_status ON videos(status);
+CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_is_deleted ON videos(is_deleted) WHERE is_deleted = false;
 
 COMMENT ON TABLE videos IS 'Uploaded video content with processing status';
 COMMENT ON COLUMN videos.status IS 'Processing pipeline status';
@@ -111,8 +111,8 @@ CREATE TABLE IF NOT EXISTS video_chunks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_video_chunks_video_id ON video_chunks(video_id);
-CREATE INDEX idx_video_chunks_chunk_index ON video_chunks(video_id, chunk_index);
+CREATE INDEX IF NOT EXISTS idx_video_chunks_video_id ON video_chunks(video_id);
+CREATE INDEX IF NOT EXISTS idx_video_chunks_chunk_index ON video_chunks(video_id, chunk_index);
 
 COMMENT ON TABLE video_chunks IS 'Chunked video transcripts with vector embeddings for RAG';
 COMMENT ON COLUMN video_chunks.embedding IS 'OpenAI ada-002 embedding vector (1536 dimensions)';
@@ -136,10 +136,10 @@ CREATE TABLE IF NOT EXISTS courses (
   is_deleted BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE INDEX idx_courses_creator_id ON courses(creator_id);
-CREATE INDEX idx_courses_is_published ON courses(is_published);
-CREATE INDEX idx_courses_display_order ON courses(creator_id, display_order);
-CREATE INDEX idx_courses_is_deleted ON courses(is_deleted) WHERE is_deleted = false;
+CREATE INDEX IF NOT EXISTS idx_courses_creator_id ON courses(creator_id);
+CREATE INDEX IF NOT EXISTS idx_courses_is_published ON courses(is_published);
+CREATE INDEX IF NOT EXISTS idx_courses_display_order ON courses(creator_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_courses_is_deleted ON courses(is_deleted) WHERE is_deleted = false;
 
 COMMENT ON TABLE courses IS 'Course containers organizing videos into modules';
 COMMENT ON COLUMN courses.display_order IS 'Sort order for course listing';
@@ -159,9 +159,9 @@ CREATE TABLE IF NOT EXISTS course_modules (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_course_modules_course_id ON course_modules(course_id);
-CREATE INDEX idx_course_modules_display_order ON course_modules(course_id, display_order);
-CREATE INDEX idx_course_modules_video_ids ON course_modules USING GIN(video_ids);
+CREATE INDEX IF NOT EXISTS idx_course_modules_course_id ON course_modules(course_id);
+CREATE INDEX IF NOT EXISTS idx_course_modules_display_order ON course_modules(course_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_course_modules_video_ids ON course_modules USING GIN(video_ids);
 
 COMMENT ON TABLE course_modules IS 'Course modules containing ordered video lists';
 COMMENT ON COLUMN course_modules.video_ids IS 'Array of video UUIDs in display order';
@@ -181,9 +181,9 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
   last_message_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_chat_sessions_student_id ON chat_sessions(student_id);
-CREATE INDEX idx_chat_sessions_creator_id ON chat_sessions(creator_id);
-CREATE INDEX idx_chat_sessions_last_message_at ON chat_sessions(last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_student_id ON chat_sessions(student_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_creator_id ON chat_sessions(creator_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_last_message_at ON chat_sessions(last_message_at DESC);
 
 COMMENT ON TABLE chat_sessions IS 'AI chat conversation sessions';
 COMMENT ON COLUMN chat_sessions.context_video_ids IS 'Videos available for RAG context';
@@ -203,8 +203,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id);
-CREATE INDEX idx_chat_messages_created_at ON chat_messages(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(session_id, created_at);
 
 COMMENT ON TABLE chat_messages IS 'Individual chat messages with AI responses';
 COMMENT ON COLUMN chat_messages.video_references IS 'Array of {video_id, timestamp, title} objects';
@@ -228,9 +228,9 @@ CREATE TABLE IF NOT EXISTS video_analytics (
   CONSTRAINT unique_video_date UNIQUE(video_id, date)
 );
 
-CREATE INDEX idx_video_analytics_video_id ON video_analytics(video_id);
-CREATE INDEX idx_video_analytics_date ON video_analytics(date DESC);
-CREATE INDEX idx_video_analytics_video_date ON video_analytics(video_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_video_analytics_video_id ON video_analytics(video_id);
+CREATE INDEX IF NOT EXISTS idx_video_analytics_date ON video_analytics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_video_analytics_video_date ON video_analytics(video_id, date DESC);
 
 COMMENT ON TABLE video_analytics IS 'Daily video performance metrics';
 COMMENT ON COLUMN video_analytics.completion_rate IS 'Percentage of viewers who finished video';
@@ -255,9 +255,9 @@ CREATE TABLE IF NOT EXISTS usage_metrics (
   CONSTRAINT unique_creator_date UNIQUE(creator_id, date)
 );
 
-CREATE INDEX idx_usage_metrics_creator_id ON usage_metrics(creator_id);
-CREATE INDEX idx_usage_metrics_date ON usage_metrics(date DESC);
-CREATE INDEX idx_usage_metrics_creator_date ON usage_metrics(creator_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_metrics_creator_id ON usage_metrics(creator_id);
+CREATE INDEX IF NOT EXISTS idx_usage_metrics_date ON usage_metrics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_metrics_creator_date ON usage_metrics(creator_id, date DESC);
 
 COMMENT ON TABLE usage_metrics IS 'Daily creator usage and quota tracking';
 COMMENT ON COLUMN usage_metrics.ai_credits_used IS 'AI API usage count (rate limiting)';
@@ -276,26 +276,34 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at triggers to all tables
+DROP TRIGGER IF EXISTS update_creators_updated_at ON creators;
 CREATE TRIGGER update_creators_updated_at BEFORE UPDATE ON creators
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_students_updated_at ON students;
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_videos_updated_at ON videos;
 CREATE TRIGGER update_videos_updated_at BEFORE UPDATE ON videos
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_courses_updated_at ON courses;
 CREATE TRIGGER update_courses_updated_at BEFORE UPDATE ON courses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_course_modules_updated_at ON course_modules;
 CREATE TRIGGER update_course_modules_updated_at BEFORE UPDATE ON course_modules
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_chat_sessions_updated_at ON chat_sessions;
 CREATE TRIGGER update_chat_sessions_updated_at BEFORE UPDATE ON chat_sessions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_video_analytics_updated_at ON video_analytics;
 CREATE TRIGGER update_video_analytics_updated_at BEFORE UPDATE ON video_analytics
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_usage_metrics_updated_at ON usage_metrics;
 CREATE TRIGGER update_usage_metrics_updated_at BEFORE UPDATE ON usage_metrics
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

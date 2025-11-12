@@ -40,27 +40,43 @@ ON chat_messages(session_id, created_at DESC, cost_usd)
 WHERE cost_usd IS NOT NULL;
 
 -- Add check constraint for valid roles
-ALTER TABLE chat_messages
-ADD CONSTRAINT check_message_role
-CHECK (role IN ('user', 'assistant', 'system'));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_message_role') THEN
+    ALTER TABLE chat_messages
+    ADD CONSTRAINT check_message_role
+    CHECK (role IN ('user', 'assistant', 'system'));
+  END IF;
+END $$;
 
 -- Add check constraint for non-negative tokens
-ALTER TABLE chat_messages
-ADD CONSTRAINT check_tokens_positive
-CHECK (
-  (input_tokens IS NULL OR input_tokens >= 0) AND
-  (output_tokens IS NULL OR output_tokens >= 0)
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_tokens_positive') THEN
+    ALTER TABLE chat_messages
+    ADD CONSTRAINT check_tokens_positive
+    CHECK (
+      (input_tokens IS NULL OR input_tokens >= 0) AND
+      (output_tokens IS NULL OR output_tokens >= 0)
+    );
+  END IF;
+END $$;
 
 -- Add check constraint for non-negative cost
-ALTER TABLE chat_messages
-ADD CONSTRAINT check_cost_positive
-CHECK (cost_usd IS NULL OR cost_usd >= 0);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_cost_positive') THEN
+    ALTER TABLE chat_messages
+    ADD CONSTRAINT check_cost_positive
+    CHECK (cost_usd IS NULL OR cost_usd >= 0);
+  END IF;
+END $$;
 
 -- Add check constraint for non-negative response time
-ALTER TABLE chat_messages
-ADD CONSTRAINT check_response_time_positive
-CHECK (response_time_ms IS NULL OR response_time_ms >= 0);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_response_time_positive') THEN
+    ALTER TABLE chat_messages
+    ADD CONSTRAINT check_response_time_positive
+    CHECK (response_time_ms IS NULL OR response_time_ms >= 0);
+  END IF;
+END $$;
 
 -- Create function to automatically set has_video_reference
 CREATE OR REPLACE FUNCTION update_has_video_reference()
