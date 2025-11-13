@@ -414,7 +414,7 @@ export default function ChatPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Hardcoded creator ID for now - in production, get from auth
-  const CREATOR_ID = 'creator-1';
+  const CREATOR_ID = '00000000-0000-0000-0000-000000000001';
 
   // Load sessions on mount
   useEffect(() => {

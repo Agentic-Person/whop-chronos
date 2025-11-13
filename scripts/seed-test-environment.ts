@@ -321,7 +321,7 @@ async function createTestVideos() {
       title: 'Day Trading Strategy Deep Dive',
       description: 'My personal day trading strategy explained',
       duration_seconds: 2880,
-      thumbnail_url: 'https://placeholder.com/thumbnail-001.jpg',
+      thumbnail_url: 'https://placehold.co/640x360/1a1a1a/white?text=Day+Trading',
       status: 'completed',
       metadata: {
         file_size: 524288000, // 500MB
@@ -336,7 +336,7 @@ async function createTestVideos() {
       title: 'Reading Market Sentiment',
       description: 'How to gauge market psychology and sentiment',
       duration_seconds: 1920,
-      thumbnail_url: 'https://placeholder.com/thumbnail-002.jpg',
+      thumbnail_url: 'https://placehold.co/640x360/1a1a1a/white?text=Market+Sentiment',
       status: 'completed',
       metadata: {
         file_size: 367001600, // 350MB
@@ -351,7 +351,7 @@ async function createTestVideos() {
       title: 'Building a Trading Plan',
       description: 'Create a comprehensive trading plan that works',
       duration_seconds: 2160,
-      thumbnail_url: 'https://placeholder.com/thumbnail-003.jpg',
+      thumbnail_url: 'https://placehold.co/640x360/1a1a1a/white?text=Trading+Plan',
       status: 'completed',
       metadata: {
         file_size: 419430400, // 400MB
@@ -387,7 +387,7 @@ async function createTestCourses(videos: any[]) {
       creator_id: TEST_CREATOR_ID,
       title: 'Complete Trading Masterclass',
       description: 'Master trading from beginner to advanced. This comprehensive course covers everything from basic concepts to advanced strategies used by professional traders.',
-      thumbnail_url: 'https://placeholder.com/course-1-thumbnail.jpg',
+      thumbnail_url: 'https://placehold.co/1280x720/1a1a1a/white?text=Trading+Masterclass',
       metadata: {
         difficulty: 'beginner-to-advanced',
         duration_hours: 20,
@@ -491,7 +491,7 @@ async function createTestCourses(videos: any[]) {
       creator_id: TEST_CREATOR_ID,
       title: 'Advanced Trading Strategies',
       description: 'Take your trading to the next level with advanced strategies for options, crypto, and forex markets.',
-      thumbnail_url: 'https://placeholder.com/course-2-thumbnail.jpg',
+      thumbnail_url: 'https://placehold.co/1280x720/1a1a1a/white?text=Advanced+Trading',
       metadata: {
         difficulty: 'advanced',
         duration_hours: 15,

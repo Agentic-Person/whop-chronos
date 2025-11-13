@@ -1,5 +1,5 @@
 /**
- * Next.js Middleware
+ * Next.js Proxy (Next.js 16+)
  *
  * Protects routes and validates authentication
  */

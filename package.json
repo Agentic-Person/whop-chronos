@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "AI-powered video learning assistant for Whop creators in education and coaching",
 	"scripts": {
-		"dev": "whop-proxy --command 'next dev --turbopack --port 3007'",
+		"dev": "whop-proxy --command=\"next dev --turbopack --port 3007\"",
 		"build": "next build",
 		"start": "next start",
 		"lint": "biome lint",

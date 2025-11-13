@@ -49,6 +49,9 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
     setError(null);
 
     try {
+      // Use default placeholder if no cover image provided
+      const defaultThumbnail = 'https://placehold.co/1280x720/1a1a1a/white?text=Course';
+
       // Call API to create course
       const response = await fetch('/api/courses', {
         method: 'POST',
@@ -59,7 +62,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
           creator_id: creatorId,
           title: name.trim(),
           description: description.trim() || null,
-          thumbnail_url: coverImage || null,
+          thumbnail_url: coverImage || defaultThumbnail,
           is_published: false,
         }),
       });

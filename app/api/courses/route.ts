@@ -156,10 +156,10 @@ export async function GET(req: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    // Build query
+    // Build query with module_lessons count
     let query = supabase
       .from('courses')
-      .select('*, course_modules(id)', { count: 'exact' })
+      .select('*, course_modules(id, module_lessons(id))', { count: 'exact' })
       .eq('creator_id', creatorId)
       .eq('is_deleted', false);
 
@@ -193,20 +193,28 @@ export async function GET(req: NextRequest) {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    // Format response with module count
-    const formattedCourses = courses?.map((course: any) => ({
-      id: course.id,
-      creator_id: course.creator_id,
-      title: course.title,
-      description: course.description,
-      thumbnail_url: course.thumbnail_url,
-      is_published: course.is_published,
-      display_order: course.display_order,
-      module_count: course.course_modules?.length || 0,
-      created_at: course.created_at,
-      updated_at: course.updated_at,
-      published_at: course.published_at,
-    }));
+    // Format response with module count and lesson count
+    const formattedCourses = courses?.map((course: any) => {
+      // Calculate total lesson count across all modules
+      const lessonCount = course.course_modules?.reduce((total: number, module: any) => {
+        return total + (module.module_lessons?.length || 0);
+      }, 0) || 0;
+
+      return {
+        id: course.id,
+        creator_id: course.creator_id,
+        title: course.title,
+        description: course.description,
+        thumbnail_url: course.thumbnail_url,
+        is_published: course.is_published,
+        display_order: course.display_order,
+        module_count: course.course_modules?.length || 0,
+        lesson_count: lessonCount,
+        created_at: course.created_at,
+        updated_at: course.updated_at,
+        published_at: course.published_at,
+      };
+    });
 
     return NextResponse.json(
       {
