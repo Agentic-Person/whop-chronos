@@ -21,7 +21,7 @@ interface VideoPreview {
 }
 
 export default function YouTubeTab({
-  creatorId,
+  creatorId: _creatorId,
   onImport,
   showPreview = true,
 }: YouTubeTabProps) {

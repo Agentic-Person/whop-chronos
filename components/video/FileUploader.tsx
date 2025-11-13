@@ -32,7 +32,6 @@ const ALLOWED_MIME_TYPES = [
   'video/webm',
 ];
 const MAX_FILE_SIZE_GB = 2;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_GB * 1024 * 1024 * 1024;
 
 export interface FileUploaderProps {
   creatorId: string;
@@ -176,7 +175,7 @@ export function FileUploader({
       if (uploadingCount >= 3) return prev;
 
       const updated = [...prev];
-      const uploadFile = updated[queuedIndex];
+      const uploadFile = updated[queuedIndex]!;
 
       // Start upload
       startUpload(uploadFile);
@@ -385,8 +384,8 @@ export function FileUploader({
           transition-all duration-200
           ${
             isDragging
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              ? 'border-blue-9 bg-blue-2'
+              : 'border-gray-6 hover:border-gray-7 hover:bg-gray-2'
           }
           ${isExtracting ? 'opacity-50 cursor-wait' : ''}
         `}
@@ -402,21 +401,21 @@ export function FileUploader({
         />
 
         <div className="flex flex-col items-center gap-4">
-          <div className="p-4 bg-gray-100 rounded-full">
-            <Upload className="w-8 h-8 text-gray-600" />
+          <div className="p-4 bg-gray-3 rounded-full">
+            <Upload className="w-8 h-8 text-gray-11" />
           </div>
 
           <div>
-            <p className="text-lg font-medium text-gray-900">
+            <p className="text-lg font-medium text-gray-12">
               {isExtracting
                 ? 'Processing files...'
                 : 'Drop video files here or click to browse'}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-11 mt-1">
               Supported formats: {ALLOWED_VIDEO_FORMATS.join(', ')} • Max size:{' '}
               {maxSizeGB}GB
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-11 mt-1">
               Up to {maxFiles} files • Maximum 3 concurrent uploads
             </p>
           </div>
@@ -426,7 +425,7 @@ export function FileUploader({
       {/* Upload queue */}
       {uploads.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">
+          <h3 className="text-sm font-medium text-gray-12">
             Upload Queue ({uploads.length})
           </h3>
 
@@ -473,15 +472,15 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
   const getStatusColor = () => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 border-green-300';
+        return 'bg-green-2 border-green-6';
       case 'error':
-        return 'bg-red-100 border-red-300';
+        return 'bg-red-2 border-red-6';
       case 'uploading':
-        return 'bg-blue-100 border-blue-300';
+        return 'bg-blue-2 border-blue-6';
       case 'paused':
-        return 'bg-gray-100 border-gray-300';
+        return 'bg-gray-2 border-gray-6';
       default:
-        return 'bg-white border-gray-200';
+        return 'bg-gray-1 border-gray-6';
     }
   };
 
@@ -489,7 +488,7 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
     <div className={`border rounded-lg p-4 ${getStatusColor()}`}>
       <div className="flex items-start gap-4">
         {/* Thumbnail */}
-        <div className="flex-shrink-0 w-24 h-16 bg-gray-200 rounded overflow-hidden">
+        <div className="flex-shrink-0 w-24 h-16 bg-gray-3 rounded overflow-hidden">
           {thumbnail ? (
             <img
               src={thumbnail}
@@ -498,7 +497,7 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Film className="w-8 h-8 text-gray-400" />
+              <Film className="w-8 h-8 text-gray-11" />
             </div>
           )}
         </div>
@@ -507,10 +506,10 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-12 truncate">
                 {title}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-11">
                 {formatBytes(file.size)}
                 {metadata && (
                   <>
@@ -527,7 +526,7 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
               {getStatusIcon()}
               <button
                 onClick={onCancel}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-11 hover:text-gray-12"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -537,14 +536,14 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
           {/* Progress bar */}
           {status !== 'completed' && status !== 'error' && (
             <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+              <div className="flex items-center justify-between text-xs text-gray-11 mb-1">
                 <span>{status === 'paused' ? 'Paused' : 'Uploading...'}</span>
                 <span>{progress.toFixed(1)}%</span>
               </div>
-              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-3 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-300 ${
-                    status === 'paused' ? 'bg-gray-400' : 'bg-blue-500'
+                    status === 'paused' ? 'bg-gray-8' : 'bg-blue-9'
                   }`}
                   style={{ width: `${progress}%` }}
                 />
@@ -554,13 +553,13 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
 
           {/* Error message */}
           {error && (
-            <p className="mt-2 text-xs text-red-600">{error}</p>
+            <p className="mt-2 text-xs text-red-11">{error}</p>
           )}
 
           {/* Actions */}
           {status === 'uploading' && (
             <div className="mt-3">
-              <Button size="sm" variant="ghost" onClick={onPause}>
+              <Button size="2" variant="ghost" onClick={onPause}>
                 <Pause className="w-4 h-4 mr-1" />
                 Pause
               </Button>
@@ -569,7 +568,7 @@ function UploadItem({ upload, onPause, onResume, onCancel }: UploadItemProps) {
 
           {status === 'paused' && (
             <div className="mt-3">
-              <Button size="sm" variant="ghost" onClick={onResume}>
+              <Button size="2" variant="ghost" onClick={onResume}>
                 <Play className="w-4 h-4 mr-1" />
                 Resume
               </Button>

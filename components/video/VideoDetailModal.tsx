@@ -32,7 +32,6 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { cn } from '@/lib/utils';
 import type { Database } from '@/lib/db/types';
 
 type Video = Database['public']['Tables']['videos']['Row'];
@@ -120,9 +119,9 @@ export function VideoDetailModal({
       case 'mux':
         return <VideoIcon className="h-5 w-5 text-blue-600" />;
       case 'upload':
-        return <FileVideo className="h-5 w-5 text-gray-600" />;
+        return <FileVideo className="h-5 w-5 text-gray-11" />;
       default:
-        return <FileVideo className="h-5 w-5 text-gray-600" />;
+        return <FileVideo className="h-5 w-5 text-gray-11" />;
     }
   };
 
@@ -154,7 +153,7 @@ export function VideoDetailModal({
     const regex = new RegExp(`(${transcriptSearch})`, 'gi');
     const highlighted = video.transcript.replace(
       regex,
-      '<mark class="bg-yellow-200 text-gray-900">$1</mark>'
+      '<mark class="bg-yellow-200 text-gray-12">$1</mark>'
     );
     setHighlightedTranscript(highlighted);
   }, [transcriptSearch, video.transcript]);
@@ -170,24 +169,24 @@ export function VideoDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-5xl max-h-[90vh] bg-gray-2 rounded-lg shadow-xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-6">
           <div className="flex-1 min-w-0">
             {isEditing ? (
               <input
                 type="text"
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
-                className="w-full text-2xl font-bold text-gray-900 border-b-2 border-purple-500 focus:outline-none"
+                className="w-full text-2xl font-bold text-gray-12 bg-transparent border-b-2 border-purple-9 focus:outline-none"
                 placeholder="Video title"
               />
             ) : (
-              <h2 className="text-2xl font-bold text-gray-900 truncate">{video.title}</h2>
+              <h2 className="text-2xl font-bold text-gray-12 truncate">{video.title}</h2>
             )}
             <div className="mt-2 flex items-center gap-3">
               <Badge variant={getStatusVariant(video.status)}>{video.status}</Badge>
-              <div className="flex items-center gap-1 text-sm text-gray-600">
+              <div className="flex items-center gap-1 text-sm text-gray-11">
                 {getSourceIcon(video.source_type)}
                 <span className="capitalize">{video.source_type}</span>
               </div>
@@ -210,7 +209,7 @@ export function VideoDetailModal({
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-11 hover:text-gray-12 transition-colors"
               aria-label="Close modal"
             >
               <X className="h-6 w-6" />
@@ -226,7 +225,7 @@ export function VideoDetailModal({
               {video.thumbnail_url ? (
                 <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover rounded-lg" />
               ) : (
-                <FileVideo className="h-20 w-20 text-gray-600" />
+                <FileVideo className="h-20 w-20 text-gray-11" />
               )}
             </div>
           </Card>
@@ -234,38 +233,38 @@ export function VideoDetailModal({
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card padding="sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-11">
                 <Clock className="h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Duration</p>
-                  <p className="font-semibold text-gray-900">{formatDuration(video.duration_seconds)}</p>
+                  <p className="font-semibold text-gray-12">{formatDuration(video.duration_seconds)}</p>
                 </div>
               </div>
             </Card>
             <Card padding="sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-11">
                 <HardDrive className="h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">File Size</p>
-                  <p className="font-semibold text-gray-900">{formatFileSize(video.file_size_bytes)}</p>
+                  <p className="font-semibold text-gray-12">{formatFileSize(video.file_size_bytes)}</p>
                 </div>
               </div>
             </Card>
             <Card padding="sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-11">
                 <Calendar className="h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Created</p>
-                  <p className="font-semibold text-gray-900">{new Date(video.created_at).toLocaleDateString()}</p>
+                  <p className="font-semibold text-gray-12">{new Date(video.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
             </Card>
             <Card padding="sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-11">
                 <FileVideo className="h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Source</p>
-                  <p className="font-semibold text-gray-900 capitalize">{video.source_type}</p>
+                  <p className="font-semibold text-gray-12 capitalize">{video.source_type}</p>
                 </div>
               </div>
             </Card>
@@ -273,7 +272,7 @@ export function VideoDetailModal({
 
           {/* Description */}
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+            <h3 className="text-lg font-semibold text-gray-12 mb-3">Description</h3>
             {isEditing ? (
               <textarea
                 value={editedDescription}
@@ -283,7 +282,7 @@ export function VideoDetailModal({
                 placeholder="Enter video description..."
               />
             ) : (
-              <p className="text-gray-600">{video.description || 'No description provided'}</p>
+              <p className="text-gray-11">{video.description || 'No description provided'}</p>
             )}
           </Card>
 
@@ -297,8 +296,8 @@ export function VideoDetailModal({
                   <div className="h-5 w-5 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Processing Status</h3>
-                  <p className="text-sm text-gray-700 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-12 mb-1">Processing Status</h3>
+                  <p className="text-sm text-gray-12 mb-2">
                     {video.status === 'failed'
                       ? 'Processing failed'
                       : `Currently ${video.status}...`}
@@ -307,7 +306,7 @@ export function VideoDetailModal({
                     <p className="text-sm text-red-700 bg-red-100 px-3 py-2 rounded-lg">{video.error_message}</p>
                   )}
                   {video.processing_started_at && (
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="text-xs text-gray-11 mt-2">
                       Started: {formatDate(video.processing_started_at)}
                     </p>
                   )}
@@ -321,7 +320,7 @@ export function VideoDetailModal({
             <Card>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Transcript</h3>
+                  <h3 className="text-lg font-semibold text-gray-12">Transcript</h3>
                   <div className="flex items-center gap-2">
                     {video.transcript_language && (
                       <Badge variant="info" size="sm">
@@ -341,7 +340,7 @@ export function VideoDetailModal({
                   </div>
                 </div>
                 <div
-                  className="max-h-96 overflow-y-auto bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed"
+                  className="max-h-96 overflow-y-auto bg-gray-1 rounded-lg p-4 text-sm text-gray-12 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: highlightedTranscript }}
                 />
               </div>
@@ -351,21 +350,21 @@ export function VideoDetailModal({
           {/* Processing Timeline */}
           {video.status === 'completed' && (
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Timeline</h3>
+              <h3 className="text-lg font-semibold text-gray-12 mb-4">Processing Timeline</h3>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-gray-900">Video Uploaded</p>
-                    <p className="text-sm text-gray-600">{formatDate(video.created_at)}</p>
+                    <p className="font-medium text-gray-12">Video Uploaded</p>
+                    <p className="text-sm text-gray-11">{formatDate(video.created_at)}</p>
                   </div>
                 </div>
                 {video.processing_started_at && (
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-gray-900">Processing Started</p>
-                      <p className="text-sm text-gray-600">{formatDate(video.processing_started_at)}</p>
+                      <p className="font-medium text-gray-12">Processing Started</p>
+                      <p className="text-sm text-gray-11">{formatDate(video.processing_started_at)}</p>
                     </div>
                   </div>
                 )}
@@ -373,8 +372,8 @@ export function VideoDetailModal({
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-gray-900">Processing Completed</p>
-                      <p className="text-sm text-gray-600">{formatDate(video.processing_completed_at)}</p>
+                      <p className="font-medium text-gray-12">Processing Completed</p>
+                      <p className="text-sm text-gray-11">{formatDate(video.processing_completed_at)}</p>
                     </div>
                   </div>
                 )}
@@ -384,7 +383,7 @@ export function VideoDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-6 bg-gray-1">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
 import { useVideoWatchSession } from '@/hooks/useVideoWatchSession';
 import { trackVideoStart, trackVideoProgress, trackVideoComplete } from '@/lib/analytics/video-tracking';
@@ -56,8 +56,8 @@ export default function AnalyticsVideoPlayer({
   video,
   studentId,
   creatorId,
-  courseId,
-  moduleId,
+  courseId: _courseId,
+  moduleId: _moduleId,
   deviceType,
   referrerType,
   autoplay = false,

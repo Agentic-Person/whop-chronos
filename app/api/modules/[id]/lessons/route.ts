@@ -104,7 +104,7 @@ export async function POST(
     }
 
     // Check authorization
-    const courseCreatorId = (module.courses as { creator_id: string }).creator_id;
+    const courseCreatorId = ((module as any).courses as { creator_id: string }).creator_id;
     if (courseCreatorId !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this module', code: 'FORBIDDEN' },
@@ -127,7 +127,7 @@ export async function POST(
       );
     }
 
-    if (video.creator_id !== creator_id) {
+    if ((video as any).creator_id !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: Video does not belong to you', code: 'VIDEO_FORBIDDEN' },
         { status: 403 },
@@ -135,7 +135,7 @@ export async function POST(
     }
 
     // Create lesson
-    const { data: lesson, error } = await supabase
+    const { data: lesson, error } = await (supabase as any)
       .from('module_lessons')
       .insert({
         module_id: moduleId,
@@ -199,7 +199,7 @@ export async function POST(
  * }
  */
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -258,7 +258,7 @@ export async function GET(
     }
 
     // Format response
-    const formattedLessons = lessons?.map((lesson) => ({
+    const formattedLessons = lessons?.map((lesson: any) => ({
       id: lesson.id,
       module_id: lesson.module_id,
       video_id: lesson.video_id,

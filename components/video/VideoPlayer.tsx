@@ -128,7 +128,7 @@ export default function VideoPlayer({
             courseId={courseId}
             moduleId={moduleId}
             onStart={onPlay}
-            onProgress={(percent, currentTime) => {
+            onProgress={(_percent, currentTime) => {
               onProgress?.(currentTime);
             }}
             onComplete={onComplete}
@@ -155,7 +155,7 @@ export default function VideoPlayer({
             courseId={courseId}
             moduleId={moduleId}
             onStart={onPlay}
-            onProgress={(percent) => {
+            onProgress={(_percent) => {
               // Loom only provides percent, not current time
             }}
             onComplete={onComplete}

@@ -1,8 +1,8 @@
 /**
  * Course Progress API
  *
- * GET /api/courses/[courseId]/progress - Get student's progress for a course
- * POST /api/courses/[courseId]/progress - Save/update lesson completion
+ * GET /api/courses/[id]/progress - Get student's progress for a course
+ * POST /api/courses/[id]/progress - Save/update lesson completion
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,7 +11,7 @@ import { getServiceSupabase } from '@/lib/db/client';
 export const runtime = 'nodejs';
 
 /**
- * GET /api/courses/[courseId]/progress
+ * GET /api/courses/[id]/progress
  *
  * Get student's progress for a specific course
  *
@@ -33,11 +33,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: courseId } = await params;
+    const { id } = await params;
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get('student_id');
 
-    if (!courseId) {
+    if (!id) {
       return NextResponse.json({ error: 'Missing course ID' }, { status: 400 });
     }
 
@@ -51,7 +51,7 @@ export async function GET(
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .select('id')
-      .eq('id', courseId)
+      .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
@@ -72,7 +72,7 @@ export async function GET(
           video_id
         )
       `)
-      .eq('course_id', courseId)
+      .eq('course_id', id)
       .order('display_order', { ascending: true });
 
     if (modulesError) {
@@ -179,7 +179,7 @@ export async function GET(
 }
 
 /**
- * POST /api/courses/[courseId]/progress
+ * POST /api/courses/[id]/progress
  *
  * Save/update lesson completion and watch progress
  *
@@ -204,7 +204,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: courseId } = await params;
+    const { id } = await params;
     const body = await req.json();
     const {
       student_id,
@@ -216,7 +216,7 @@ export async function POST(
     } = body;
 
     // Validate required fields
-    if (!courseId) {
+    if (!id) {
       return NextResponse.json({ error: 'Missing course ID' }, { status: 400 });
     }
 
@@ -241,7 +241,7 @@ export async function POST(
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .select('id')
-      .eq('id', courseId)
+      .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
@@ -263,7 +263,7 @@ export async function POST(
         )
       `)
       .eq('video_id', video_id)
-      .eq('course_modules.course_id', courseId)
+      .eq('course_modules.course_id', id)
       .single();
 
     if (lessonError || !lesson) {
@@ -288,7 +288,7 @@ export async function POST(
         device_type,
         referrer_type: 'course_page',
         metadata: {
-          course_id: courseId,
+          course_id: id,
           lesson_id: (lesson as any).id,
         },
       })

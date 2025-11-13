@@ -46,14 +46,14 @@ interface ProcessingMonitorProps {
 // =====================================================
 
 const StatusBadge = ({ status }: { status: VideoStatus }) => {
-  const variants: Record<VideoStatus, 'default' | 'success' | 'warning' | 'error'> = {
+  const variants: Record<VideoStatus, 'default' | 'success' | 'warning' | 'danger'> = {
     pending: 'default',
     uploading: 'warning',
     transcribing: 'warning',
     processing: 'warning',
     embedding: 'warning',
     completed: 'success',
-    failed: 'error',
+    failed: 'danger',
   };
 
   const labels: Record<VideoStatus, string> = {
@@ -89,7 +89,7 @@ const ProgressBar = ({ progress, status }: { progress: number; status: VideoStat
   };
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+    <div className="w-full bg-gray-3 rounded-full h-2.5 overflow-hidden">
       <div
         className={`h-2.5 ${colors[status]} transition-all duration-500 ease-out`}
         style={{ width: `${progress}%` }}
@@ -116,13 +116,13 @@ const PipelineStage = ({
   let className = 'flex items-center justify-center w-24 h-10 rounded-lg border-2 text-sm font-medium ';
 
   if (isFailed) {
-    className += 'border-red-500 bg-red-100 text-red-700';
+    className += 'border-red-9 bg-red-2 text-red-11';
   } else if (isCompleted) {
-    className += 'border-green-500 bg-green-100 text-green-700';
+    className += 'border-green-9 bg-green-2 text-green-11';
   } else if (isActive) {
-    className += 'border-blue-500 bg-blue-100 text-blue-700 animate-pulse';
+    className += 'border-blue-9 bg-blue-2 text-blue-11 animate-pulse';
   } else {
-    className += 'border-gray-300 bg-gray-100 text-gray-500';
+    className += 'border-gray-6 bg-gray-2 text-gray-11';
   }
 
   return (
@@ -148,7 +148,7 @@ const ProcessingPipeline = ({ status }: { status: VideoStatus }) => {
             isFailed={isFailed && index === currentIndex}
           />
           {index < stages.length - 1 && (
-            <div className="w-4 h-0.5 bg-gray-300" />
+            <div className="w-4 h-0.5 bg-gray-4" />
           )}
         </div>
       ))}
@@ -189,10 +189,10 @@ const VideoProcessingCard = ({ video }: { video: ProcessingVideo }) => {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-gray-12 truncate">
               {video.title}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-11 mt-1">
               Updated {formatTimestamp(video.updatedAt)}
             </p>
           </div>
@@ -202,7 +202,7 @@ const VideoProcessingCard = ({ video }: { video: ProcessingVideo }) => {
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Progress</span>
+            <span className="text-gray-11">Progress</span>
             <span className="font-medium">{video.progress}%</span>
           </div>
           <ProgressBar progress={video.progress} status={video.status} />
@@ -215,16 +215,16 @@ const VideoProcessingCard = ({ video }: { video: ProcessingVideo }) => {
 
         {/* Time Remaining */}
         {video.estimatedTimeRemaining !== null && video.status !== 'completed' && video.status !== 'failed' && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-11">
             Est. time remaining: {formatTimeRemaining(video.estimatedTimeRemaining)}
           </div>
         )}
 
         {/* Error Message */}
         {video.errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700 font-medium">Error</p>
-            <p className="text-sm text-red-600 mt-1">{video.errorMessage}</p>
+          <div className="p-3 bg-red-1 border border-red-6 rounded-lg">
+            <p className="text-sm text-red-11 font-medium">Error</p>
+            <p className="text-sm text-red-11 mt-1">{video.errorMessage}</p>
           </div>
         )}
       </div>
@@ -237,8 +237,8 @@ const VideoProcessingCard = ({ video }: { video: ProcessingVideo }) => {
 // =====================================================
 
 const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
-  <div className="p-4 bg-white rounded-lg border border-gray-200">
-    <p className="text-sm text-gray-600">{label}</p>
+  <div className="p-4 bg-gray-2 rounded-lg border border-gray-6">
+    <p className="text-sm text-gray-11">{label}</p>
     <p className={`text-2xl font-bold ${color} mt-1`}>{value}</p>
   </div>
 );
@@ -281,7 +281,7 @@ export function ProcessingMonitor({
         status: event.status,
         progress: event.progress,
         errorMessage: event.errorMessage,
-        estimatedTimeRemaining: event.metadata.estimated_time_remaining || null,
+        estimatedTimeRemaining: event.metadata['estimated_time_remaining'] || null,
         createdAt: existing?.createdAt || event.timestamp,
         updatedAt: event.timestamp,
       });
@@ -356,10 +356,10 @@ export function ProcessingMonitor({
     <div className="space-y-6">
       {/* Connection Status */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Processing Monitor</h2>
+        <h2 className="text-2xl font-bold text-gray-12">Processing Monitor</h2>
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
-          <span className="text-sm text-gray-600">
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-9' : 'bg-gray-8'}`} />
+          <span className="text-sm text-gray-11">
             {isConnected ? 'Live Updates' : 'Offline'}
           </span>
         </div>
@@ -367,9 +367,9 @@ export function ProcessingMonitor({
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700 font-medium">Connection Error</p>
-          <p className="text-sm text-red-600 mt-1">{error}</p>
+        <div className="p-4 bg-red-1 border border-red-6 rounded-lg">
+          <p className="text-sm text-red-11 font-medium">Connection Error</p>
+          <p className="text-sm text-red-11 mt-1">{error}</p>
           <Button
             size="sm"
             variant="outline"
@@ -387,8 +387,8 @@ export function ProcessingMonitor({
       {/* Statistics Dashboard */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          <StatCard label="Total" value={stats.total} color="text-gray-900" />
-          <StatCard label="Pending" value={stats.pending} color="text-gray-600" />
+          <StatCard label="Total" value={stats.total} color="text-gray-12" />
+          <StatCard label="Pending" value={stats.pending} color="text-gray-11" />
           <StatCard label="Uploading" value={stats.uploading} color="text-blue-600" />
           <StatCard label="Transcribing" value={stats.transcribing} color="text-purple-600" />
           <StatCard label="Processing" value={stats.processing} color="text-indigo-600" />
@@ -401,7 +401,7 @@ export function ProcessingMonitor({
       <div className="space-y-4">
         {videoList.length === 0 ? (
           <Card className="p-12 text-center">
-            <p className="text-gray-500">No videos in processing queue</p>
+            <p className="text-gray-11">No videos in processing queue</p>
           </Card>
         ) : (
           videoList.map(video => (

@@ -62,7 +62,7 @@ export default function MuxVideoPlayer({
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [milestonesReached, setMilestonesReached] = useState<Set<number>>(new Set());
-  const playerRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<any>(null);
   const lastTimeUpdateRef = useRef<number>(0);
   const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
 
@@ -108,8 +108,10 @@ export default function MuxVideoPlayer({
    * Handle time update event
    * Tracks progress milestones and watch time
    */
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = e.currentTarget;
+  const handleTimeUpdate = () => {
+    const video = playerRef.current;
+    if (!video) return;
+
     const currentTime = video.currentTime;
     const duration = video.duration;
 
@@ -158,8 +160,8 @@ export default function MuxVideoPlayer({
    * Handle error event
    * Captures and displays player errors
    */
-  const handleError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.error('[MuxVideoPlayer] Playback error:', e);
+  const handleError = () => {
+    console.error('[MuxVideoPlayer] Playback error');
     setError('Failed to load video. Please check if the playback ID is valid.');
   };
 

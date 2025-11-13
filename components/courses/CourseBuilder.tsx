@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, GripVertical, MoreVertical, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, GripVertical, Trash2, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 import AddLessonDialog from './AddLessonDialog';
 import VideoLibraryPicker from './VideoLibraryPicker';
@@ -194,7 +194,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
       setChapters(chapters.filter((c) => c.id !== chapterId));
       if (selectedChapterId === chapterId) {
         const remainingChapters = chapters.filter((c) => c.id !== chapterId);
-        setSelectedChapterId(remainingChapters.length > 0 ? remainingChapters[0].id : null);
+        setSelectedChapterId(remainingChapters.length > 0 ? remainingChapters[0]!.id : null);
       }
     } catch (err) {
       console.error('Error deleting chapter:', err);
@@ -202,12 +202,6 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const renameChapter = (chapterId: string, newName: string) => {
-    setChapters(
-      chapters.map((c) => (c.id === chapterId ? { ...c, name: newName } : c))
-    );
   };
 
   const toggleChapter = (chapterId: string) => {

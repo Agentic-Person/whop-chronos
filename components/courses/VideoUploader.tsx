@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { X, Upload, Video, ArrowLeft, FileText, Calendar, ToggleLeft, ToggleRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Video, ArrowLeft, FileText, ToggleLeft, ToggleRight, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 import { VIDEO_LIMITS } from '@/lib/video/config';
 
@@ -32,7 +32,7 @@ export default function VideoUploader({
   const [videoUrl, setVideoUrl] = useState('');
   const [unlockImmediately, setUnlockImmediately] = useState(true);
   const [unlockDate, setUnlockDate] = useState('');
-  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  const [_currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [error, setError] = useState<UploadError | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -77,7 +77,7 @@ export default function VideoUploader({
 
     // Validate file format
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-    if (!allowedFormats.includes(fileExtension)) {
+    if (!allowedFormats.includes(fileExtension as any)) {
       setError({
         message: `File format .${fileExtension} not supported for ${tier} tier. Allowed formats: ${allowedFormats.join(', ')}`,
         canRetry: false,
@@ -157,7 +157,7 @@ export default function VideoUploader({
               throw new Error('Failed to confirm upload');
             }
 
-            const confirmData = await confirmResponse.json();
+            await confirmResponse.json();
             setStatus('pending');
 
             // Step 4: Poll for processing status
@@ -568,7 +568,7 @@ export default function VideoUploader({
         {/* Footer */}
         <div className="flex justify-between items-center gap-3 p-6 border-t border-gray-6">
           <div className="text-xs text-gray-10">
-            {tier === 'basic' && `Basic plan: ${maxFileSizeMB}MB max, 50 videos total`}
+            {(tier === 'free' || tier === 'starter') && `Basic plan: ${maxFileSizeMB}MB max, 50 videos total`}
             {tier === 'pro' && `Pro plan: ${maxFileSizeMB}MB max, 500 videos total`}
             {tier === 'enterprise' && `Enterprise plan: ${maxFileSizeMB}MB max, unlimited videos`}
           </div>

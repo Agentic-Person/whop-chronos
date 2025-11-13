@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Grid, List, Search, Filter, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button, Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { VideoPreview } from './VideoPreview';
 import type { Database } from '@/lib/db/types';
 
@@ -123,13 +123,13 @@ export function VideoList({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-11" />
             <input
               type="text"
               placeholder="Search videos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-6 rounded-lg bg-gray-1 text-gray-12 focus:ring-2 focus:ring-purple-9 focus:border-transparent"
               aria-label="Search videos"
             />
           </div>
@@ -169,10 +169,10 @@ export function VideoList({
 
         {/* Filter panel */}
         {showFilters && (
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 space-y-4">
+          <div className="rounded-lg border border-gray-6 bg-gray-2 p-4 space-y-4">
             {/* Status filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-12 mb-2">
                 Status
               </label>
               <div className="flex flex-wrap gap-2">
@@ -187,8 +187,8 @@ export function VideoList({
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         filterStatus === option.value
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:border-purple-600 dark:hover:border-purple-400'
+                          ? 'bg-purple-9 text-white'
+                          : 'bg-gray-1 text-gray-12 border border-gray-6 hover:border-purple-9'
                       )}
                     >
                       {option.label}
@@ -201,15 +201,15 @@ export function VideoList({
 
             {/* Sort options */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-12 mb-2">
                 Sort By
               </label>
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-gray-400" />
+                <ArrowUpDown className="h-4 w-4 text-gray-11" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-6 rounded-lg bg-gray-1 text-gray-12 focus:ring-2 focus:ring-purple-9 focus:border-transparent"
                 >
                   {sortOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -223,7 +223,7 @@ export function VideoList({
         )}
 
         {/* Results count */}
-        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between text-sm text-gray-11">
           <span>
             {filteredAndSortedVideos.length} video{filteredAndSortedVideos.length !== 1 ? 's' : ''}
             {searchQuery && ` matching "${searchQuery}"`}
@@ -234,7 +234,7 @@ export function VideoList({
                 setSearchQuery('');
                 setFilterStatus('all');
               }}
-              className="text-purple-600 dark:text-purple-400 hover:underline"
+              className="text-purple-11 hover:underline"
             >
               Clear filters
             </button>
@@ -245,13 +245,13 @@ export function VideoList({
       {/* Videos grid/list */}
       {filteredAndSortedVideos.length === 0 ? (
         <div className="text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-            <Search className="h-8 w-8 text-gray-400 dark:text-gray-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-3 mb-4">
+            <Search className="h-8 w-8 text-gray-11" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg font-semibold text-gray-12 mb-2">
             No videos found
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-11">
             {searchQuery || filterStatus !== 'all'
               ? 'Try adjusting your filters or search query'
               : 'Upload your first video to get started'}

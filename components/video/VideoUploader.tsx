@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { Upload, X, AlertCircle, FileVideo } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
 
 // Tier-based file size limits (in bytes)
 const TIER_LIMITS = {
@@ -226,8 +225,8 @@ export function VideoUploader({
         className={cn(
           'relative rounded-lg border-2 border-dashed transition-all duration-200',
           isDragging
-            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/10'
-            : 'border-gray-300 bg-white dark:bg-gray-900 hover:border-gray-400',
+            ? 'border-purple-9 bg-purple-2'
+            : 'border-gray-6 bg-gray-1 hover:border-gray-7',
           'p-8 md:p-12 text-center cursor-pointer'
         )}
         onClick={openFilePicker}
@@ -252,20 +251,20 @@ export function VideoUploader({
         />
 
         <div className="flex flex-col items-center gap-4">
-          <div className="rounded-full bg-purple-100 dark:bg-purple-900/30 p-4">
-            <Upload className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+          <div className="rounded-full bg-purple-3 p-4">
+            <Upload className="h-8 w-8 text-purple-11" />
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-12">
               {isDragging ? 'Drop your videos here' : 'Upload videos'}
             </h3>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-11">
               Drag and drop or click to browse
             </p>
           </div>
 
-          <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+          <div className="text-xs text-gray-11 space-y-1">
             <p>Supported formats: MP4, MOV, AVI, WebM</p>
             <p>
               Max file size: {formatFileSize(tierLimit.maxFileSize)} ({tier} tier)
@@ -281,16 +280,16 @@ export function VideoUploader({
 
       {/* Overall Progress */}
       {activeUploads > 0 && (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+        <div className="rounded-lg border border-gray-6 bg-gray-1 p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-12">
               Uploading {activeUploads} file{activeUploads !== 1 ? 's' : ''}...
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">{overallProgress}%</span>
+            <span className="text-sm text-gray-11">{overallProgress}%</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-gray-3 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-purple-9 to-blue-9 h-2 rounded-full transition-all duration-300"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
@@ -303,19 +302,19 @@ export function VideoUploader({
           {uploadingFiles.map((uploadingFile) => (
             <div
               key={uploadingFile.id}
-              className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4"
+              className="flex items-center gap-3 rounded-lg border border-gray-6 bg-gray-1 p-4"
             >
               <div className="flex-shrink-0">
                 {uploadingFile.status === 'failed' ? (
-                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <AlertCircle className="h-5 w-5 text-red-9" />
                 ) : (
-                  <FileVideo className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <FileVideo className="h-5 w-5 text-gray-11" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  <p className="text-sm font-medium text-gray-12 truncate">
                     {uploadingFile.file.name}
                   </p>
                   <button
@@ -323,14 +322,14 @@ export function VideoUploader({
                       e.stopPropagation();
                       removeFile(uploadingFile.id);
                     }}
-                    className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="flex-shrink-0 text-gray-11 hover:text-gray-12 transition-colors"
                     aria-label={`Remove ${uploadingFile.file.name}`}
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-xs text-gray-11">
                   <span>{formatFileSize(uploadingFile.file.size)}</span>
                   {uploadingFile.status === 'uploading' && (
                     <>
@@ -341,21 +340,21 @@ export function VideoUploader({
                   {uploadingFile.status === 'completed' && (
                     <>
                       <span>•</span>
-                      <span className="text-green-600 dark:text-green-400">Completed</span>
+                      <span className="text-green-11">Completed</span>
                     </>
                   )}
                   {uploadingFile.status === 'failed' && uploadingFile.error && (
                     <>
                       <span>•</span>
-                      <span className="text-red-600 dark:text-red-400">{uploadingFile.error}</span>
+                      <span className="text-red-11">{uploadingFile.error}</span>
                     </>
                   )}
                 </div>
 
                 {uploadingFile.status === 'uploading' && (
-                  <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                  <div className="mt-2 w-full bg-gray-3 rounded-full h-1.5">
                     <div
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-purple-9 to-blue-9 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${uploadingFile.progress}%` }}
                     />
                   </div>

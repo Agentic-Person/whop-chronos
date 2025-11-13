@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, Zap, CheckCircle, Search } from 'lucide-react';
-import VideoPreviewCard from '../VideoPreviewCard';
+import { Loader, Zap } from 'lucide-react';
 
 interface WhopTabProps {
   creatorId: string;
@@ -28,9 +27,9 @@ interface WhopLesson {
 }
 
 export default function WhopTab({
-  creatorId,
+  creatorId: _creatorId,
   onImport,
-  showPreview = true,
+  showPreview: _showPreview = true,
 }: WhopTabProps) {
   const [mode, setMode] = useState<ImportMode>('url');
   const [lessonId, setLessonId] = useState('');

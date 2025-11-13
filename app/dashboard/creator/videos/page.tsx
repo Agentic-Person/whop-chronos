@@ -21,6 +21,8 @@ import { VideoLibraryGrid } from '@/components/video/VideoLibraryGrid';
 import { VideoFilters } from '@/components/video/VideoFilters';
 import { BulkActions } from '@/components/video/BulkActions';
 import { ProcessingMonitor } from '@/components/video/ProcessingMonitor';
+import VideoSourceSelector from '@/components/video/VideoSourceSelector';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Database } from '@/lib/db/types';
 
 type Video = Database['public']['Tables']['videos']['Row'];
@@ -33,11 +35,12 @@ interface FilterState {
 }
 
 export default function VideosPage() {
+  const { creatorId } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [_showUploadModal, setShowUploadModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     status: [],
     sourceType: [],
@@ -47,10 +50,6 @@ export default function VideosPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalVideos, setTotalVideos] = useState(0);
-
-  // TODO: Get creator ID from auth context
-  // Using a valid UUID format for development (this will return empty results if creator doesn't exist)
-  const creatorId = '00000000-0000-0000-0000-000000000000';
 
   // Fetch videos
   const fetchVideos = async () => {
@@ -431,6 +430,19 @@ export default function VideosPage() {
             <p className="mt-4 text-gray-11">Loading videos...</p>
           </div>
         </div>
+      )}
+
+      {/* Video Upload Modal */}
+      {showUploadModal && (
+        <VideoSourceSelector
+          creatorId={creatorId}
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          onVideoImported={() => {
+            setShowUploadModal(false);
+            fetchVideos(); // Refresh video list
+          }}
+        />
       )}
     </div>
   );

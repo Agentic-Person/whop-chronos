@@ -52,7 +52,7 @@ export function VideoCard({
   viewMode = 'grid',
 }: VideoCardProps) {
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, setIsEditing] = useState(false);
 
   // Format duration (seconds to MM:SS)
   const formatDuration = (seconds: number | null): string => {

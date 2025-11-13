@@ -58,7 +58,7 @@ interface ProgressData {
 export default function StudentCourseViewerPage() {
   const params = useParams();
   const router = useRouter();
-  const courseId = params.id as string;
+  const courseId = params['id'] as string;
 
   // Temporary hardcoded student ID (replace with real auth)
   const TEMP_STUDENT_ID = 'temp-student-123';
@@ -381,32 +381,36 @@ export default function StudentCourseViewerPage() {
           </div>
 
           {/* Video Player */}
-          <div className="bg-black">
-            <div className="max-w-7xl mx-auto">
-              <VideoPlayer
-                video={currentLesson.video}
-                studentId={TEMP_STUDENT_ID}
-                creatorId={TEMP_CREATOR_ID}
-                courseId={courseId}
-                moduleId={currentLesson.module_id}
-                onProgress={handleVideoProgress}
-                onComplete={handleVideoComplete}
-                enableAnalytics={true}
-              />
-            </div>
-          </div>
+          {currentLesson && (
+            <>
+              <div className="bg-black">
+                <div className="max-w-7xl mx-auto">
+                  <VideoPlayer
+                    video={currentLesson.video}
+                    studentId={TEMP_STUDENT_ID}
+                    creatorId={TEMP_CREATOR_ID}
+                    courseId={courseId}
+                    moduleId={currentLesson.module_id}
+                    onProgress={handleVideoProgress}
+                    onComplete={handleVideoComplete}
+                    enableAnalytics={true}
+                  />
+                </div>
+              </div>
 
-          {/* Lesson Metadata */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-              <LessonMetadata
-                title={currentLesson.title}
-                description={currentLesson.description}
-                estimatedDuration={currentLesson.estimated_duration_minutes}
-                metadata={currentLesson.metadata}
-              />
-            </div>
-          </div>
+              {/* Lesson Metadata */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                  <LessonMetadata
+                    title={currentLesson.title}
+                    description={currentLesson.description}
+                    estimatedDuration={currentLesson.estimated_duration_minutes}
+                    metadata={currentLesson.metadata}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Navigation Controls */}
           <NavigationControls

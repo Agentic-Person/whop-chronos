@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { X, Youtube, Link as LinkIcon, Upload, Zap } from 'lucide-react';
 import YouTubeTab from './source-tabs/YouTubeTab';
 import LoomTab from './source-tabs/LoomTab';

@@ -75,7 +75,7 @@ export async function DELETE(
 
     // Check authorization
     const courseCreatorId = (
-      lesson.course_modules as {
+      (lesson as any).course_modules as {
         courses: { creator_id: string };
       }
     ).courses.creator_id;
@@ -198,7 +198,7 @@ export async function PUT(
 
     // Check authorization
     const courseCreatorId = (
-      lesson.course_modules as {
+      (lesson as any).course_modules as {
         courses: { creator_id: string };
       }
     ).courses.creator_id;
@@ -244,7 +244,7 @@ export async function PUT(
     }
 
     // Update lesson
-    const { data: updatedLesson, error: updateError } = await supabase
+    const { data: updatedLesson, error: updateError } = await (supabase as any)
       .from('module_lessons')
       .update(updates)
       .eq('id', lessonId)

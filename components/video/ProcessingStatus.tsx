@@ -102,8 +102,8 @@ export function ProcessingStatus({
           filter: `id=eq.${videoId}`,
         },
         (payload) => {
-          const newStatus = payload.new.status as VideoStatus;
-          const newError = payload.new.error_message as string | null;
+          const newStatus = payload.new['status'] as VideoStatus;
+          const newError = payload.new['error_message'] as string | null;
 
           setStatus(newStatus);
           setError(newError);

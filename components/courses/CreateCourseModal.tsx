@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 interface CreateCourseModalProps {
   isOpen: boolean;
@@ -10,11 +11,14 @@ interface CreateCourseModalProps {
 }
 
 export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: CreateCourseModalProps) {
+  const { creatorId } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [_coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -30,32 +34,75 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim()) {
-      alert('Please enter a course name');
+      setError('Please enter a course name');
       return;
     }
 
-    const newCourse = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      description: description.trim(),
-      coverImage: coverImage || '',
-      aspectRatio,
-      chapters: 1, // Start with 1 chapter
-      lessons: 0,
-      lastEdited: new Date().toISOString(),
-    };
+    if (name.trim().length < 3) {
+      setError('Course name must be at least 3 characters');
+      return;
+    }
 
-    onCourseCreated(newCourse);
+    setIsCreating(true);
+    setError(null);
 
-    // Reset form
-    setName('');
-    setDescription('');
-    setAspectRatio('16:9');
-    setCoverImage(null);
-    setCoverImageFile(null);
-    onClose();
+    try {
+      // Call API to create course
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creator_id: creatorId,
+          title: name.trim(),
+          description: description.trim() || null,
+          thumbnail_url: coverImage || null,
+          is_published: false,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create course');
+      }
+
+      if (!result.success || !result.data) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Pass the real course from database to parent
+      const dbCourse = result.data;
+      const formattedCourse = {
+        id: dbCourse.id,
+        name: dbCourse.title,
+        description: dbCourse.description || '',
+        coverImage: dbCourse.thumbnail_url || '',
+        aspectRatio,
+        chapters: 0,
+        lessons: 0,
+        lastEdited: dbCourse.updated_at || dbCourse.created_at,
+      };
+
+      onCourseCreated(formattedCourse);
+
+      // Reset form
+      setName('');
+      setDescription('');
+      setAspectRatio('16:9');
+      setCoverImage(null);
+      setCoverImageFile(null);
+      setError(null);
+      onClose();
+    } catch (err) {
+      console.error('Error creating course:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create course');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -81,6 +128,13 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
 
         {/* Content */}
         <div className="p-6 space-y-5">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-2 border border-red-a4 rounded-lg">
+              <p className="text-sm text-red-11">{error}</p>
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-12 mb-2">
@@ -204,9 +258,11 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
           </button>
           <button
             onClick={handleCreate}
-            className="px-4 py-2 bg-blue-9 hover:bg-blue-10 text-white rounded-lg transition-colors"
+            disabled={isCreating}
+            className="px-4 py-2 bg-blue-9 hover:bg-blue-10 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Create
+            {isCreating && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isCreating ? 'Creating...' : 'Create'}
           </button>
         </div>
       </div>

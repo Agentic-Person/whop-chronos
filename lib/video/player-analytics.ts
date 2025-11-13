@@ -97,7 +97,6 @@ export class VideoAnalyticsTracker {
 
   private hasStarted: boolean = false;
   private milestonesReached: Set<number> = new Set();
-  private startTime: number = 0;
   private totalWatchTime: number = 0;
   private lastTimeUpdate: number = 0;
   private isPlaying: boolean = false;
@@ -127,7 +126,6 @@ export class VideoAnalyticsTracker {
 
     this.hasStarted = true;
     this.isPlaying = true;
-    this.startTime = Date.now();
     this.lastTimeUpdate = Date.now();
 
     await trackVideoEvent({
@@ -352,7 +350,6 @@ export class VideoAnalyticsTracker {
   reset(): void {
     this.hasStarted = false;
     this.milestonesReached.clear();
-    this.startTime = 0;
     this.totalWatchTime = 0;
     this.lastTimeUpdate = 0;
     this.isPlaying = false;

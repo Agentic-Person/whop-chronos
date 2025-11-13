@@ -99,14 +99,14 @@ export function VideoPreview({
   return (
     <div
       className={cn(
-        'rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden',
+        'rounded-lg border border-gray-6 bg-gray-1 overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
         className
       )}
     >
       <div className="flex flex-col md:flex-row">
         {/* Thumbnail */}
-        <div className="w-full md:w-48 h-32 bg-gray-100 dark:bg-gray-800 flex-shrink-0 relative">
+        <div className="w-full md:w-48 h-32 bg-gray-3 flex-shrink-0 relative">
           {video.thumbnail ? (
             <img
               src={video.thumbnail}
@@ -115,7 +115,7 @@ export function VideoPreview({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <FileVideo className="h-12 w-12 text-gray-400 dark:text-gray-600" />
+              <FileVideo className="h-12 w-12 text-gray-11" />
             </div>
           )}
 
@@ -140,7 +140,7 @@ export function VideoPreview({
             // Edit mode
             <div className="space-y-3">
               <div>
-                <label htmlFor={`title-${video.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor={`title-${video.id}`} className="block text-sm font-medium text-gray-12 mb-1">
                   Title
                 </label>
                 <input
@@ -148,13 +148,13 @@ export function VideoPreview({
                   type="text"
                   value={editedTitle}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-6 rounded-lg bg-gray-1 text-gray-12 focus:ring-2 focus:ring-purple-9 focus:border-transparent"
                   placeholder="Enter video title"
                 />
               </div>
 
               <div>
-                <label htmlFor={`description-${video.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor={`description-${video.id}`} className="block text-sm font-medium text-gray-12 mb-1">
                   Description
                 </label>
                 <textarea
@@ -162,7 +162,7 @@ export function VideoPreview({
                   value={editedDescription}
                   onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditedDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-gray-6 rounded-lg bg-gray-1 text-gray-12 focus:ring-2 focus:ring-purple-9 focus:border-transparent resize-none"
                   placeholder="Enter video description (optional)"
                 />
               </div>
@@ -191,11 +191,11 @@ export function VideoPreview({
             <>
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                  <h3 className="text-lg font-semibold text-gray-12 truncate">
                     {video.title}
                   </h3>
                   {video.description && (
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                    <p className="mt-1 text-sm text-gray-11 line-clamp-2">
                       {video.description}
                     </p>
                   )}
@@ -205,14 +205,14 @@ export function VideoPreview({
                   <div className="flex items-center gap-2 ml-4">
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                      className="text-gray-11 hover:text-purple-11 transition-colors"
                       aria-label="Edit video"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      className="text-gray-11 hover:text-red-11 transition-colors"
                       aria-label="Delete video"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -222,7 +222,7 @@ export function VideoPreview({
               </div>
 
               {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-11">
                 {video.duration && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
@@ -241,7 +241,7 @@ export function VideoPreview({
                 </div>
 
                 {video.createdAt && (
-                  <span className="text-gray-500 dark:text-gray-500">
+                  <span className="text-gray-11">
                     {new Date(video.createdAt).toLocaleDateString()}
                   </span>
                 )}

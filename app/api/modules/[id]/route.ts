@@ -25,7 +25,7 @@ export const runtime = 'nodejs';
  * }
  */
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -56,17 +56,17 @@ export async function GET(
 
     // Fetch videos if video_ids exist
     let videos = [];
-    if (module.video_ids && module.video_ids.length > 0) {
+    if ((module as any).video_ids && (module as any).video_ids.length > 0) {
       const { data: videoData, error: videoError } = await supabase
         .from('videos')
         .select('id, title, description, thumbnail_url, duration_seconds, status, source_type, youtube_video_id')
-        .in('id', module.video_ids)
+        .in('id', (module as any).video_ids)
         .eq('is_deleted', false);
 
       if (!videoError && videoData) {
         // Maintain the order from video_ids array
-        videos = module.video_ids
-          .map((videoId: string) => videoData.find((v) => v.id === videoId))
+        videos = (module as any).video_ids
+          .map((videoId: string) => (videoData as any).find((v: any) => v.id === videoId))
           .filter(Boolean);
       }
     }
@@ -75,7 +75,7 @@ export async function GET(
       {
         success: true,
         data: {
-          ...module,
+          ...(module as any),
           videos,
           video_count: videos.length,
         },
@@ -154,7 +154,7 @@ export async function PUT(
     }
 
     // Check authorization
-    const courseCreatorId = (module.courses as { creator_id: string }).creator_id;
+    const courseCreatorId = ((module as any).courses as { creator_id: string }).creator_id;
     if (courseCreatorId !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this module', code: 'FORBIDDEN' },
@@ -193,7 +193,7 @@ export async function PUT(
     }
 
     // Update module
-    const { data: updatedModule, error: updateError } = await supabase
+    const { data: updatedModule, error: updateError } = await (supabase as any)
       .from('course_modules')
       .update(updates)
       .eq('id', id)
@@ -282,7 +282,7 @@ export async function DELETE(
     }
 
     // Check authorization
-    const courseCreatorId = (module.courses as { creator_id: string }).creator_id;
+    const courseCreatorId = ((module as any).courses as { creator_id: string }).creator_id;
     if (courseCreatorId !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this module', code: 'FORBIDDEN' },

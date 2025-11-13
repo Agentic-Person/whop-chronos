@@ -37,7 +37,7 @@ export function VideoLibraryGrid({
   onVideoUpdate,
   onVideoDelete,
 }: VideoLibraryGridProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const allSelected = videos.length > 0 && selectedVideos.size === videos.length;
   const someSelected = selectedVideos.size > 0 && selectedVideos.size < videos.length;

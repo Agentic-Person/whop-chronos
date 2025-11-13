@@ -91,10 +91,10 @@ export function AnalyticsProvider({ children, creatorId, tier }: AnalyticsProvid
     return getDateRangeFromPreset(rangeParam);
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [_refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Update URL when date range changes
   const setDateRange = useCallback((range: DateRange) => {

@@ -21,7 +21,7 @@ interface VideoPreview {
 }
 
 export default function LoomTab({
-  creatorId,
+  creatorId: _creatorId,
   onImport,
   showPreview = true,
 }: LoomTabProps) {

@@ -9,7 +9,7 @@ interface UploadTabProps {
 }
 
 export default function UploadTab({
-  creatorId,
+  creatorId: _creatorId,
   onImport,
 }: UploadTabProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
