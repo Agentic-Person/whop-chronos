@@ -24,6 +24,17 @@ const TOKEN_COOKIE_NAME = 'whop_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const ENCRYPTION_KEY = process.env['WHOP_TOKEN_ENCRYPTION_KEY'];
 
+// Test Mode Configuration
+const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
+const TEST_CREATOR_ID = '00000000-0000-0000-0000-000000000001';
+const TEST_STUDENT_ID = '00000000-0000-0000-0000-000000000002';
+
+if (TEST_MODE) {
+  console.log('⚠️  [AUTH] Test mode enabled - authentication bypassed');
+  console.log(`   Creator ID: ${TEST_CREATOR_ID}`);
+  console.log(`   Student ID: ${TEST_STUDENT_ID}`);
+}
+
 // ============================================================================
 // Token Encryption/Decryption
 // ============================================================================
@@ -101,6 +112,22 @@ export async function createSession(
 }
 
 export async function getSession(): Promise<WhopSession | null> {
+  // Test mode bypass
+  if (TEST_MODE) {
+    return {
+      access_token: 'test_access_token',
+      refresh_token: 'test_refresh_token',
+      expires_at: Date.now() + (1000 * 60 * 60 * 24), // 24 hours
+      user: {
+        id: TEST_CREATOR_ID,
+        email: 'creator@test.chronos.ai',
+        username: 'test_creator',
+        profile_pic_url: null,
+        social_accounts: [],
+      },
+    };
+  }
+
   try {
     const cookieStore = await cookies();
     const encryptedSession = cookieStore.get(TOKEN_COOKIE_NAME)?.value;
@@ -181,6 +208,30 @@ export async function validateUserMembership(
   membershipId: string
 ): Promise<ValidatedMembership> {
   const session = await requireAuth();
+
+  // Test mode bypass
+  if (TEST_MODE) {
+    return {
+      user: session.user,
+      membership: {
+        id: 'mem_test_001',
+        user_id: session.user.id,
+        product_id: 'prod_test_pro',
+        plan_id: 'plan_test_pro',
+        status: 'active',
+        valid: true,
+        expires_at: null,
+        renewal_period_start: Date.now(),
+        renewal_period_end: Date.now() + (1000 * 60 * 60 * 24 * 30),
+        access_pass: {
+          name: 'Test Pro Pass',
+          slug: 'test-pro',
+        },
+      },
+      tier: 'pro',
+      isValid: true,
+    };
+  }
 
   try {
     const result = await whopApi.validateMembership(membershipId);

@@ -16,6 +16,8 @@
 		"db:migrate": "tsx scripts/run-migrations.ts",
 		"db:seed": "tsx scripts/seed-database.ts",
 		"seed:minimal": "dotenv -e .env.local -- tsx scripts/seed-minimal.ts",
+		"seed:test": "dotenv -e .env.local -- tsx scripts/seed-test-environment.ts",
+		"db:reset:test": "dotenv -e .env.local -- tsx scripts/reset-test-db.ts",
 		"db:types": "supabase gen types typescript --linked > lib/db/types.ts",
 		"db:reset": "supabase db reset",
 		"db:push": "supabase db push",
