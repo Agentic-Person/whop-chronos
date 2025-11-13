@@ -223,7 +223,7 @@ async function createTestVideos() {
       creator_id: TEST_CREATOR_ID,
       source_type: 'loom',
       embed_type: 'loom',
-      loom_video_id: 'test-loom-001',
+      embed_id: 'test-loom-001',
       title: 'Live Trading Session #1',
       description: 'Watch me execute trades in real-time',
       duration_seconds: 2400,
@@ -237,7 +237,7 @@ async function createTestVideos() {
       creator_id: TEST_CREATOR_ID,
       source_type: 'loom',
       embed_type: 'loom',
-      loom_video_id: 'test-loom-002',
+      embed_id: 'test-loom-002',
       title: 'Setting Up Your Trading Platform',
       description: 'Step-by-step platform configuration guide',
       duration_seconds: 1200,
@@ -251,7 +251,7 @@ async function createTestVideos() {
       creator_id: TEST_CREATOR_ID,
       source_type: 'loom',
       embed_type: 'loom',
-      loom_video_id: 'test-loom-003',
+      embed_id: 'test-loom-003',
       title: 'Common Trading Mistakes to Avoid',
       description: 'Learn from my biggest mistakes as a trader',
       duration_seconds: 1680,
@@ -262,11 +262,11 @@ async function createTestVideos() {
       },
     },
 
-    // Mux videos (3)
+    // Mux videos (3) - embed_type is null for Mux (uses native Mux player)
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'mux',
-      embed_type: 'mux',
+      embed_type: null,
       mux_asset_id: 'test-mux-asset-001',
       mux_playback_id: 'test-mux-playback-001',
       title: 'Advanced Options Trading',
@@ -282,7 +282,7 @@ async function createTestVideos() {
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'mux',
-      embed_type: 'mux',
+      embed_type: null,
       mux_asset_id: 'test-mux-asset-002',
       mux_playback_id: 'test-mux-playback-002',
       title: 'Cryptocurrency Trading Fundamentals',
@@ -298,7 +298,7 @@ async function createTestVideos() {
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'mux',
-      embed_type: 'mux',
+      embed_type: null,
       mux_asset_id: 'test-mux-asset-003',
       mux_playback_id: 'test-mux-playback-003',
       title: 'Forex Trading Masterclass',
@@ -312,11 +312,11 @@ async function createTestVideos() {
       },
     },
 
-    // Uploaded videos (3)
+    // Uploaded videos (3) - embed_type is null for uploads (uses HTML5 player)
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'upload',
-      embed_type: 'html5',
+      embed_type: null,
       storage_path: 'videos/test-upload-001.mp4',
       title: 'Day Trading Strategy Deep Dive',
       description: 'My personal day trading strategy explained',
@@ -331,7 +331,7 @@ async function createTestVideos() {
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'upload',
-      embed_type: 'html5',
+      embed_type: null,
       storage_path: 'videos/test-upload-002.mp4',
       title: 'Reading Market Sentiment',
       description: 'How to gauge market psychology and sentiment',
@@ -346,7 +346,7 @@ async function createTestVideos() {
     {
       creator_id: TEST_CREATOR_ID,
       source_type: 'upload',
-      embed_type: 'html5',
+      embed_type: null,
       storage_path: 'videos/test-upload-003.mp4',
       title: 'Building a Trading Plan',
       description: 'Create a comprehensive trading plan that works',
@@ -407,10 +407,9 @@ async function createTestCourses(videos: any[]) {
     .from('course_modules')
     .insert({
       course_id: course1.id,
-      creator_id: TEST_CREATOR_ID,
       title: 'Module 1: Trading Foundations',
       description: 'Build a solid foundation in trading psychology and technical analysis',
-      module_order: 1,
+      display_order: 1,
     })
     .select('id')
     .single();
@@ -453,10 +452,9 @@ async function createTestCourses(videos: any[]) {
     .from('course_modules')
     .insert({
       course_id: course1.id,
-      creator_id: TEST_CREATOR_ID,
       title: 'Module 2: Live Trading Sessions',
       description: 'Watch real trades being executed with live commentary',
-      module_order: 2,
+      display_order: 2,
     })
     .select('id')
     .single();
@@ -513,10 +511,9 @@ async function createTestCourses(videos: any[]) {
     .from('course_modules')
     .insert({
       course_id: course2.id,
-      creator_id: TEST_CREATOR_ID,
       title: 'Module 1: Advanced Markets',
       description: 'Master options, crypto, and forex trading',
-      module_order: 1,
+      display_order: 1,
     })
     .select('id')
     .single();
