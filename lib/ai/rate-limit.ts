@@ -10,8 +10,8 @@ import { Redis } from '@upstash/redis';
 
 // Initialize Redis client
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  url: process.env['UPSTASH_REDIS_REST_URL'] || '',
+  token: process.env['UPSTASH_REDIS_REST_TOKEN'] || '',
 });
 
 // Rate limit configurations per tier
@@ -161,29 +161,29 @@ export async function getRateLimitStatus(
   return {
     student: {
       perMinute: {
-        limit: RATE_LIMITS.student.perMinute['limiter']['tokens'],
+        limit: (RATE_LIMITS.student.perMinute as any)['limiter']['tokens'],
         remaining: studentMinuteLimit
-          ? RATE_LIMITS.student.perMinute['limiter']['tokens'] -
+          ? (RATE_LIMITS.student.perMinute as any)['limiter']['tokens'] -
             (studentMinuteLimit as number)
-          : RATE_LIMITS.student.perMinute['limiter']['tokens'],
+          : (RATE_LIMITS.student.perMinute as any)['limiter']['tokens'],
         reset: Date.now() + 60000, // Approximate
       },
       perHour: {
-        limit: RATE_LIMITS.student.perHour['limiter']['tokens'],
+        limit: (RATE_LIMITS.student.perHour as any)['limiter']['tokens'],
         remaining: studentHourLimit
-          ? RATE_LIMITS.student.perHour['limiter']['tokens'] -
+          ? (RATE_LIMITS.student.perHour as any)['limiter']['tokens'] -
             (studentHourLimit as number)
-          : RATE_LIMITS.student.perHour['limiter']['tokens'],
+          : (RATE_LIMITS.student.perHour as any)['limiter']['tokens'],
         reset: Date.now() + 3600000, // Approximate
       },
     },
     creator: {
       perDay: {
-        limit: RATE_LIMITS.creator[tier].perDay['limiter']['tokens'],
+        limit: (RATE_LIMITS.creator[tier].perDay as any)['limiter']['tokens'],
         remaining: creatorDayLimit
-          ? RATE_LIMITS.creator[tier].perDay['limiter']['tokens'] -
+          ? (RATE_LIMITS.creator[tier].perDay as any)['limiter']['tokens'] -
             (creatorDayLimit as number)
-          : RATE_LIMITS.creator[tier].perDay['limiter']['tokens'],
+          : (RATE_LIMITS.creator[tier].perDay as any)['limiter']['tokens'],
         reset: Date.now() + 86400000, // Approximate
       },
     },
@@ -250,6 +250,6 @@ export function formatRateLimitError(check: RateLimitCheck): string {
  */
 export function isRateLimitingEnabled(): boolean {
   return !!(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    process.env['UPSTASH_REDIS_REST_URL'] && process.env['UPSTASH_REDIS_REST_TOKEN']
   );
 }

@@ -56,9 +56,9 @@ async function checkEnvironmentVariables() {
   logSection('1. Environment Variables Check');
 
   const envVars = {
-    INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
-    INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    INNGEST_EVENT_KEY: process.env['INNGEST_EVENT_KEY'],
+    INNGEST_SIGNING_KEY: process.env['INNGEST_SIGNING_KEY'],
+    NEXT_PUBLIC_APP_URL: process.env['NEXT_PUBLIC_APP_URL'],
   };
 
   let allSet = true;
@@ -123,7 +123,7 @@ async function checkFunctionRegistration() {
 async function checkWebhookEndpoint() {
   logSection('4. Webhook Endpoint Check');
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
   const webhookUrl = `${appUrl}/api/inngest`;
 
   logInfo(`Webhook URL: ${webhookUrl}`);

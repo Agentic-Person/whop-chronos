@@ -68,7 +68,7 @@ interface ErrorResponse {
 // =====================================================
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ProcessingStatusResponse | ErrorResponse>> {
   const { id: videoId } = await params;
@@ -117,7 +117,7 @@ export async function GET(
     }
 
     // Check if video is deleted
-    if (video.is_deleted) {
+    if ((video as any).is_deleted) {
       return NextResponse.json(
         {
           error: 'NotFound',
@@ -130,7 +130,7 @@ export async function GET(
 
     // Get chunk count if completed
     let chunkCount: number | null = null;
-    if (video.status === 'completed') {
+    if ((video as any).status === 'completed') {
       const { count } = await supabase
         .from('video_chunks')
         .select('*', { count: 'exact', head: true })
@@ -140,23 +140,23 @@ export async function GET(
     }
 
     // Build stage metadata
-    const stageMetadata = getStageMetadata(video.status);
+    const stageMetadata = getStageMetadata((video as any).status);
 
     // Build error information
-    const errorInfo = video.error_message
+    const errorInfo = (video as any).error_message
       ? {
-          message: video.error_message,
-          stage: (video.metadata as any)?.last_error?.stage || null,
-          timestamp: (video.metadata as any)?.last_error?.timestamp || null,
-          retryCount: (video.metadata as any)?.retry_count || 0,
+          message: (video as any).error_message,
+          stage: (video as any).metadata?.last_error?.stage || null,
+          timestamp: (video as any).metadata?.last_error?.timestamp || null,
+          retryCount: (video as any).metadata?.retry_count || 0,
         }
       : null;
 
     // Build response
     const response: ProcessingStatusResponse = {
-      videoId: video.id,
-      status: video.status,
-      progress: calculateProgress(video.status),
+      videoId: (video as any).id,
+      status: (video as any).status,
+      progress: calculateProgress((video as any).status),
       currentStage: {
         name: stageMetadata.name,
         description: stageMetadata.description,
@@ -164,30 +164,30 @@ export async function GET(
         timeoutMinutes: stageMetadata.timeoutMinutes,
       },
       timestamps: {
-        createdAt: video.created_at,
-        updatedAt: video.updated_at,
-        processingStartedAt: video.processing_started_at,
-        processingCompletedAt: video.processing_completed_at,
+        createdAt: (video as any).created_at,
+        updatedAt: (video as any).updated_at,
+        processingStartedAt: (video as any).processing_started_at,
+        processingCompletedAt: (video as any).processing_completed_at,
       },
       duration: {
         totalSeconds: getProcessingDuration(
-          video.processing_started_at,
-          video.processing_completed_at
+          (video as any).processing_started_at,
+          (video as any).processing_completed_at
         ),
         estimatedRemainingMinutes: getEstimatedTimeRemaining(
-          video.status,
-          video.processing_started_at
+          (video as any).status,
+          (video as any).processing_started_at
         ),
       },
       error: errorInfo,
       metadata: {
-        fileSize: video.file_size_bytes,
-        durationSeconds: video.duration_seconds,
-        transcriptLanguage: video.transcript_language,
+        fileSize: (video as any).file_size_bytes,
+        durationSeconds: (video as any).duration_seconds,
+        transcriptLanguage: (video as any).transcript_language,
         chunkCount,
       },
-      isTerminal: isTerminalState(video.status),
-      nextSteps: getNextSteps(video.status),
+      isTerminal: isTerminalState((video as any).status),
+      nextSteps: getNextSteps((video as any).status),
     };
 
     return NextResponse.json(response, { status: 200 });
@@ -241,7 +241,7 @@ function getNextSteps(status: VideoRow['status']): string[] {
  * GET /api/video/[id]/status/analytics - Get processing analytics
  */
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const { id: videoId } = await params;
@@ -264,7 +264,7 @@ export async function POST(
     }
 
     // Extract stage timings from metadata
-    const metadata = video.metadata as any || {};
+    const metadata = (video as any).metadata || {};
     const stageTimings = {
       upload: metadata.upload_duration_ms || null,
       transcription: metadata.transcription_duration_ms || null,
@@ -274,29 +274,29 @@ export async function POST(
 
     // Calculate total processing time
     const totalDuration = getProcessingDuration(
-      video.processing_started_at,
-      video.processing_completed_at
+      (video as any).processing_started_at,
+      (video as any).processing_completed_at
     );
 
     // Build analytics response
     const analytics = {
-      videoId: video.id,
+      videoId: (video as any).id,
       processingTime: {
         total: totalDuration,
         byStage: stageTimings,
       },
       performance: {
         bottleneck: identifyBottleneck(stageTimings),
-        avgProcessingSpeed: calculateAvgSpeed(video.duration_seconds, totalDuration),
+        avgProcessingSpeed: calculateAvgSpeed((video as any).duration_seconds, totalDuration),
       },
       errors: {
         count: metadata.retry_count || 0,
         lastError: metadata.last_error || null,
       },
       resources: {
-        fileSize: video.file_size_bytes,
+        fileSize: (video as any).file_size_bytes,
         chunkCount: await getChunkCount(videoId),
-        transcriptLength: video.transcript?.length || 0,
+        transcriptLength: (video as any).transcript?.length || 0,
       },
     };
 

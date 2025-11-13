@@ -50,7 +50,7 @@ const COST_PER_1K_TOKENS = 0.0001;
  * Initialize OpenAI client
  */
 function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env['OPENAI_API_KEY'];
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY environment variable is not set');
   }
@@ -91,7 +91,7 @@ async function generateSingleEmbedding(
     }
 
     return {
-      embedding: response.data[0].embedding,
+      embedding: response.data[0]!.embedding,
       tokens: response.usage.total_tokens,
     };
   } catch (error) {
@@ -198,9 +198,9 @@ export async function generateEmbeddings(
     // Map embeddings to results
     for (let j = 0; j < batch.length; j++) {
       allEmbeddings.push({
-        chunk_id: `chunk_${batch[j].chunk_index}`,
-        chunk_index: batch[j].chunk_index,
-        embedding: embeddings[j],
+        chunk_id: `chunk_${batch[j]!.chunk_index}`,
+        chunk_index: batch[j]!.chunk_index,
+        embedding: embeddings[j]!,
         model: opts.model,
         tokens_used: Math.ceil(total_tokens / batch.length), // Approximate tokens per chunk
       });
@@ -328,9 +328,9 @@ export async function batchEmbeddingsWithRateLimit(
     // Map embeddings to results
     for (let j = 0; j < batch.length; j++) {
       allEmbeddings.push({
-        chunk_id: `chunk_${batch[j].chunk_index}`,
-        chunk_index: batch[j].chunk_index,
-        embedding: embeddings[j],
+        chunk_id: `chunk_${batch[j]!.chunk_index}`,
+        chunk_index: batch[j]!.chunk_index,
+        embedding: embeddings[j]!,
         model: opts.model,
         tokens_used: Math.ceil(total_tokens / batch.length),
       });

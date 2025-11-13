@@ -37,7 +37,7 @@ const SEGMENT_COLORS: Record<string, string> = {
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (!active || !payload || payload.length === 0) return null;
 
-  const data = payload[0].payload;
+  const data = payload[0]!.payload;
 
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
@@ -55,12 +55,12 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
 };
 
 interface CustomLabelProps {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
 }
 
 const renderCustomLabel = ({
@@ -71,6 +71,8 @@ const renderCustomLabel = ({
   outerRadius,
   percent,
 }: CustomLabelProps) => {
+  if (!cx || !cy || midAngle === undefined || !innerRadius || !outerRadius || !percent) return null;
+
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -139,8 +141,8 @@ const EmptyState: React.FC<{ height: number }> = ({ height }) => (
 );
 
 export const CompletionRateChart: React.FC<CompletionRateChartProps> = React.memo(({
-  videoId,
-  creatorId,
+  videoId: _videoId,
+  creatorId: _creatorId,
   data,
   isLoading = false,
   className = '',

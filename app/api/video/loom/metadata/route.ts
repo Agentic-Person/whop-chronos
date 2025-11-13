@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   extractLoomVideoId,
   LoomProcessorError,
-  LoomErrorCode,
   getErrorMessage
 } from '@/lib/video/loom-processor';
 
@@ -33,7 +32,7 @@ interface MetadataResponse {
  *
  * Fetch Loom video metadata for preview
  */
-export async function POST(req: NextRequest): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse<MetadataResponse | { error: string }>> {
   try {
     const body: MetadataRequest = await req.json();
     const { videoUrl } = body;
@@ -49,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const videoId = extractLoomVideoId(videoUrl.trim());
 
     // Get Loom API key
-    const apiKey = process.env.LOOM_API_KEY;
+    const apiKey = process.env['LOOM_API_KEY'];
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Loom API key not configured' },

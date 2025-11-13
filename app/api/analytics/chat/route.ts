@@ -8,7 +8,6 @@ import {
 } from '@/lib/analytics/chat';
 import type {
   ChatVolumeData,
-  QualityMetrics,
   VideoReferenceData,
   StudentChatActivityData,
   SessionMetrics,
@@ -17,8 +16,8 @@ import type {
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+  process.env['SUPABASE_SERVICE_ROLE_KEY']!
 );
 
 /**
@@ -127,7 +126,7 @@ async function getChatVolumeData(
   >();
 
   messages.forEach((msg) => {
-    const date = new Date(msg.created_at).toISOString().split('T')[0];
+    const date = new Date(msg.created_at).toISOString().split('T')[0]!;
 
     if (!volumeMap.has(date)) {
       volumeMap.set(date, {
@@ -190,8 +189,8 @@ async function getSessionMetrics(
       : 0;
 
   // Get previous period for trend
-  const currentPeriodStart = messages.length > 0 ? new Date(messages[0].created_at) : new Date();
-  const currentPeriodEnd = messages.length > 0 ? new Date(messages[messages.length - 1].created_at) : new Date();
+  const currentPeriodStart = messages.length > 0 ? new Date(messages[0]!.created_at) : new Date();
+  const currentPeriodEnd = messages.length > 0 ? new Date(messages[messages.length - 1]!.created_at) : new Date();
   const periodLength = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
 
   const previousPeriodStart = new Date(currentPeriodStart.getTime() - periodLength);

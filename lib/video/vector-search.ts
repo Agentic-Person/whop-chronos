@@ -8,9 +8,8 @@
  * - Supports filtering by video IDs
  */
 
-import { createClient } from '@/lib/db/client';
+import { getServiceSupabase } from '@/lib/db/client';
 import { generateQueryEmbedding } from './embeddings';
-import type { Database } from '@/lib/db/types';
 
 export interface VectorSearchResult {
   chunk_id: string;
@@ -59,9 +58,9 @@ export async function searchVideoChunks(
   const queryEmbedding = await generateQueryEmbedding(query);
 
   // Use Supabase client to call the search function
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
-  const { data, error } = await supabase.rpc('search_video_chunks', {
+  const { data, error } = await (supabase as any).rpc('search_video_chunks', {
     query_embedding: queryEmbedding,
     match_count: opts.match_count,
     similarity_threshold: opts.similarity_threshold,
@@ -82,7 +81,7 @@ export async function searchVideoChunks(
 
   // Enrich results with video metadata if requested
   if (opts.include_video_metadata) {
-    const videoIds = [...new Set(data.map(chunk => chunk.video_id))];
+    const videoIds = [...new Set(data.map((chunk: any) => chunk.video_id))];
     const { data: videos, error: videoError } = await supabase
       .from('videos')
       .select('id, title, url, thumbnail_url, creator_id')
@@ -94,10 +93,10 @@ export async function searchVideoChunks(
 
     // Map video metadata to chunks
     const videoMap = new Map(
-      videos?.map(v => [v.id, v]) || []
+      videos?.map((v: any) => [v.id, v]) || []
     );
 
-    return data.map(chunk => ({
+    return data.map((chunk: any) => ({
       chunk_id: chunk.chunk_id,
       video_id: chunk.video_id,
       video_title: videoMap.get(chunk.video_id)?.title,
@@ -114,7 +113,7 @@ export async function searchVideoChunks(
   }
 
   // Return without video metadata
-  return data.map(chunk => ({
+  return data.map((chunk: any) => ({
     chunk_id: chunk.chunk_id,
     video_id: chunk.video_id,
     chunk_text: chunk.chunk_text,
@@ -159,10 +158,10 @@ export async function findRelatedChunks(
   chunkId: string,
   options: VectorSearchOptions = {}
 ): Promise<VectorSearchResult[]> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
   // Get the chunk's embedding
-  const { data: chunk, error: chunkError } = await supabase
+  const { data: chunk, error: chunkError } = await (supabase as any)
     .from('video_chunks')
     .select('embedding, chunk_text')
     .eq('id', chunkId)
@@ -175,7 +174,7 @@ export async function findRelatedChunks(
   // Search using the chunk's embedding
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
-  const { data, error } = await supabase.rpc('search_video_chunks', {
+  const { data, error } = await (supabase as any).rpc('search_video_chunks', {
     query_embedding: chunk.embedding,
     match_count: opts.match_count + 1, // +1 to exclude the original chunk
     similarity_threshold: opts.similarity_threshold,
@@ -187,10 +186,10 @@ export async function findRelatedChunks(
   }
 
   // Filter out the original chunk
-  const relatedChunks = (data || []).filter(c => c.chunk_id !== chunkId);
+  const relatedChunks = (data || []).filter((c: any) => c.chunk_id !== chunkId);
 
   // Return top match_count results
-  return relatedChunks.slice(0, opts.match_count).map(chunk => ({
+  return relatedChunks.slice(0, opts.match_count).map((chunk: any) => ({
     chunk_id: chunk.chunk_id,
     video_id: chunk.video_id,
     chunk_text: chunk.chunk_text,
@@ -278,9 +277,9 @@ export async function getSearchStats(): Promise<{
   chunks_with_embeddings: number;
   embedding_coverage_percent: number;
 }> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('vector_index_stats')
     .select('*')
     .single();

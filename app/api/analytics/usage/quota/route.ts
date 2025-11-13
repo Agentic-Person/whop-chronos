@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tier = creator.subscription_tier as SubscriptionTier;
+    const tier = (creator as any).subscription_tier as SubscriptionTier;
     const quotaCheck = await checkQuota(creatorId, tier, operation);
 
     // Build response

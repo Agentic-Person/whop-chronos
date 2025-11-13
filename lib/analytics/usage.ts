@@ -24,14 +24,14 @@ export async function calculateCurrentUsage(
   const supabase = getServiceSupabase();
 
   // Get video count and total storage
-  const { data: videos } = await supabase
+  const { data: videos } = await (supabase as any)
     .from('videos')
     .select('id, file_size_bytes')
     .eq('creator_id', creatorId)
     .eq('is_deleted', false);
 
   const videoCount = videos?.length || 0;
-  const totalStorageBytes = videos?.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0) || 0;
+  const totalStorageBytes = videos?.reduce((sum: number, v: any) => sum + (v.file_size_bytes || 0), 0) || 0;
   const totalStorageGB = totalStorageBytes / (1024 * 1024 * 1024);
 
   // Get AI message count for current month
@@ -182,7 +182,7 @@ export async function getStorageBreakdown(
 ): Promise<StorageBreakdown[]> {
   const supabase = getServiceSupabase();
 
-  const { data: videos } = await supabase
+  const { data: videos } = await (supabase as any)
     .from('videos')
     .select('id, title, file_size_bytes')
     .eq('creator_id', creatorId)
@@ -191,11 +191,11 @@ export async function getStorageBreakdown(
 
   if (!videos || videos.length === 0) return [];
 
-  const totalBytes = videos.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0);
+  const totalBytes = videos.reduce((sum: number, v: any) => sum + (v.file_size_bytes || 0), 0);
 
   return videos
-    .filter((v) => v.file_size_bytes && v.file_size_bytes > 0)
-    .map((v) => ({
+    .filter((v: any) => v.file_size_bytes && v.file_size_bytes > 0)
+    .map((v: any) => ({
       videoId: v.id,
       videoTitle: v.title,
       sizeBytes: v.file_size_bytes || 0,
@@ -243,7 +243,7 @@ export async function getAIMessageTrend(
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const { data: messages } = await supabase
+  const { data: messages } = await (supabase as any)
     .from('chat_messages')
     .select('created_at, session:chat_sessions!inner(creator_id)')
     .eq('session.creator_id', creatorId)
@@ -254,7 +254,7 @@ export async function getAIMessageTrend(
 
   // Group by date
   const dailyCounts = new Map<string, number>();
-  messages.forEach((msg) => {
+  messages.forEach((msg: any) => {
     const date = new Date(msg.created_at).toISOString().split('T')[0];
     if (date) {
       dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);

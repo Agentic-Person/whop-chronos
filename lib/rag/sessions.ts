@@ -32,7 +32,7 @@ export async function createSession(
 ): Promise<ChatSession> {
   const supabase = getServiceSupabase();
 
-  const { data: session, error } = await supabase
+  const { data: session, error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .insert({
       student_id: data.student_id,
@@ -60,7 +60,7 @@ export async function getSession(
 ): Promise<SessionWithMessages | ChatSession | null> {
   const supabase = getServiceSupabase();
 
-  const { data: session, error } = await supabase
+  const { data: session, error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .select('*')
     .eq('id', sessionId)
@@ -75,7 +75,7 @@ export async function getSession(
   }
 
   // Load messages
-  const { data: messages, error: messagesError } = await supabase
+  const { data: messages, error: messagesError } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .select('*')
     .eq('session_id', sessionId)
@@ -86,7 +86,7 @@ export async function getSession(
   }
 
   const totalTokens = messages.reduce(
-    (sum, msg) => sum + (msg.token_count || 0),
+    (sum: number, msg: any) => sum + (msg.token_count || 0),
     0,
   );
 
@@ -111,7 +111,7 @@ export async function getOrCreateSession(
   const supabase = getServiceSupabase();
 
   // Try to find most recent active session
-  const { data: existingSession } = await supabase
+  const { data: existingSession } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .select('*')
     .eq('student_id', studentId)
@@ -149,7 +149,7 @@ export async function updateSessionTitle(
 ): Promise<void> {
   const supabase = getServiceSupabase();
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .update({ title })
     .eq('id', sessionId);
@@ -188,7 +188,7 @@ export async function updateSession(
 ): Promise<ChatSession> {
   const supabase = getServiceSupabase();
 
-  const { data: session, error } = await supabase
+  const { data: session, error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .update(updates)
     .eq('id', sessionId)
@@ -209,7 +209,7 @@ export async function updateSession(
 export async function touchSession(sessionId: string): Promise<void> {
   const supabase = getServiceSupabase();
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .update({ last_message_at: new Date().toISOString() })
     .eq('id', sessionId);
@@ -226,7 +226,7 @@ export async function touchSession(sessionId: string): Promise<void> {
 export async function archiveSession(sessionId: string): Promise<void> {
   const supabase = getServiceSupabase();
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .update({
       metadata: {
@@ -329,7 +329,7 @@ export async function listSessions(
   }
 
   // Get first message preview for each session
-  const sessionIds = sessions?.map((s) => s.id) || [];
+  const sessionIds = sessions?.map((s: any) => s.id) || [];
   const { data: firstMessages } = await supabase
     .from(Tables.CHAT_MESSAGES)
     .select('session_id, content')
@@ -338,11 +338,11 @@ export async function listSessions(
     .order('created_at', { ascending: true });
 
   const firstMessageMap = new Map(
-    firstMessages?.map((m) => [m.session_id, m.content]) || [],
+    firstMessages?.map((m: any) => [m.session_id, m.content]) || [],
   );
 
   const items: SessionListItem[] =
-    sessions?.map((session) => ({
+    sessions?.map((session: any) => ({
       id: session.id,
       title: session.title,
       created_at: session.created_at,
@@ -386,8 +386,8 @@ export async function searchSessions(
     .ilike('content', `%${query}%`);
 
   const sessionIds = new Set([
-    ...(matchingSessions?.map((s) => s.id) || []),
-    ...(matchingMessages?.map((m) => m.session_id) || []),
+    ...(matchingSessions?.map((s: any) => s.id) || []),
+    ...(matchingMessages?.map((m: any) => m.session_id) || []),
   ]);
 
   // Return all sessions if no matches

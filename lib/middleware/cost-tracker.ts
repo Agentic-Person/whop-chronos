@@ -341,7 +341,7 @@ export async function getCurrentUsage(
   total_cost: number;
 } | null> {
   try {
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetDate = date || new Date().toISOString().split('T')[0]!;
 
     const supabase = getServiceSupabase();
     const { data, error } = await supabase

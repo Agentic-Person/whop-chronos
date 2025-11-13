@@ -94,8 +94,8 @@ const EmptyState: React.FC<{ height: number }> = ({ height }) => (
 );
 
 export const EngagementHeatmap: React.FC<EngagementHeatmapProps> = React.memo(({
-  videoId,
-  dateRange,
+  videoId: _videoId,
+  dateRange: _dateRange,
   data,
   isLoading = false,
   className = '',

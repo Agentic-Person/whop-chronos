@@ -25,7 +25,7 @@ export const runtime = 'nodejs';
  * }
  */
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -69,7 +69,7 @@ export async function GET(
     }
 
     // Sort modules by display_order
-    const sortedModules = course.course_modules?.sort(
+    const sortedModules = (course as any).course_modules?.sort(
       (a: { display_order: number }, b: { display_order: number }) =>
         a.display_order - b.display_order,
     );
@@ -78,7 +78,7 @@ export async function GET(
       {
         success: true,
         data: {
-          ...course,
+          ...(course as any),
           course_modules: sortedModules || [],
           module_count: sortedModules?.length || 0,
         },
@@ -166,7 +166,7 @@ export async function PUT(
     }
 
     // Check authorization
-    if (existingCourse.creator_id !== creator_id) {
+    if ((existingCourse as any).creator_id !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this course', code: 'FORBIDDEN' },
         { status: 403 },
@@ -200,13 +200,13 @@ export async function PUT(
     if (is_published !== undefined) {
       updates.is_published = is_published;
       // Set published_at timestamp when publishing for the first time
-      if (is_published && !existingCourse.published_at) {
+      if (is_published && !(existingCourse as any).published_at) {
         updates.published_at = new Date().toISOString();
       }
     }
 
     // Update course
-    const { data: updatedCourse, error: updateError } = await supabase
+    const { data: updatedCourse, error: updateError } = await (supabase as any)
       .from('courses')
       .update(updates)
       .eq('id', id)
@@ -296,7 +296,7 @@ export async function DELETE(
     }
 
     // Check authorization
-    if (course.creator_id !== creator_id) {
+    if ((course as any).creator_id !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this course', code: 'FORBIDDEN' },
         { status: 403 },
@@ -304,7 +304,7 @@ export async function DELETE(
     }
 
     // Soft delete the course
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('courses')
       .update({ is_deleted: true })
       .eq('id', id);

@@ -10,7 +10,7 @@
  * Run with: npx tsx lib/rag/verify-setup.ts
  */
 
-import { createClient } from '@/lib/db/client';
+import { getServiceSupabase } from '@/lib/db/client';
 import { kv } from '@vercel/kv';
 import { getSearchStats } from '@/lib/video/vector-search';
 
@@ -40,9 +40,9 @@ async function verifyPgVector(): Promise<void> {
   console.log('\n1. Checking pgvector extension...');
 
   try {
-    const supabase = createClient();
+    const supabase = getServiceSupabase();
 
-    const { data, error } = await supabase.rpc('pg_extension_exists', {
+    const { data: _data, error } = await (supabase as any).rpc('pg_extension_exists', {
       extension_name: 'vector',
     });
 
@@ -92,7 +92,7 @@ async function verifyVectorIndex(): Promise<void> {
   console.log('\n2. Checking vector similarity index...');
 
   try {
-    const supabase = createClient();
+    const supabase = getServiceSupabase();
 
     // Check if index exists
     const { data: indexes, error } = await supabase
@@ -109,7 +109,7 @@ async function verifyVectorIndex(): Promise<void> {
       return;
     }
 
-    const vectorIndex = indexes?.find(idx =>
+    const vectorIndex = indexes?.find((idx: any) =>
       idx.indexname === 'idx_video_chunks_embedding_cosine'
     );
 
@@ -119,7 +119,7 @@ async function verifyVectorIndex(): Promise<void> {
         status: 'pass',
         message: 'IVFFlat index exists for cosine similarity',
         details: {
-          index_name: vectorIndex.indexname,
+          index_name: (vectorIndex as any).indexname,
         },
       });
     } else {
@@ -143,12 +143,12 @@ async function verifySearchFunction(): Promise<void> {
   console.log('\n3. Checking search_video_chunks function...');
 
   try {
-    const supabase = createClient();
+    const supabase = getServiceSupabase();
 
     // Try calling the function with a dummy embedding
     const dummyEmbedding = new Array(1536).fill(0);
 
-    const { data, error } = await supabase.rpc('search_video_chunks', {
+    const { data: _data, error } = await (supabase as any).rpc('search_video_chunks', {
       query_embedding: dummyEmbedding,
       match_count: 1,
       similarity_threshold: 0.9,

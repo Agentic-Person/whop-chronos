@@ -618,7 +618,7 @@ export async function getCreatorUsageStats(creatorId: string) {
   const supabase = getServiceSupabase();
 
   // Get video count and total storage
-  const { data: videos } = await supabase
+  const { data: videos } = await (supabase as any)
     .from('videos')
     .select('id, file_size_bytes')
     .eq('creator_id', creatorId)
@@ -626,7 +626,7 @@ export async function getCreatorUsageStats(creatorId: string) {
 
   const videoCount = videos?.length || 0;
   const totalStorageBytes =
-    videos?.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0) || 0;
+    videos?.reduce((sum: number, v: any) => sum + (v.file_size_bytes || 0), 0) || 0;
 
   // Get AI message count for current month
   const firstOfMonth = new Date();

@@ -129,7 +129,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
     // Step 2: Save to database
     const supabase = getServiceSupabase();
 
-    const { data: video, error: dbError } = await supabase
+    const { data: video, error: dbError } = await (supabase as any)
       .from('videos')
       .insert({
         creator_id: creatorId,
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
         duration_seconds: youtubeData.duration,
         thumbnail_url: youtubeData.thumbnail,
         transcript: youtubeData.transcript,
-        status: 'transcribing', // Will be updated to 'processing' by chunking job
+        status: 'processing', // YouTube videos skip transcription (already have transcript)
         metadata: {
           channel_name: youtubeData.channelName,
           source_url: videoUrl.trim(),
@@ -180,18 +180,26 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       status: video.status,
     });
 
-    // Step 3: Return success response
-    // Trigger Inngest job to chunk transcript and generate embeddings
-    console.log('[YouTube Import API] Triggering chunking/embedding job');
-    await inngest.send({
-      name: 'video/transcription.completed',
-      data: {
-        video_id: video.id,
-        creator_id: creatorId,
-        transcript: video.transcript,
-      },
-    });
+    // Step 3: Trigger Inngest job to chunk transcript and generate embeddings (optional)
+    // Don't fail the import if Inngest is not configured
+    try {
+      console.log('[YouTube Import API] Triggering chunking/embedding job');
+      await inngest.send({
+        name: 'video/transcription.completed',
+        data: {
+          video_id: video.id,
+          creator_id: creatorId,
+          transcript: video.transcript,
+        },
+      });
+      console.log('[YouTube Import API] Successfully triggered background job');
+    } catch (inngestError) {
+      // Log but don't fail - the video is already saved to database
+      console.warn('[YouTube Import API] Failed to trigger Inngest job (this is OK in development):', inngestError);
+      console.warn('[YouTube Import API] Video saved successfully, but embeddings will need to be generated manually');
+    }
 
+    // Step 4: Return success response
     return NextResponse.json(
       {
         success: true,

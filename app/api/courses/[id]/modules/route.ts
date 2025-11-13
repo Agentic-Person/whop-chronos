@@ -35,12 +35,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: courseId } = await params;
+    const { id } = await params;
     const body = await req.json();
     const { title, description, display_order, video_ids = [], creator_id } = body;
 
     // Validate required fields
-    if (!courseId) {
+    if (!id) {
       return NextResponse.json(
         { error: 'Missing course ID' },
         { status: 400 },
@@ -75,7 +75,7 @@ export async function POST(
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .select('id, creator_id')
-      .eq('id', courseId)
+      .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
@@ -87,7 +87,7 @@ export async function POST(
     }
 
     // Check authorization
-    if (course.creator_id !== creator_id) {
+    if ((course as any).creator_id !== creator_id) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this course', code: 'FORBIDDEN' },
         { status: 403 },
@@ -95,10 +95,10 @@ export async function POST(
     }
 
     // Create module
-    const { data: module, error } = await supabase
+    const { data: module, error } = await (supabase as any)
       .from('course_modules')
       .insert({
-        course_id: courseId,
+        course_id: id,
         title,
         description,
         display_order,
@@ -147,13 +147,13 @@ export async function POST(
  * }
  */
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: courseId } = await params;
+    const { id } = await params;
 
-    if (!courseId) {
+    if (!id) {
       return NextResponse.json(
         { error: 'Missing course ID' },
         { status: 400 },
@@ -166,7 +166,7 @@ export async function GET(
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .select('id')
-      .eq('id', courseId)
+      .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
@@ -181,7 +181,7 @@ export async function GET(
     const { data: modules, error } = await supabase
       .from('course_modules')
       .select('*')
-      .eq('course_id', courseId)
+      .eq('course_id', id)
       .order('display_order', { ascending: true });
 
     if (error) {
@@ -193,7 +193,7 @@ export async function GET(
     }
 
     // Add video count to each module
-    const formattedModules = modules?.map((module) => ({
+    const formattedModules = modules?.map((module: any) => ({
       ...module,
       video_count: module.video_ids?.length || 0,
     }));

@@ -16,7 +16,7 @@ async function seedMinimal() {
   const supabase = getServiceSupabase();
 
   // Get Whop company ID from environment
-  const whopCompanyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
+  const whopCompanyId = process.env['NEXT_PUBLIC_WHOP_COMPANY_ID'];
 
   if (!whopCompanyId) {
     console.error(

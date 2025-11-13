@@ -13,9 +13,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
 import type { SessionDurationData, TimeRange } from './engagement-types';
 
@@ -28,8 +26,8 @@ interface SessionDurationChartProps {
 }
 
 export default function SessionDurationChart({
-  creatorId,
-  dateRange = '30d',
+  creatorId: _creatorId,
+  dateRange: _dateRange = '30d',
   data = [],
   averageDuration = 0,
   isLoading = false,
@@ -137,7 +135,7 @@ export default function SessionDurationChart({
               borderRadius: '8px',
               color: '#fff',
             }}
-            formatter={(value: number, name: string, props: any) => {
+            formatter={(value: number, _name: string, _props: any) => {
               const percentage = totalSessions > 0
                 ? ((value as number / totalSessions) * 100).toFixed(1)
                 : 0;
@@ -183,7 +181,7 @@ export default function SessionDurationChart({
               </span>
             </div>
           )}
-          {data.find((d) => d.bucket === '60m+')?.count > totalSessions * 0.2 && (
+          {(data.find((d) => d.bucket === '60m+')?.count ?? 0) > totalSessions * 0.2 && (
             <div className="flex items-start gap-2">
               <span className="text-blue-500">★</span>
               <span className="text-gray-700 dark:text-gray-300">

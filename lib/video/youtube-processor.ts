@@ -216,7 +216,7 @@ export async function processYouTubeVideo(
   const basicInfo = info.basic_info;
 
   // Check for age-restricted videos
-  if (basicInfo.is_age_restricted) {
+  if ((basicInfo as any).is_age_restricted) {
     throw new YouTubeProcessorError(
       'Age-restricted videos are not supported. Please use a non-age-restricted video.',
       YouTubeErrorCode.AGE_RESTRICTED

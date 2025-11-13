@@ -16,7 +16,7 @@ interface StudentRetentionChartProps {
 }
 
 export default function StudentRetentionChart({
-  creatorId,
+  creatorId: _creatorId,
   cohortSize = 5,
   data = [],
   isLoading = false,

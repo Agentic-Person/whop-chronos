@@ -13,11 +13,11 @@ import path from 'path';
 import { rateLimiter } from '@/lib/rate-limit';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env['OPENAI_API_KEY'],
 });
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env['ANTHROPIC_API_KEY'],
 });
 
 interface TranscriptChunk {
@@ -48,9 +48,9 @@ function cosineSimilarity(a: number[], b: number[]): number {
   let magnitudeB = 0;
 
   for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    magnitudeA += a[i] * a[i];
-    magnitudeB += b[i] * b[i];
+    dotProduct += a[i]! * b[i]!;
+    magnitudeA += a[i]! * a[i]!;
+    magnitudeB += b[i]! * b[i]!;
   }
 
   magnitudeA = Math.sqrt(magnitudeA);
@@ -77,7 +77,7 @@ async function searchTranscript(
     input: query,
   });
 
-  const queryEmbedding = queryEmbeddingResponse.data[0].embedding;
+  const queryEmbedding = queryEmbeddingResponse.data[0]!.embedding;
 
   // Calculate similarities
   const results: SearchResult[] = chunks.map((chunk) => ({
@@ -130,7 +130,7 @@ If the question cannot be answered from the provided context, politely say so an
     ],
   });
 
-  const content = response.content[0];
+  const content = response.content[0]!;
   if (content.type !== 'text') {
     throw new Error('Unexpected response type from Claude');
   }
@@ -194,14 +194,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate API keys
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env['OPENAI_API_KEY']) {
       return NextResponse.json(
         { error: 'OpenAI API key not configured' },
         { status: 500 }
       );
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env['ANTHROPIC_API_KEY']) {
       return NextResponse.json(
         { error: 'Anthropic API key not configured' },
         { status: 500 }

@@ -52,7 +52,7 @@ const RETRY_DELAY_MS = 1000;
  * Initialize OpenAI client
  */
 function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env['OPENAI_API_KEY'];
 
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY environment variable not set');

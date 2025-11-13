@@ -13,8 +13,6 @@ import {
   buildContext,
   buildSystemPrompt,
   extractCitations,
-  type EnhancedSearchResult,
-  type FormattedContext,
 } from '@/lib/rag';
 
 // ============================================================================
@@ -78,7 +76,7 @@ export async function simpleRAGChat(
 
   // 4. Call Claude API
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   const response = await anthropic.messages.create({
@@ -94,7 +92,8 @@ export async function simpleRAGChat(
     ],
   });
 
-  const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+  const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
   // 5. Extract citations for UI
   const citations = extractCitations(searchResults);
@@ -168,7 +167,7 @@ export async function conversationalRAGChat(
 
   // 4. Call Claude API
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   const response = await anthropic.messages.create({
@@ -179,7 +178,8 @@ export async function conversationalRAGChat(
     messages,
   });
 
-  const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+  const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
   return {
     answer,
@@ -239,7 +239,7 @@ export async function courseAssistant(
   `);
 
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   const response = await anthropic.messages.create({
@@ -249,7 +249,8 @@ export async function courseAssistant(
     messages: [{ role: 'user', content: question }],
   });
 
-  const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+  const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
   return {
     answer,
@@ -297,7 +298,7 @@ export async function debuggingAssistant(
     : 0;
 
   const topRankScore = searchResults.length > 0
-    ? searchResults[0].rank_score
+    ? searchResults[0]!.rank_score
     : 0;
 
   const uniqueVideos = new Set(searchResults.map(r => r.video_id)).size;
@@ -308,7 +309,7 @@ export async function debuggingAssistant(
   `);
 
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   const response = await anthropic.messages.create({
@@ -318,7 +319,8 @@ export async function debuggingAssistant(
     messages: [{ role: 'user', content: question }],
   });
 
-  const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+  const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
   return {
     answer,
@@ -357,7 +359,7 @@ export async function streamingRAGChat(
 
   // 3. Stream response from Claude
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   const stream = await anthropic.messages.stream({
@@ -408,7 +410,7 @@ export async function robustRAGChat(
       console.warn('[RAG] No results found, using general assistant');
 
       const anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY!,
+        apiKey: process.env['ANTHROPIC_API_KEY']!,
       });
 
       const response = await anthropic.messages.create({
@@ -418,7 +420,8 @@ export async function robustRAGChat(
         messages: [{ role: 'user', content: question }],
       });
 
-      const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+      const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
       return {
         answer,
@@ -432,7 +435,7 @@ export async function robustRAGChat(
     const systemPrompt = buildSystemPrompt(context);
 
     const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
+      apiKey: process.env['ANTHROPIC_API_KEY']!,
     });
 
     const response = await anthropic.messages.create({
@@ -442,7 +445,8 @@ export async function robustRAGChat(
       messages: [{ role: 'user', content: question }],
     });
 
-    const answer = response.content[0].type === 'text' ? response.content[0].text : '';
+    const firstContent = response.content[0];
+  const answer = firstContent?.type === 'text' ? firstContent.text : '';
 
     return {
       answer,
@@ -494,7 +498,7 @@ export async function measureRAGPerformance(
   // Measure LLM call
   const llmStart = Date.now();
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    apiKey: process.env['ANTHROPIC_API_KEY']!,
   });
 
   await anthropic.messages.create({

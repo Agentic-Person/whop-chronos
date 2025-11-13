@@ -91,7 +91,7 @@ export async function createSession(
 
   cookieStore.set(TOKEN_COOKIE_NAME, encryptedSession, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env['NODE_ENV'] === 'production',
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
     path: '/',

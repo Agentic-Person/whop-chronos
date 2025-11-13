@@ -30,9 +30,10 @@ export const runtime = 'nodejs';
  *   }
  * }
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const sessionId = params.id;
+    const { id } = await params;
+    const sessionId = id;
     const body = await req.json().catch(() => ({}));
     const { session_end } = body;
 
@@ -58,18 +59,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Calculate final statistics
     const endTime = session_end || new Date().toISOString();
-    const startTime = new Date(session.session_start).getTime();
+    const startTime = new Date((session as any).session_start).getTime();
     const endTimestamp = new Date(endTime).getTime();
     const totalDurationSeconds = Math.floor((endTimestamp - startTime) / 1000);
 
     // Update session with end time and final stats
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('video_watch_sessions')
       .update({
         session_end: endTime,
         updated_at: new Date().toISOString(),
         metadata: {
-          ...(session.metadata as Record<string, unknown>),
+          ...((session as any).metadata as Record<string, unknown>),
           total_session_duration_seconds: totalDurationSeconds,
           ended_at: endTime,
         },
@@ -90,9 +91,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       session_id: sessionId,
       message: 'Watch session ended successfully',
       stats: {
-        watch_time_seconds: session.watch_time_seconds,
-        percent_complete: session.percent_complete,
-        completed: session.completed,
+        watch_time_seconds: (session as any).watch_time_seconds,
+        percent_complete: (session as any).percent_complete,
+        completed: (session as any).completed,
         total_session_duration_seconds: totalDurationSeconds,
       },
     });

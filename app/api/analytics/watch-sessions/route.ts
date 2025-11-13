@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify creator matches
-    if (video.creator_id !== creator_id) {
+    if ((video as any).creator_id !== creator_id) {
       return NextResponse.json(
         { error: 'Creator ID mismatch', code: 'CREATOR_MISMATCH' },
         { status: 403 },
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create watch session
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await (supabase as any)
       .from('video_watch_sessions')
       .insert({
         video_id,

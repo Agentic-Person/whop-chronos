@@ -39,7 +39,7 @@ interface ErrorResponse {
  * Confirm video upload and trigger processing pipeline
  */
 export async function POST(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ConfirmResponse | ErrorResponse>> {
   try {
@@ -73,18 +73,18 @@ export async function POST(
     }
 
     // Validate video is in uploading state
-    if (video.status !== 'uploading') {
+    if ((video as any).status !== 'uploading') {
       return NextResponse.json(
         {
           error: 'Video is not in uploading state',
-          details: `Current status: ${video.status}`,
+          details: `Current status: ${(video as any).status}`,
         },
         { status: 400 }
       );
     }
 
     // Verify storage path exists
-    if (!video.storage_path) {
+    if (!(video as any).storage_path) {
       return NextResponse.json(
         {
           error: 'Video storage path not set',
@@ -97,8 +97,8 @@ export async function POST(
     // Verify file exists in storage and has valid size
     const { data: fileData, error: storageError } = await supabase.storage
       .from('videos')
-      .list(video.storage_path.split('/').slice(0, -1).join('/'), {
-        search: video.storage_path.split('/').pop(),
+      .list((video as any).storage_path.split('/').slice(0, -1).join('/'), {
+        search: (video as any).storage_path.split('/').pop(),
       });
 
     if (storageError || !fileData || fileData.length === 0) {
@@ -113,7 +113,7 @@ export async function POST(
     }
 
     const uploadedFile = fileData[0];
-    const fileSizeBytes = uploadedFile?.metadata?.size || 0;
+    const fileSizeBytes = uploadedFile?.metadata?.['size'] || 0;
 
     if (fileSizeBytes === 0) {
       return NextResponse.json(
@@ -126,13 +126,13 @@ export async function POST(
     }
 
     // Update video record to pending status
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('videos')
       .update({
         status: 'pending',
         file_size_bytes: fileSizeBytes,
         metadata: {
-          ...(video.metadata as Record<string, unknown>),
+          ...((video as any).metadata as Record<string, unknown>),
           upload_confirmed_at: new Date().toISOString(),
           actual_file_size_bytes: fileSizeBytes,
         },
@@ -156,11 +156,11 @@ export async function POST(
       const inngestResult = await inngest.send({
         name: 'video/transcribe.requested',
         data: {
-          videoId: video.id,
-          creatorId: video.creator_id,
-          storagePath: video.storage_path,
+          videoId: (video as any).id,
+          creatorId: (video as any).creator_id,
+          storagePath: (video as any).storage_path,
           originalFilename:
-            (video.metadata as { original_filename?: string })
+            ((video as any).metadata as { original_filename?: string })
               ?.original_filename || 'video',
         },
       });
@@ -181,8 +181,8 @@ export async function POST(
         {
           success: true,
           video: {
-            id: video.id,
-            title: video.title,
+            id: (video as any).id,
+            title: (video as any).title,
             status: 'pending',
           },
           processing: {
@@ -196,12 +196,12 @@ export async function POST(
       console.error('Error sending Inngest event:', inngestError);
 
       // Revert video status back to uploading
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({
           status: 'uploading',
           metadata: {
-            ...(video.metadata as Record<string, unknown>),
+            ...((video as any).metadata as Record<string, unknown>),
             inngest_error: inngestError instanceof Error ? inngestError.message : 'Unknown error',
             inngest_error_at: new Date().toISOString(),
           },

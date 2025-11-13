@@ -129,11 +129,11 @@ export function StorageBreakdownChart({
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
-            data={chartData}
+            data={chartData as any}
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={(entry) => `${entry.sizeGB.toFixed(2)} GB`}
+            label={(entry: any) => `${entry.sizeGB.toFixed(2)} GB`}
             outerRadius={80}
             fill="#8884d8"
             dataKey="value"

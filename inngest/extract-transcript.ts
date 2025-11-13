@@ -70,7 +70,7 @@ export const extractTranscriptFunction = inngest.createFunction(
     });
 
     // Step 1: Get video record from database
-    const video = await step.run('fetch-video-record', async () => {
+    const video: any = await step.run('fetch-video-record', async () => {
       const supabase = getServiceSupabase();
 
       const { data, error } = await supabase
@@ -84,16 +84,16 @@ export const extractTranscriptFunction = inngest.createFunction(
       }
 
       logger.info('Video record fetched', {
-        title: data.title,
-        status: data.status,
-        source_type: data.source_type,
+        title: (data as any).title,
+        status: (data as any).status,
+        source_type: (data as any).source_type,
       });
 
       return data;
     });
 
     // Step 2: Estimate cost before processing
-    const costEstimate = await step.run('estimate-cost', async () => {
+    await step.run('estimate-cost', async () => {
       const durationSeconds = video.duration_seconds || 600; // Default to 10 min if unknown
       const estimate = calculateEstimatedCost(source_type, durationSeconds);
 
@@ -111,7 +111,7 @@ export const extractTranscriptFunction = inngest.createFunction(
     await step.run('update-status-transcribing', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({
           status: 'transcribing',
@@ -166,7 +166,7 @@ export const extractTranscriptFunction = inngest.createFunction(
             storage_path: video.storage_path,
           },
           creator_id,
-          videoBuffer || undefined
+          (videoBuffer as any) || undefined
         );
 
         logger.info('Transcript extracted successfully', {
@@ -196,7 +196,7 @@ export const extractTranscriptFunction = inngest.createFunction(
 
       logger.info('Saving transcript to database');
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('videos')
         .update({
           transcript: transcriptResult.transcript,
@@ -223,7 +223,7 @@ export const extractTranscriptFunction = inngest.createFunction(
     await step.run('log-analytics-event', async () => {
       const supabase = getServiceSupabase();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('video_analytics_events')
         .insert({
           event_type: 'video_transcribed',
@@ -258,7 +258,7 @@ export const extractTranscriptFunction = inngest.createFunction(
       const aiCreditsUsed = Math.ceil(transcriptResult.metadata.cost_usd * 1000); // Convert to credits
 
       // Get current metrics
-      const { data: existingMetrics } = await supabase
+      const { data: existingMetrics } = await (supabase as any)
         .from('usage_metrics')
         .select('*')
         .eq('creator_id', creator_id)
@@ -267,7 +267,7 @@ export const extractTranscriptFunction = inngest.createFunction(
 
       if (existingMetrics) {
         // Update existing metrics
-        await supabase
+        await (supabase as any)
           .from('usage_metrics')
           .update({
             transcription_minutes: existingMetrics.transcription_minutes + transcriptionMinutes,
@@ -289,7 +289,7 @@ export const extractTranscriptFunction = inngest.createFunction(
           .eq('id', existingMetrics.id);
       } else {
         // Create new metrics
-        await supabase.from('usage_metrics').insert({
+        await (supabase as any).from('usage_metrics').insert({
           creator_id,
           date: today,
           transcription_minutes: transcriptionMinutes,
@@ -376,7 +376,7 @@ export const handleTranscriptExtractionError = inngest.createFunction(
     await step.run('update-status-failed', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({
           status: 'failed',
@@ -392,7 +392,7 @@ export const handleTranscriptExtractionError = inngest.createFunction(
     await step.run('log-failure-event', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('video_analytics_events')
         .insert({
           event_type: 'video_transcribed',

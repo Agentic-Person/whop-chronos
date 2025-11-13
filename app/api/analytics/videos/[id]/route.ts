@@ -84,7 +84,7 @@ export async function GET(
     }
 
     // Check authorization
-    if (video.creator_id !== creatorId) {
+    if ((video as any).creator_id !== creatorId) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this video', code: 'FORBIDDEN' },
         { status: 403 },
@@ -125,20 +125,20 @@ export async function GET(
     }
 
     // Aggregate metrics
-    const totalViews = analytics?.reduce((sum, day) => sum + (day.views || 0), 0) || 0;
+    const totalViews = analytics?.reduce((sum, day: any) => sum + (day.views || 0), 0) || 0;
     const totalWatchTime = analytics?.reduce(
-      (sum, day) => sum + (day.total_watch_time_seconds || 0),
+      (sum, day: any) => sum + (day.total_watch_time_seconds || 0),
       0,
     ) || 0;
 
     // Get unique viewers (use the latest day's count or max)
     const uniqueViewers =
-      Math.max(...(analytics?.map((day) => day.unique_viewers || 0) || [0])) || 0;
+      Math.max(...(analytics?.map((day: any) => day.unique_viewers || 0) || [0])) || 0;
 
     // Calculate average completion rate
     const avgCompletionRate =
       analytics && analytics.length > 0
-        ? analytics.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / analytics.length
+        ? analytics.reduce((sum, day: any) => sum + (day.completion_rate || 0), 0) / analytics.length
         : 0;
 
     // Calculate average watch time per view
@@ -147,7 +147,7 @@ export async function GET(
     // Calculate engagement score (0-100)
     const engagementScore = calculateEngagementScore(
       avgWatchTime,
-      video.duration_seconds || 1,
+      (video as any).duration_seconds || 1,
       avgCompletionRate,
       totalViews,
       uniqueViewers,
@@ -155,7 +155,7 @@ export async function GET(
 
     // Format views over time
     const viewsOverTime =
-      analytics?.map((day) => ({
+      analytics?.map((day: any) => ({
         date: day.date,
         views: day.views || 0,
         unique_viewers: day.unique_viewers || 0,
@@ -168,7 +168,7 @@ export async function GET(
         success: true,
         data: {
           video_id: videoId,
-          video_title: video.title,
+          video_title: (video as any).title,
           period,
           total_views: totalViews,
           unique_viewers: uniqueViewers,

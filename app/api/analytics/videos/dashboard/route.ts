@@ -154,7 +154,7 @@ async function fetchMetrics(
     .lte('created_at', end.toISOString());
 
   const total_watch_time_seconds =
-    watchTimeData?.reduce((sum, event) => {
+    watchTimeData?.reduce((sum, event: any) => {
       const watchTime = (event.metadata as any)?.watch_time_seconds || 0;
       return sum + watchTime;
     }, 0) || 0;
@@ -166,7 +166,7 @@ async function fetchMetrics(
     .eq('creator_id', creatorId)
     .eq('is_deleted', false);
 
-  const videoIds = videosData?.map((v) => v.id) || [];
+  const videoIds = videosData?.map((v: any) => v.id) || [];
 
   let avg_completion_rate = 0;
   if (videoIds.length > 0) {
@@ -226,8 +226,8 @@ async function fetchViewsOverTime(
   // Group by date
   const viewsByDate: Record<string, number> = {};
 
-  data?.forEach((event) => {
-    const date = new Date(event.created_at).toISOString().split('T')[0];
+  data?.forEach((event: any) => {
+    const date = new Date(event.created_at).toISOString().split('T')[0]!;
     viewsByDate[date] = (viewsByDate[date] || 0) + 1;
   });
 
@@ -235,7 +235,7 @@ async function fetchViewsOverTime(
   const result = [];
   const currentDate = new Date(start);
   while (currentDate <= end) {
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.toISOString().split('T')[0]!;
     result.push({
       date: dateStr,
       views: viewsByDate[dateStr] || 0,
@@ -261,7 +261,7 @@ async function fetchCompletionRates(
   if (!videos || videos.length === 0) return [];
 
   const completionRates = await Promise.all(
-    videos.map(async (video) => {
+    videos.map(async (video: any) => {
       const { data: starts } = await supabase
         .from('video_analytics_events')
         .select('id')
@@ -312,7 +312,7 @@ async function fetchCostBreakdown(
 
   const costByMethod: Record<string, { total_cost: number; video_count: number }> = {};
 
-  data?.forEach((event) => {
+  data?.forEach((event: any) => {
     const metadata = event.metadata as any;
     const method = metadata?.transcript_method || 'unknown';
     const cost = metadata?.cost || 0;
@@ -348,8 +348,8 @@ async function fetchStorageUsage(
 
   const storageByDate: Record<string, number> = {};
 
-  data?.forEach((video) => {
-    const date = new Date(video.created_at).toISOString().split('T')[0];
+  data?.forEach((video: any) => {
+    const date = new Date(video.created_at).toISOString().split('T')[0]!;
     const sizeGb = (video.file_size_bytes || 0) / (1024 * 1024 * 1024);
     storageByDate[date] = (storageByDate[date] || 0) + sizeGb;
   });
@@ -360,7 +360,7 @@ async function fetchStorageUsage(
   const currentDate = new Date(start);
 
   while (currentDate <= end) {
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.toISOString().split('T')[0]!;
     const dailyStorage = storageByDate[dateStr] || 0;
     cumulativeStorage += dailyStorage;
 
@@ -392,7 +392,7 @@ async function fetchStudentEngagement(
     .lte('created_at', end.toISOString())
     .not('student_id', 'is', null);
 
-  const uniqueLearners = new Set(activeLearners?.map((e) => e.student_id) || []);
+  const uniqueLearners = new Set(activeLearners?.map((e: any) => e.student_id) || []);
 
   // Get videos per student
   const { data: allViews } = await supabase
@@ -405,11 +405,11 @@ async function fetchStudentEngagement(
     .not('student_id', 'is', null);
 
   const videosByStudent: Record<string, Set<string>> = {};
-  allViews?.forEach((view) => {
+  allViews?.forEach((view: any) => {
     if (!videosByStudent[view.student_id]) {
       videosByStudent[view.student_id] = new Set();
     }
-    videosByStudent[view.student_id].add(view.video_id);
+    videosByStudent[view.student_id]!.add(view.video_id);
   });
 
   const avgVideosPerStudent =
@@ -426,7 +426,7 @@ async function fetchStudentEngagement(
     .lte('created_at', end.toISOString());
 
   const activityByTime: Record<string, number> = {};
-  timeData?.forEach((event) => {
+  timeData?.forEach((event: any) => {
     const date = new Date(event.created_at);
     const hour = date.getHours();
     const dayOfWeek = date.getDay();
@@ -465,7 +465,7 @@ async function fetchTopVideos(
   if (!videos || videos.length === 0) return [];
 
   const videoStats = await Promise.all(
-    videos.map(async (video) => {
+    videos.map(async (video: any) => {
       const { data: starts } = await supabase
         .from('video_analytics_events')
         .select('id')
@@ -485,7 +485,7 @@ async function fetchTopVideos(
       const views = starts?.length || 0;
       const avgWatchTime =
         completions && completions.length > 0
-          ? completions.reduce((sum, c) => {
+          ? completions.reduce((sum, c: any) => {
               const watchTime = (c.metadata as any)?.watch_time_seconds || 0;
               return sum + watchTime;
             }, 0) / completions.length

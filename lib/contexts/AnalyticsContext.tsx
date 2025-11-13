@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export type SubscriptionTier = 'free' | 'starter' | 'pro' | 'enterprise';
@@ -194,4 +194,15 @@ export function useAnalyticsData<T>(
   }, [dateRange, creatorId, ...dependencies]);
 
   return { data, loading, error, refetch: () => fetcher(dateRange, creatorId) };
+}
+
+// Wrapper with Suspense boundary for Next.js 15+ compatibility
+export function AnalyticsProviderWithSuspense({ children, creatorId, tier }: AnalyticsProviderProps) {
+  return (
+    <Suspense fallback={<div>Loading analytics...</div>}>
+      <AnalyticsProvider creatorId={creatorId} tier={tier}>
+        {children}
+      </AnalyticsProvider>
+    </Suspense>
+  );
 }

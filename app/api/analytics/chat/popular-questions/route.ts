@@ -5,8 +5,8 @@ import type { ChatMessage, QuestionCluster } from '@/components/analytics/chat-t
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+  process.env['SUPABASE_SERVICE_ROLE_KEY']!
 );
 
 /**
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
 async function enhanceClusters(
   clusters: QuestionCluster[],
   userMessages: ChatMessage[],
-  creatorId: string
+  _creatorId: string
 ): Promise<QuestionCluster[]> {
   // Build a map of question to message for fast lookup
   const questionToMessage = new Map<string, ChatMessage>();

@@ -127,7 +127,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
     // Step 2: Save to database
     const supabase = getServiceSupabase();
 
-    const { data: video, error: dbError } = await supabase
+    const { data: video, error: dbError } = await (supabase as any)
       .from('videos')
       .insert({
         creator_id: creatorId,

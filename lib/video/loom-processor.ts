@@ -131,7 +131,7 @@ export function extractLoomVideoId(url: string): string {
  * Get Loom API key from environment
  */
 function getLoomApiKey(): string {
-  const apiKey = process.env.LOOM_API_KEY;
+  const apiKey = process.env['LOOM_API_KEY'];
 
   if (!apiKey) {
     throw new LoomProcessorError(

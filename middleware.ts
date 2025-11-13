@@ -36,8 +36,8 @@ export function middleware(request: NextRequest) {
 	// ============================================================================
 	// DEV MODE BYPASS - Skip auth in development
 	// ============================================================================
-	const isDevelopment = process.env.NODE_ENV === "development";
-	const devBypass = process.env.DEV_BYPASS_AUTH === "true";
+	const isDevelopment = process.env['NODE_ENV'] === "development";
+	const devBypass = process.env['DEV_BYPASS_AUTH'] === "true";
 
 	if (isDevelopment && devBypass) {
 		// In dev mode with bypass enabled, allow all routes

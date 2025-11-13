@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create course
-    const { data: course, error } = await supabase
+    const { data: course, error } = await (supabase as any)
       .from('courses')
       .insert({
         creator_id,
@@ -194,7 +194,7 @@ export async function GET(req: NextRequest) {
     const hasPreviousPage = page > 1;
 
     // Format response with module count
-    const formattedCourses = courses?.map((course) => ({
+    const formattedCourses = courses?.map((course: any) => ({
       id: course.id,
       creator_id: course.creator_id,
       title: course.title,

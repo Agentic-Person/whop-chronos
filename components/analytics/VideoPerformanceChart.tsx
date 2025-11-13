@@ -103,8 +103,8 @@ const EmptyState: React.FC<{ height: number }> = ({ height }) => (
 );
 
 export const VideoPerformanceChart: React.FC<VideoPerformanceChartProps> = React.memo(({
-  videoId,
-  timeRange,
+  videoId: _videoId,
+  timeRange: _timeRange,
   data,
   isLoading = false,
   className = '',

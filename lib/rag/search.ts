@@ -11,7 +11,7 @@
 import { kv } from '@vercel/kv';
 import { searchVideoChunks, type VectorSearchResult } from '@/lib/video/vector-search';
 import { rankSearchResults, type RankingOptions } from './ranking';
-import type { Database } from '@/lib/db/types';
+import { getServiceSupabase } from '@/lib/db/client';
 
 export interface EnhancedSearchOptions {
   // Base search options
@@ -145,8 +145,7 @@ export async function searchWithinCourse(
   options: Omit<EnhancedSearchOptions, 'filter_video_ids'> = {}
 ): Promise<EnhancedSearchResult[]> {
   // Get video IDs for the course
-  const { createClient } = await import('@/lib/db/client');
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
   const { data: modules, error } = await supabase
     .from('course_modules')
@@ -158,7 +157,7 @@ export async function searchWithinCourse(
   }
 
   // Flatten video IDs from all modules
-  const videoIds = modules?.flatMap(m => m.video_ids || []) || [];
+  const videoIds = modules?.flatMap((m: any) => m.video_ids || []) || [];
 
   if (videoIds.length === 0) {
     console.warn(`No videos found for course ${courseId}`);
@@ -182,8 +181,7 @@ export async function searchCreatorContent(
   options: Omit<EnhancedSearchOptions, 'filter_video_ids'> = {}
 ): Promise<EnhancedSearchResult[]> {
   // Get all video IDs for creator
-  const { createClient } = await import('@/lib/db/client');
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
   const { data: videos, error } = await supabase
     .from('videos')
@@ -196,7 +194,7 @@ export async function searchCreatorContent(
     throw new Error(`Failed to fetch creator videos: ${error.message}`);
   }
 
-  const videoIds = videos?.map(v => v.id) || [];
+  const videoIds = videos?.map((v: any) => v.id) || [];
 
   if (videoIds.length === 0) {
     console.warn(`No videos found for creator ${creatorId}`);

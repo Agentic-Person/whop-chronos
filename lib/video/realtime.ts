@@ -215,7 +215,7 @@ export class VideoProcessingSubscription {
     if (!this.supabase || !this.statsCallback) return;
 
     try {
-      let query = this.supabase
+      let query = (this.supabase as any)
         .from('videos')
         .select('status')
         .eq('is_deleted', false);
@@ -240,7 +240,7 @@ export class VideoProcessingSubscription {
       };
 
       for (const video of data || []) {
-        stats[video.status]++;
+        stats[video.status as keyof Omit<ProcessingStatsEvent, 'total'>]++;
         stats.total++;
       }
 

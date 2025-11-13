@@ -15,7 +15,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
 } from 'recharts';
 import type { ProgressBucket } from './engagement-types';
 
@@ -45,8 +44,8 @@ const LABELS = {
 };
 
 export default function CourseProgressDistribution({
-  creatorId,
-  courseIds = [],
+  creatorId: _creatorId,
+  courseIds: _courseIds = [],
   data = [],
   isLoading = false,
 }: CourseProgressDistributionProps) {

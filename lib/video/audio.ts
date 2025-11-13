@@ -137,7 +137,7 @@ export async function cleanupAudioFile(audioPath: string): Promise<void> {
  * Clean up all temporary audio files older than specified age
  */
 export async function cleanupOldAudioFiles(
-  maxAgeMinutes = 60,
+  _maxAgeMinutes = 60,
 ): Promise<number> {
   try {
     const tempDir = getTempAudioDir();
@@ -160,7 +160,7 @@ export async function cleanupOldAudioFiles(
  */
 function getFileExtension(filename: string): string | null {
   const match = filename.match(/\.([^.]+)$/);
-  return match ? match[1].toLowerCase() : null;
+  return match ? (match[1]?.toLowerCase() || null) : null;
 }
 
 /**

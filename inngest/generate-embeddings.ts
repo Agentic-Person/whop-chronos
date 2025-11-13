@@ -13,19 +13,6 @@ import { inngest } from './client';
 import { getServiceSupabase } from '@/lib/db/client';
 import { chunkTranscript, getChunkingStats, validateChunks } from '@/lib/video/chunking';
 import { generateEmbeddings } from '@/lib/video/embeddings';
-import type { TranscriptSegment } from '@/lib/video/chunking';
-
-/**
- * Event payload for embedding generation
- */
-interface GenerateEmbeddingsEvent {
-  data: {
-    video_id: string;
-    creator_id: string;
-    transcript: string | TranscriptSegment[];
-    skip_if_exists?: boolean; // Skip if embeddings already exist
-  };
-}
 
 /**
  * Generate embeddings for a video's transcript
@@ -43,7 +30,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     console.log(`[Embeddings] Starting embedding generation for video ${video_id}`);
 
     // Step 1: Validate video exists and get current status
-    const video = await step.run('validate-video', async () => {
+    const video: any = await step.run('validate-video', async () => {
       const supabase = getServiceSupabase();
 
       const { data, error } = await supabase
@@ -81,7 +68,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     await step.run('update-status-processing', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({
           status: 'processing',
@@ -143,7 +130,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
         metadata: chunk.metadata,
       }));
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('video_chunks')
         .insert(chunksToInsert);
 
@@ -156,7 +143,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     await step.run('update-status-embedding', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({ status: 'embedding' })
         .eq('id', video_id);
@@ -192,7 +179,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
         const batch = embeddingResult.embeddings.slice(i, i + batchSize);
 
         for (const embedding of batch) {
-          const { error } = await supabase
+          const { error } = await (supabase as any)
             .from('video_chunks')
             .update({
               embedding: embedding.embedding,
@@ -217,7 +204,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
       const today = new Date().toISOString().split('T')[0];
 
       // Get current metrics
-      const { data: existingMetrics } = await supabase
+      const { data: existingMetrics } = await (supabase as any)
         .from('usage_metrics')
         .select('*')
         .eq('creator_id', creator_id)
@@ -228,7 +215,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
       if (existingMetrics) {
         // Update existing metrics
-        await supabase
+        await (supabase as any)
           .from('usage_metrics')
           .update({
             ai_credits_used: existingMetrics.ai_credits_used + aiCreditsUsed,
@@ -237,7 +224,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
           .eq('id', existingMetrics.id);
       } else {
         // Create new metrics
-        await supabase
+        await (supabase as any)
           .from('usage_metrics')
           .insert({
             creator_id,
@@ -267,7 +254,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     await step.run('update-status-completed', async () => {
       const supabase = getServiceSupabase();
 
-      await supabase
+      await (supabase as any)
         .from('videos')
         .update({
           status: 'completed',
@@ -320,7 +307,7 @@ export const handleEmbeddingFailure = inngest.createFunction(
 
     // Update video status to failed
     const supabase = getServiceSupabase();
-    await supabase
+    await (supabase as any)
       .from('videos')
       .update({
         status: 'failed',
@@ -357,7 +344,7 @@ export const batchReprocessEmbeddings = inngest.createFunction(
       for (const videoId of video_ids) {
         try {
           // Get video data
-          const { data: video } = await supabase
+          const { data: video } = await (supabase as any)
             .from('videos')
             .select('id, transcript, creator_id')
             .eq('id', videoId)

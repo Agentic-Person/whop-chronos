@@ -15,7 +15,7 @@ import { buildPrompt, extractVideoReferences } from './prompts';
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
+  apiKey: process.env['ANTHROPIC_API_KEY'] || '',
 });
 
 export interface ChatMessage {
@@ -296,7 +296,7 @@ export async function testClaudeAPI(): Promise<{
  * Validate API key
  */
 export function validateAPIKey(): boolean {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env['ANTHROPIC_API_KEY'];
 
   if (!apiKey) {
     console.error('ANTHROPIC_API_KEY is not set');

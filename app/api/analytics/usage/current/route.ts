@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tier = creator.subscription_tier as SubscriptionTier;
+    const tier = (creator as any).subscription_tier as SubscriptionTier;
 
     // Get current month's date range
     const now = new Date();
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     const daysElapsed = now.getDate();
 
     // Call the Supabase function to get monthly usage summary
-    const { data: monthlyUsage, error: usageError } = await supabase.rpc(
+    const { data: monthlyUsage, error: usageError } = await (supabase.rpc as any)(
       'get_monthly_usage_summary',
       {
         p_creator_id: creatorId,
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       .eq('is_deleted', false);
 
     const videoCount = videos?.length || 0;
-    const totalStorageBytes = videos?.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0) || 0;
+    const totalStorageBytes = videos?.reduce((sum, v: any) => sum + (v.file_size_bytes || 0), 0) || 0;
     const totalStorageGB = totalStorageBytes / (1024 * 1024 * 1024);
     const avgVideoSizeMB = videoCount > 0 ? (totalStorageBytes / videoCount) / (1024 * 1024) : 0;
 
@@ -145,14 +145,14 @@ export async function GET(request: NextRequest) {
       .gte('created_at', firstOfMonth.toISOString());
 
     const totalChatMessages = chatMessages?.length || 0;
-    const aiMessages = chatMessages?.filter((m) => m.role === 'assistant') || [];
+    const aiMessages = chatMessages?.filter((m: any) => m.role === 'assistant') || [];
     const apiCalls = aiMessages.length;
 
     // Calculate token counts from metadata
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
 
-    aiMessages.forEach((msg) => {
+    aiMessages.forEach((msg: any) => {
       if (msg.token_count) {
         // Rough estimate: 75% of tokens are output for AI responses
         totalOutputTokens += Math.floor(msg.token_count * 0.75);

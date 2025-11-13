@@ -9,7 +9,6 @@ import type { Database } from '@/lib/db/types';
 
 type VideoRow = Database['public']['Tables']['videos']['Row'];
 type VideoStatus = VideoRow['status'];
-type VideoAnalyticsRow = Database['public']['Tables']['video_analytics']['Row'];
 
 // =====================================================
 // TYPES
@@ -116,7 +115,7 @@ export class ProcessingTimer {
     const supabase = getServiceSupabase();
 
     // Get current metadata
-    const { data: video } = await supabase
+    const { data: video } = await (supabase as any)
       .from('videos')
       .select('metadata')
       .eq('id', this.videoId)
@@ -126,7 +125,7 @@ export class ProcessingTimer {
     const totalDuration = this.getTotalDuration();
 
     // Update metadata with timings
-    await supabase
+    await (supabase as any)
       .from('videos')
       .update({
         metadata: {
@@ -155,7 +154,7 @@ export async function logProcessingCompletion(
 
   try {
     // Get video details
-    const { data: video } = await supabase
+    const { data: video } = await (supabase as any)
       .from('videos')
       .select('*')
       .eq('id', videoId)
@@ -171,10 +170,10 @@ export async function logProcessingCompletion(
       : null;
 
     // Get today's date for analytics
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] as string;
 
     // Check if analytics record exists for today
-    const { data: existingAnalytics } = await supabase
+    const { data: existingAnalytics } = await (supabase as any)
       .from('video_analytics')
       .select('*')
       .eq('video_id', videoId)
@@ -183,7 +182,7 @@ export async function logProcessingCompletion(
 
     if (existingAnalytics) {
       // Update existing record
-      await supabase
+      await (supabase as any)
         .from('video_analytics')
         .update({
           processing_duration_ms: processingDuration,
@@ -197,7 +196,7 @@ export async function logProcessingCompletion(
         .eq('id', existingAnalytics.id);
     } else {
       // Create new analytics record
-      await supabase
+      await (supabase as any)
         .from('video_analytics')
         .insert({
           video_id: videoId,
@@ -233,7 +232,7 @@ export async function logProcessingFailure(
 
   try {
     // Get video metadata
-    const { data: video } = await supabase
+    const { data: video } = await (supabase as any)
       .from('videos')
       .select('metadata')
       .eq('id', videoId)
@@ -246,7 +245,7 @@ export async function logProcessingFailure(
     const errorCount = (metadata[errorKey] || 0) + 1;
 
     // Update metadata with failure information
-    await supabase
+    await (supabase as any)
       .from('videos')
       .update({
         metadata: {
@@ -303,7 +302,7 @@ export async function calculateAverageProcessingTimes(
   const supabase = getServiceSupabase();
 
   // Get all completed videos
-  let query = supabase
+  let query = (supabase as any)
     .from('videos')
     .select('metadata')
     .eq('status', 'completed')
@@ -450,7 +449,7 @@ export async function getProcessingStatistics(creatorId?: string) {
   const supabase = getServiceSupabase();
 
   // Get all videos
-  let query = supabase
+  let query = (supabase as any)
     .from('videos')
     .select('status, processing_started_at, processing_completed_at, metadata, created_at')
     .eq('is_deleted', false);
@@ -487,7 +486,7 @@ export async function getProcessingStatistics(creatorId?: string) {
   let completedCount = 0;
 
   for (const video of videos) {
-    stats.byStatus[video.status]++;
+    stats.byStatus[video.status as keyof typeof stats.byStatus]++;
 
     if (video.status === 'completed' && video.processing_started_at && video.processing_completed_at) {
       const duration =
@@ -516,7 +515,7 @@ export async function getProcessingStatistics(creatorId?: string) {
 export async function exportProcessingAnalytics(creatorId?: string): Promise<string> {
   const supabase = getServiceSupabase();
 
-  let query = supabase
+  let query = (supabase as any)
     .from('videos')
     .select('id, title, status, created_at, processing_started_at, processing_completed_at, metadata')
     .eq('is_deleted', false)
@@ -547,7 +546,7 @@ export async function exportProcessingAnalytics(creatorId?: string): Promise<str
     'Total Duration (ms)',
   ];
 
-  const rows = videos.map((video) => {
+  const rows = videos.map((video: any) => {
     const metadata = video.metadata as any || {};
     const totalDuration = video.processing_started_at && video.processing_completed_at
       ? new Date(video.processing_completed_at).getTime() - new Date(video.processing_started_at).getTime()

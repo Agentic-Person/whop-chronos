@@ -19,15 +19,15 @@ export async function emailReport(
       throw new Error('No valid email recipients');
     }
 
-    // Generate email content
-    const emailHTML = generateEmailHTML(metadata);
-    const emailText = generateEmailText(metadata);
+    // Generate email content (prepared for email service integration)
+    void generateEmailHTML(metadata);
+    void generateEmailText(metadata);
 
     // TODO: Integrate with email service
     // Example with Resend:
     /*
     const { Resend } = await import('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(process.env['RESEND_API_KEY']);
 
     await resend.emails.send({
       from: 'reports@chronos.app',
@@ -178,13 +178,16 @@ function isValidEmail(email: string): boolean {
 
 /**
  * Sanitize filename for attachment
+ * TODO: Uncomment when email service is integrated
  */
+/*
 function sanitizeFilename(name: string): string {
   return name
     .replace(/[^a-z0-9_\-]/gi, '_')
     .replace(/_{2,}/g, '_')
     .toLowerCase();
 }
+*/
 
 /**
  * Track email delivery status

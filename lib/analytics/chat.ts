@@ -39,8 +39,8 @@ export function calculateResponseQuality(
   let followUpCount = 0;
   for (let i = 0; i < messages.length - 1; i++) {
     if (
-      messages[i].role === 'assistant' &&
-      messages[i + 1].role === 'user'
+      messages[i]!.role === 'assistant' &&
+      messages[i + 1]!.role === 'user'
     ) {
       followUpCount++;
     }
@@ -148,24 +148,24 @@ function levenshteinDistance(str1: string, str2: string): number {
     .fill(null)
     .map(() => Array(n + 1).fill(0));
 
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 0; i <= m; i++) dp[i]![0] = i;
+  for (let j = 0; j <= n; j++) dp[0]![j] = j;
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       if (str1[i - 1] === str2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1];
+        dp[i]![j] = dp[i - 1]![j - 1]!;
       } else {
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1, // deletion
-          dp[i][j - 1] + 1, // insertion
-          dp[i - 1][j - 1] + 1 // substitution
+        dp[i]![j] = Math.min(
+          dp[i - 1]![j]! + 1, // deletion
+          dp[i]![j - 1]! + 1, // insertion
+          dp[i - 1]![j - 1]! + 1 // substitution
         );
       }
     }
   }
 
-  return dp[m][n];
+  return dp[m]![n]!;
 }
 
 /**
@@ -198,7 +198,7 @@ export function calculateAICost(messages: ChatMessage[]): CostBreakdown {
       breakdown.byModel[model] = (breakdown.byModel[model] || 0) + msg.cost_usd;
 
       // Track by date
-      const date = new Date(msg.created_at).toISOString().split('T')[0];
+      const date = new Date(msg.created_at).toISOString().split('T')[0]!;
       dateMap.set(date, (dateMap.get(date) || 0) + msg.cost_usd);
     } else if (msg.input_tokens && msg.output_tokens) {
       // Calculate cost
@@ -213,7 +213,7 @@ export function calculateAICost(messages: ChatMessage[]): CostBreakdown {
       breakdown.byModel[model] = (breakdown.byModel[model] || 0) + cost;
 
       // Track by date
-      const date = new Date(msg.created_at).toISOString().split('T')[0];
+      const date = new Date(msg.created_at).toISOString().split('T')[0]!;
       dateMap.set(date, (dateMap.get(date) || 0) + cost);
     }
   });
@@ -249,12 +249,12 @@ export function detectSessionBoundaries(
   );
 
   const sessions: Session[] = [];
-  let currentSession: ChatMessage[] = [sortedMessages[0]];
-  let sessionStart = new Date(sortedMessages[0].created_at);
+  let currentSession: ChatMessage[] = [sortedMessages[0]!];
+  let sessionStart = new Date(sortedMessages[0]!.created_at);
 
   for (let i = 1; i < sortedMessages.length; i++) {
-    const msg = sortedMessages[i];
-    const prevMsg = sortedMessages[i - 1];
+    const msg = sortedMessages[i]!;
+    const prevMsg = sortedMessages[i - 1]!;
     const timeDiff =
       new Date(msg.created_at).getTime() -
       new Date(prevMsg.created_at).getTime();
@@ -274,7 +274,7 @@ export function detectSessionBoundaries(
 
   // Add final session
   if (currentSession.length > 0) {
-    const sessionEnd = new Date(currentSession[currentSession.length - 1].created_at);
+    const sessionEnd = new Date(currentSession[currentSession.length - 1]!.created_at);
     sessions.push(createSession(currentSession, sessionStart, sessionEnd));
   }
 
@@ -292,7 +292,7 @@ function createSession(
   const duration = endTime.getTime() - startTime.getTime();
 
   // Session is "completed" if the last message is from assistant
-  const completed = messages[messages.length - 1].role === 'assistant';
+  const completed = messages[messages.length - 1]!.role === 'assistant';
 
   return {
     id: `session-${startTime.getTime()}`,
@@ -316,7 +316,7 @@ export function extractVideoReferences(message: ChatMessage): string[] {
   // Parse video references from message content
   const videoIdPattern = /video[_-]id:\s*([a-zA-Z0-9-]+)/gi;
   const matches = message.content.matchAll(videoIdPattern);
-  const videoIds = Array.from(matches, (m) => m[1]);
+  const videoIds = Array.from(matches, (m) => m[1]!);
 
   return [...new Set(videoIds)]; // Remove duplicates
 }

@@ -8,7 +8,7 @@ import { Inngest } from 'inngest';
 export const inngest = new Inngest({
   id: 'chronos',
   name: 'Chronos Video Processing',
-  retryFunction: async (attempt) => ({
+  retryFunction: async (attempt: number) => ({
     delay: Math.min(1000 * Math.pow(2, attempt), 60000), // Exponential backoff, max 60s
     maxAttempts: 3,
   }),

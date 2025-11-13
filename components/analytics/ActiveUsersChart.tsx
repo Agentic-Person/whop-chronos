@@ -29,8 +29,8 @@ interface ActiveUsersChartProps {
 type ViewMode = 'dau' | 'mau' | 'both';
 
 export default function ActiveUsersChart({
-  creatorId,
-  timeRange = '30d',
+  creatorId: _creatorId,
+  timeRange: _timeRange = '30d',
   data = [],
   isLoading = false,
 }: ActiveUsersChartProps) {

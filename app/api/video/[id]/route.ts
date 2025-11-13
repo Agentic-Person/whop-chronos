@@ -15,7 +15,6 @@ import {
   getVideoDownloadUrl,
 } from '@/lib/video/storage';
 
-type VideoRow = Database['public']['Tables']['videos']['Row'];
 type VideoUpdate = Database['public']['Tables']['videos']['Update'];
 
 export const runtime = 'nodejs';
@@ -59,8 +58,8 @@ export async function GET(
 
     // Generate download URL if requested and video is ready
     let downloadUrl: string | null = null;
-    if (includeDownloadUrl && video.storage_path && video.status === 'completed') {
-      downloadUrl = await getVideoDownloadUrl(video.storage_path);
+    if (includeDownloadUrl && (video as any).storage_path && (video as any).status === 'completed') {
+      downloadUrl = await getVideoDownloadUrl((video as any).storage_path);
     }
 
     // Get video chunks count
@@ -74,24 +73,24 @@ export async function GET(
       {
         success: true,
         data: {
-          id: video.id,
-          creatorId: video.creator_id,
-          title: video.title,
-          description: video.description,
-          status: video.status,
-          duration: video.duration_seconds,
-          fileSize: video.file_size_bytes,
-          thumbnailUrl: video.thumbnail_url,
+          id: (video as any).id,
+          creatorId: (video as any).creator_id,
+          title: (video as any).title,
+          description: (video as any).description,
+          status: (video as any).status,
+          duration: (video as any).duration_seconds,
+          fileSize: (video as any).file_size_bytes,
+          thumbnailUrl: (video as any).thumbnail_url,
           downloadUrl,
-          transcript: video.transcript,
-          transcriptLanguage: video.transcript_language,
+          transcript: (video as any).transcript,
+          transcriptLanguage: (video as any).transcript_language,
           chunksCount: chunksCount || 0,
-          createdAt: video.created_at,
-          updatedAt: video.updated_at,
-          processingStartedAt: video.processing_started_at,
-          processingCompletedAt: video.processing_completed_at,
-          errorMessage: video.error_message,
-          metadata: video.metadata,
+          createdAt: (video as any).created_at,
+          updatedAt: (video as any).updated_at,
+          processingStartedAt: (video as any).processing_started_at,
+          processingCompletedAt: (video as any).processing_completed_at,
+          errorMessage: (video as any).error_message,
+          metadata: (video as any).metadata,
         },
       },
       { status: 200 },
@@ -152,7 +151,7 @@ export async function PATCH(
     if (title) updateData.title = title;
     if (description !== undefined) updateData.description = description;
 
-    const { data: updatedVideo, error: updateError } = await supabase
+    const { data: updatedVideo, error: updateError } = await (supabase as any)
       .from('videos')
       .update(updateData)
       .eq('id', id)
@@ -228,14 +227,14 @@ export async function DELETE(
       const deletePromises: Promise<boolean>[] = [];
 
       // Delete video file
-      if (video.storage_path) {
-        deletePromises.push(deleteVideoFile(video.storage_path));
+      if ((video as any).storage_path) {
+        deletePromises.push(deleteVideoFile((video as any).storage_path));
       }
 
       // Delete thumbnail
-      if (video.thumbnail_url) {
+      if ((video as any).thumbnail_url) {
         // Extract path from URL
-        const thumbnailPath = video.thumbnail_url.split('/').slice(-3).join('/');
+        const thumbnailPath = (video as any).thumbnail_url.split('/').slice(-3).join('/');
         deletePromises.push(deleteThumbnailFile(thumbnailPath));
       }
 
@@ -267,7 +266,7 @@ export async function DELETE(
     }
 
     // Soft delete: Mark as deleted
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('videos')
       .update({ is_deleted: true })
       .eq('id', id);

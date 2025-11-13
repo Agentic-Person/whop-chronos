@@ -27,7 +27,7 @@ interface Alert {
 
 export function UsageAlerts({
   creatorId,
-  tier,
+  tier: _tier,
   onUpgrade,
 }: UsageAlertsProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);

@@ -36,7 +36,7 @@ interface CustomTooltipProps {
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (!active || !payload || payload.length === 0) return null;
 
-  const data = payload[0].payload;
+  const data = payload[0]!.payload;
   const hours = Math.floor(data.watchTime / 3600);
   const minutes = Math.floor((data.watchTime % 3600) / 60);
 
@@ -109,7 +109,7 @@ const EmptyState: React.FC<{ height: number }> = ({ height }) => (
 );
 
 export const WatchTimeChart: React.FC<WatchTimeChartProps> = React.memo(({
-  creatorId,
+  creatorId: _creatorId,
   topN = 10,
   data,
   isLoading = false,
@@ -136,9 +136,9 @@ export const WatchTimeChart: React.FC<WatchTimeChartProps> = React.memo(({
     return Math.max(...chartData.map(item => item.watchTime), 1);
   }, [chartData]);
 
-  const handleBarClick = (entry: typeof chartData[0]) => {
-    if (onVideoClick) {
-      onVideoClick(entry.videoId);
+  const handleBarClick = (data: any) => {
+    if (onVideoClick && data?.videoId) {
+      onVideoClick(data.videoId);
     }
   };
 

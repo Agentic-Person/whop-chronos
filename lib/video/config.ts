@@ -76,7 +76,7 @@ export function isFormatAllowed(
   tier: SubscriptionTier,
 ): boolean {
   const extension = getFileExtension(filename);
-  return VIDEO_LIMITS[tier].allowedFormats.includes(extension);
+  return VIDEO_LIMITS[tier].allowedFormats.includes(extension as any);
 }
 
 /**

@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       .gte('date', start.toISOString().split('T')[0])
       .lte('date', end.toISOString().split('T')[0]);
 
-    const totalWatchTimeMinutes = watchTimeData?.reduce((sum, record) => sum + (record.watch_time || 0), 0) || 0;
+    const totalWatchTimeMinutes = watchTimeData?.reduce((sum, record: any) => sum + (record.watch_time || 0), 0) || 0;
     const totalWatchTime = formatWatchTime(totalWatchTimeMinutes);
 
     // Get sparkline data for last 30 days
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         videos_limit: 50,
       },
       topVideos: topVideosData.data || [],
-      tier: usageData.data?.tier || 'free',
+      tier: (usageData.data as any)?.tier || 'free',
     };
 
     return NextResponse.json(overview);
@@ -194,7 +194,7 @@ async function getSparklineData(supabase: any, creatorId: string) {
   // Aggregate by day
   const dailyData = new Map<string, { views: number; watchTime: number }>();
 
-  dailyMetrics?.forEach((metric) => {
+  dailyMetrics?.forEach((metric: any) => {
     const existing = dailyData.get(metric.date) || { views: 0, watchTime: 0 };
     dailyData.set(metric.date, {
       views: existing.views + metric.views,
@@ -207,7 +207,7 @@ async function getSparklineData(supabase: any, creatorId: string) {
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0]!;
     const data = dailyData.get(dateStr) || { views: 0, watchTime: 0 };
 
     sparklines.views.push(data.views);

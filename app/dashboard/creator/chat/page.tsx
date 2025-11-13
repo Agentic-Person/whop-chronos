@@ -10,9 +10,7 @@ import {
   Tooltip,
   DropdownMenu,
   AlertDialog,
-  Separator,
   ScrollArea,
-  Skeleton,
 } from '@whop/react/components';
 import {
   MessageSquare,
@@ -111,7 +109,7 @@ function formatTimestamp(seconds: number): string {
 }
 
 function VideoReferenceBadge({ reference }: { reference: VideoReference }) {
-  const [showPreview, setShowPreview] = useState(false);
+  const [_showPreview, setShowPreview] = useState(false);
 
   return (
     <Tooltip
@@ -370,11 +368,11 @@ function LoadingSkeleton({ type }: { type: 'sessions' | 'messages' }) {
         {[1, 2, 3, 4, 5].map((i) => (
           <Card key={i} className="p-3">
             <div className="flex items-start gap-3">
-              <Skeleton className="w-8 h-8 rounded-full" />
+              <div className="w-8 h-8 rounded-full bg-gray-a3 animate-pulse" />
               <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-3 w-full" />
+                <div className="h-4 w-3/4 bg-gray-a3 rounded animate-pulse" />
+                <div className="h-3 w-1/2 bg-gray-a3 rounded animate-pulse" />
+                <div className="h-3 w-full bg-gray-a3 rounded animate-pulse" />
               </div>
             </div>
           </Card>
@@ -387,10 +385,10 @@ function LoadingSkeleton({ type }: { type: 'sessions' | 'messages' }) {
     <div className="space-y-4 p-4">
       {[1, 2, 3].map((i) => (
         <div key={i} className={cn('flex gap-3', i % 2 === 0 ? 'flex-row-reverse' : '')}>
-          <Skeleton className="w-8 h-8 rounded-full" />
+          <div className="w-8 h-8 rounded-full bg-gray-a3 animate-pulse" />
           <div className="space-y-2 max-w-[70%]">
-            <Skeleton className="h-20 w-full rounded-lg" />
-            <Skeleton className="h-3 w-32" />
+            <div className="h-20 w-full rounded-lg bg-gray-a3 animate-pulse" />
+            <div className="h-3 w-32 bg-gray-a3 rounded animate-pulse" />
           </div>
         </div>
       ))}

@@ -5,7 +5,7 @@ import type { ReportSchedule } from '@/lib/reports/types';
  * GET /api/export/schedule
  * List all report schedules for the authenticated creator
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Validate user authentication
     // const user = await validateWhopUser(request);
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id } = body;
 
     if (!id) {
       return NextResponse.json(

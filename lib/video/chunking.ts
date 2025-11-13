@@ -97,14 +97,6 @@ function countWords(text: string): number {
 }
 
 /**
- * Get the first N words from a text string
- */
-function getFirstNWords(text: string, n: number): string {
-  const words = text.trim().split(/\s+/);
-  return words.slice(0, n).join(' ');
-}
-
-/**
  * Get the last N words from a text string
  */
 function getLastNWords(text: string, n: number): string {
@@ -192,6 +184,7 @@ export function chunkTranscript(
 
   for (let i = 0; i < allSentences.length; i++) {
     const sentence = allSentences[i];
+    if (!sentence) continue;
     const sentenceWords = countWords(sentence.text);
 
     // Check if adding this sentence would exceed max_words
@@ -215,8 +208,8 @@ export function chunkTranscript(
         chunks.push({
           chunk_index: chunkIndex,
           chunk_text: finalChunkText,
-          start_time_seconds: currentChunk.sentences[0].start_time,
-          end_time_seconds: currentChunk.sentences[currentChunk.sentences.length - 1].end_time,
+          start_time_seconds: currentChunk.sentences[0]!.start_time,
+          end_time_seconds: currentChunk.sentences[currentChunk.sentences.length - 1]!.end_time,
           word_count: countWords(finalChunkText),
           metadata: {
             has_overlap: hasOverlap,
@@ -261,8 +254,8 @@ export function chunkTranscript(
     chunks.push({
       chunk_index: chunkIndex,
       chunk_text: finalChunkText,
-      start_time_seconds: currentChunk.sentences[0].start_time,
-      end_time_seconds: currentChunk.sentences[currentChunk.sentences.length - 1].end_time,
+      start_time_seconds: currentChunk.sentences[0]!.start_time,
+      end_time_seconds: currentChunk.sentences[currentChunk.sentences.length - 1]!.end_time,
       word_count: countWords(finalChunkText),
       metadata: {
         has_overlap: hasOverlap,
@@ -290,15 +283,15 @@ export function validateChunks(chunks: TranscriptChunk[]): {
 
   // Check for very small chunks (except last one)
   for (let i = 0; i < chunks.length - 1; i++) {
-    if (chunks[i].word_count < 200) {
-      warnings.push(`Chunk ${i} is very small (${chunks[i].word_count} words)`);
+    if (chunks[i]!.word_count < 200) {
+      warnings.push(`Chunk ${i} is very small (${chunks[i]!.word_count} words)`);
     }
   }
 
   // Check for timestamp continuity
   for (let i = 1; i < chunks.length; i++) {
-    const prevEnd = chunks[i - 1].end_time_seconds;
-    const currentStart = chunks[i].start_time_seconds;
+    const prevEnd = chunks[i - 1]!.end_time_seconds;
+    const currentStart = chunks[i]!.start_time_seconds;
 
     if (currentStart < prevEnd - 1) {
       warnings.push(`Chunk ${i} has overlapping timestamps with previous chunk`);
@@ -337,7 +330,7 @@ export function getChunkingStats(chunks: TranscriptChunk[]): {
 
   const totalWords = chunks.reduce((sum, chunk) => sum + chunk.word_count, 0);
   const wordCounts = chunks.map(c => c.word_count);
-  const lastChunk = chunks[chunks.length - 1];
+  const lastChunk = chunks[chunks.length - 1]!;
 
   return {
     total_chunks: chunks.length,

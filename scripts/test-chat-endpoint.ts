@@ -18,7 +18,7 @@ import { getServiceSupabase } from '../lib/db/client';
 
 dotenv.config({ path: '.env.local' });
 
-const API_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const API_URL = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
 
 interface ChatResponse {
   content: string;

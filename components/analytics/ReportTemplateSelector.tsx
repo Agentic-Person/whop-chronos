@@ -69,6 +69,7 @@ export function ReportTemplateSelector({
           <div className="grid grid-cols-2 gap-4">
             {(Object.keys(TEMPLATES) as TemplateType[]).map((templateKey) => {
               const template = TEMPLATES[templateKey];
+              if (!template) return null;
 
               return (
                 <button
@@ -176,7 +177,7 @@ export function ReportTemplateSelector({
                 )
               ) : (
                 <ul className="text-sm text-gray-600 space-y-1">
-                  {TEMPLATES[selectedTemplate].sections.map((section, index) => (
+                  {TEMPLATES[selectedTemplate]?.sections.map((section, index) => (
                     <li key={index} className="flex items-center">
                       <span className="mr-2">
                         {section.type === 'header' && '📄'}

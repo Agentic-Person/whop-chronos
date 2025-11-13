@@ -66,10 +66,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { title, context_video_ids, metadata } = body;
 
     const updates: Record<string, unknown> = {};
-    if (title !== undefined) updates.title = title;
+    if (title !== undefined) updates['title'] = title;
     if (context_video_ids !== undefined)
-      updates.context_video_ids = context_video_ids;
-    if (metadata !== undefined) updates.metadata = metadata;
+      updates['context_video_ids'] = context_video_ids;
+    if (metadata !== undefined) updates['metadata'] = metadata;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(

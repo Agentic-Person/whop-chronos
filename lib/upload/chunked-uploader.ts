@@ -188,19 +188,7 @@ export class ChunkedUploader {
   /**
    * Upload single chunk
    */
-  private async uploadChunk(chunkIndex: number): Promise<void> {
-    const start = chunkIndex * this.chunkSize;
-    const end = Math.min(start + this.chunkSize, this.file.size);
-    const chunk = this.file.slice(start, end);
-
-    const chunkInfo: UploadChunkInfo = {
-      chunkIndex,
-      totalChunks: this.totalChunks,
-      start,
-      end,
-      size: chunk.size,
-    };
-
+  private async uploadChunk(_chunkIndex: number): Promise<void> {
     // For chunked upload, we need to send chunks sequentially
     // Supabase Storage requires using their signed URLs
     const response = await fetch(this.uploadUrl, {
@@ -284,16 +272,6 @@ export class ChunkedUploader {
       isPaused: this.isPaused,
       isCancelled: this.isCancelled,
     };
-  }
-
-  /**
-   * Calculate checksum for chunk (optional, for integrity verification)
-   */
-  private async calculateChecksum(data: Blob): Promise<string> {
-    const arrayBuffer = await data.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
   /**

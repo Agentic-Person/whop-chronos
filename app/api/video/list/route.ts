@@ -123,20 +123,22 @@ export async function GET(req: NextRequest) {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    // Format response
-    const formattedVideos = videos?.map((video) => ({
+    // Format response (using snake_case to match database schema)
+    const formattedVideos = videos?.map((video: any) => ({
       id: video.id,
       title: video.title,
       description: video.description,
       status: video.status,
-      duration: video.duration_seconds,
-      fileSize: video.file_size_bytes,
-      thumbnailUrl: video.thumbnail_url,
-      createdAt: video.created_at,
-      updatedAt: video.updated_at,
-      processingStartedAt: video.processing_started_at,
-      processingCompletedAt: video.processing_completed_at,
-      errorMessage: video.error_message,
+      duration_seconds: video.duration_seconds,
+      file_size_bytes: video.file_size_bytes,
+      thumbnail_url: video.thumbnail_url,
+      source_type: video.source_type,
+      youtube_video_id: video.youtube_video_id,
+      created_at: video.created_at,
+      updated_at: video.updated_at,
+      processing_started_at: video.processing_started_at,
+      processing_completed_at: video.processing_completed_at,
+      error_message: video.error_message,
       metadata: video.metadata,
       // Processing progress
       progress: calculateProgress(video.status),

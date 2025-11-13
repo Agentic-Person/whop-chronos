@@ -14,7 +14,7 @@ import path from 'path';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env['OPENAI_API_KEY'],
 });
 
 interface TranscriptChunk {
@@ -185,7 +185,7 @@ async function extractChapters(transcriptText: string): Promise<Chapter[]> {
 
   const Anthropic = await import('@anthropic-ai/sdk');
   const anthropic = new Anthropic.default({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    apiKey: process.env['ANTHROPIC_API_KEY'],
   });
 
   const prompt = `Analyze this video transcript and extract 5-6 logical chapters with timestamps that span the ENTIRE video.

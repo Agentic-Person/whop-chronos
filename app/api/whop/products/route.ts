@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listProducts } from '@/lib/whop/api-client';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // In production, validate authentication here
     // const userId = await validateAuth(req);

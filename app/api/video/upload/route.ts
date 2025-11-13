@@ -16,7 +16,6 @@ import {
   generateVideoPath,
   cleanupFailedUpload,
 } from '@/lib/video/storage';
-import { inngest } from '@/inngest/client';
 import {
   isValidVideoUrl,
   downloadAndUploadVideo,
@@ -111,7 +110,7 @@ export async function POST(req: NextRequest) {
       return handleFileUpload(
         filename,
         fileSize,
-        mimeType,
+        mimeType || 'video/mp4', // Default to video/mp4 if not provided
         title,
         description,
         creatorId,
@@ -167,7 +166,7 @@ async function handleUrlUpload(
 
     // Create video record with pending status
     console.log('[Upload API] Creating video record...');
-    const { data: video, error: videoError } = await supabase
+    const { data: video, error: videoError } = await (supabase as any)
       .from('videos')
       .insert({
         creator_id: creatorId,
@@ -204,7 +203,7 @@ async function handleUrlUpload(
 
     // Update video record with storage info
     console.log('[Upload API] Updating video with storage info...');
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('videos')
       .update({
         storage_path: processedVideo.storagePath,
@@ -297,7 +296,7 @@ async function handleFileUpload(
     const supabase = getServiceSupabase();
 
     // Create video record
-    const { data: video, error: videoError } = await supabase
+    const { data: video, error: videoError } = await (supabase as any)
       .from('videos')
       .insert({
         creator_id: creatorId,
@@ -327,7 +326,7 @@ async function handleFileUpload(
     const storagePath = generateVideoPath(creatorId, video.id, filename);
 
     // Update video with storage path
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('videos')
       .update({
         storage_path: storagePath,

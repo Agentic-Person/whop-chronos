@@ -12,7 +12,6 @@ import {
   calculateActiveUsersOverTime,
   calculateCohortRetention,
   calculateSessionDurations,
-  calculateAverageSessionDuration,
   calculateEngagementScore,
 } from '@/lib/analytics/engagement';
 import type {
@@ -51,8 +50,8 @@ export async function GET(request: NextRequest) {
 
     // Initialize Supabase client
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+      process.env['SUPABASE_SERVICE_ROLE_KEY']!
     );
 
     // Calculate date range
@@ -333,7 +332,7 @@ async function fetchActivityTimeline(
   for (let i = 0; i < days; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0]!;
 
     // Count video views
     const { count: videoViews } = await supabase

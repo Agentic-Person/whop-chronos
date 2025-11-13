@@ -51,14 +51,14 @@ export const AI_MODELS: Record<string, AIModelConfig> = {
 
 // Get current model from environment variable
 export function getCurrentModel(): AIModelConfig {
-  const modelId = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+  const modelId = process.env['ANTHROPIC_MODEL'] || 'claude-3-5-haiku-20241022';
   const model = AI_MODELS[modelId];
 
   if (!model) {
     console.warn(
       `Unknown model "${modelId}", falling back to Claude 3.5 Haiku`
     );
-    return AI_MODELS['claude-3-5-haiku-20241022'];
+    return AI_MODELS['claude-3-5-haiku-20241022']!;
   }
 
   return model;

@@ -8,7 +8,7 @@
  * - Generate cost reports
  */
 
-import { createClient } from '@/lib/db/client';
+import { getServiceSupabase } from '@/lib/db/client';
 import { calculateCost } from './config';
 
 export interface CostEntry {
@@ -71,7 +71,7 @@ export async function trackMessageCost(
   outputTokens: number,
   model: string
 ): Promise<void> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase() as any;
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const cost = calculateCost(inputTokens, outputTokens, model);
 
@@ -134,7 +134,7 @@ export async function getMonthlyUsage(
   creatorId: string,
   month?: string // YYYY-MM, defaults to current month
 ): Promise<MonthlyUsage> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase() as any;
   const targetMonth = month || new Date().toISOString().slice(0, 7); // YYYY-MM
 
   const { data, error } = await supabase
@@ -162,7 +162,7 @@ export async function getMonthlyUsage(
 
   // Aggregate data
   const totals = data.reduce(
-    (acc, day) => {
+    (acc: { total_messages: number; total_input_tokens: number; total_output_tokens: number; total_cost_usd: number }, day: any) => {
       acc.total_messages += day.chat_messages_sent;
       acc.total_input_tokens += day.metadata?.total_input_tokens || 0;
       acc.total_output_tokens += day.metadata?.total_output_tokens || 0;
@@ -251,7 +251,7 @@ export async function getCostTrend(
   creatorId: string,
   days = 30
 ): Promise<Array<{ date: string; cost: number; messages: number }>> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase() as any;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
@@ -266,7 +266,7 @@ export async function getCostTrend(
     throw new Error(`Failed to get cost trend: ${error.message}`);
   }
 
-  return (data || []).map(day => ({
+  return (data || []).map((day: any) => ({
     date: day.date,
     cost: day.metadata?.total_ai_cost_usd || 0,
     messages: day.chat_messages_sent,
@@ -285,7 +285,7 @@ export async function getTopSpenders(
   total_messages: number;
   average_cost_per_message: number;
 }>> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase() as any;
   const targetMonth = month || new Date().toISOString().slice(0, 7);
 
   const { data, error } = await supabase
@@ -370,8 +370,8 @@ export async function estimateMonthlyUsage(
  */
 function getNextMonth(monthStr: string): string {
   const [year, month] = monthStr.split('-').map(Number);
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month! === 12 ? 1 : month! + 1;
+  const nextYear = month! === 12 ? year! + 1 : year!;
   return `${nextYear}-${nextMonth.toString().padStart(2, '0')}`;
 }
 
@@ -379,7 +379,7 @@ function getNextMonth(monthStr: string): string {
  * Reset monthly usage (for testing)
  */
 export async function resetMonthlyUsage(creatorId: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase() as any;
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   await supabase

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     // Update video record if videoId provided
     if (videoId) {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('videos')
         .update({ thumbnail_url: thumbnailUrl })
         .eq('id', videoId);

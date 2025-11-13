@@ -423,9 +423,9 @@ export async function generateThumbnailGrid(
  */
 export function dataUrlToBlob(dataUrl: string): Blob {
   const [header, data] = dataUrl.split(',');
-  const mimeMatch = header.match(/:(.*?);/);
+  const mimeMatch = (header || '').match(/:(.*?);/);
   const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-  const binary = atob(data);
+  const binary = atob(data || '');
   const array = new Uint8Array(binary.length);
 
   for (let i = 0; i < binary.length; i++) {

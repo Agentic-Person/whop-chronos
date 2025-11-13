@@ -17,7 +17,7 @@ interface EngagementScoreCardProps {
 }
 
 export default function EngagementScoreCard({
-  creatorId,
+  creatorId: _creatorId,
   studentId,
   score,
   isLoading = false,
@@ -26,24 +26,24 @@ export default function EngagementScoreCard({
 
   // Animate score on load
   useEffect(() => {
-    if (score) {
-      const duration = 1000; // 1 second
-      const steps = 50;
-      const increment = score.total / steps;
-      let current = 0;
+    if (!score) return;
 
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= score.total) {
-          setAnimatedScore(score.total);
-          clearInterval(timer);
-        } else {
-          setAnimatedScore(Math.floor(current));
-        }
-      }, duration / steps);
+    const duration = 1000; // 1 second
+    const steps = 50;
+    const increment = score.total / steps;
+    let current = 0;
 
-      return () => clearInterval(timer);
-    }
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= score.total) {
+        setAnimatedScore(score.total);
+        clearInterval(timer);
+      } else {
+        setAnimatedScore(Math.floor(current));
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
   }, [score]);
 
   // Get score color and label

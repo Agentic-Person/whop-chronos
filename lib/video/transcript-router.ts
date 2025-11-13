@@ -24,16 +24,12 @@ import {
   processYouTubeVideo,
   isYouTubeUrl,
   YouTubeProcessorError,
-  YouTubeErrorCode,
-  type YouTubeVideoData,
 } from './youtube-processor';
 
 import {
   processLoomVideo,
   isLoomUrl,
   LoomProcessorError,
-  LoomErrorCode,
-  type LoomVideoData,
 } from './loom-processor';
 
 import {
@@ -41,16 +37,12 @@ import {
   isMuxUrl,
   MuxProcessorError,
   MuxErrorCode,
-  type MuxVideoData,
 } from './mux-processor';
 
 import {
   processWithWhisper,
-  processVideoFromUrl,
   estimateCost,
   WhisperProcessorError,
-  WhisperErrorCode,
-  type WhisperVideoData,
 } from './whisper-processor';
 
 /**
@@ -177,8 +169,6 @@ export async function extractTranscript(
       'unknown'
     );
   } catch (error) {
-    const processingTime = Date.now() - startTime;
-
     if (error instanceof TranscriptRouterError) {
       throw error;
     }
@@ -345,7 +335,7 @@ async function extractFromMux(
 async function extractWithWhisper(
   videoBuffer: Buffer,
   filename: string,
-  creatorId: string,
+  _creatorId: string,
   startTime: number,
   language?: string
 ): Promise<TranscriptResult> {

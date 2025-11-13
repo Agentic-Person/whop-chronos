@@ -11,7 +11,7 @@ import { webhooks } from './webhooks';
 // Test Configuration
 // ============================================================================
 
-const TESTS_ENABLED = process.env.NODE_ENV === 'development';
+const TESTS_ENABLED = process.env['NODE_ENV'] === 'development';
 
 // ============================================================================
 // API Client Tests

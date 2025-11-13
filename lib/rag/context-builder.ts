@@ -159,7 +159,7 @@ export function buildContext(
 
   // Add chunks until we hit token limit
   for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
+    const chunk = chunks[i]!;
     const formattedChunk = formatChunk(chunk, i, opts);
     const chunkTokens = estimateTokens(formattedChunk);
 
@@ -308,7 +308,7 @@ export function buildConversationPrompt(
  * Optimize context for specific use cases
  */
 export function optimizeContextForUseCase(
-  results: EnhancedSearchResult[],
+  _results: EnhancedSearchResult[],
   useCase: 'quick-answer' | 'detailed-explanation' | 'troubleshooting'
 ): ContextBuilderOptions {
   switch (useCase) {

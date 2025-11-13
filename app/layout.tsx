@@ -80,7 +80,7 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<WhopApp colorScheme="dark">{children}</WhopApp>
+				<WhopApp>{children}</WhopApp>
 			</body>
 		</html>
 	);

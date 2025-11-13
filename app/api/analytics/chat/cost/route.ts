@@ -5,8 +5,8 @@ import type { ChatMessage, CostBreakdown } from '@/components/analytics/chat-typ
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+  process.env['SUPABASE_SERVICE_ROLE_KEY']!
 );
 
 /**
@@ -168,7 +168,11 @@ export async function POST(request: NextRequest) {
       sonnet: { input: 3.0, output: 15.0 },
     };
 
-    const pricing = costs[model] || costs.haiku;
+    const pricing = costs[model] || costs['haiku'];
+    if (!pricing) {
+      console.error(`No pricing found for model: ${model}`);
+      return NextResponse.json({ error: 'Pricing model not found' }, { status: 500 });
+    }
     const costUsd =
       (inputTokens * pricing.input + outputTokens * pricing.output) / 1_000_000;
 

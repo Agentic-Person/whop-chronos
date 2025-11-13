@@ -143,7 +143,7 @@ export function StudentChatActivity({
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student, index) => (
+              {filteredStudents.map((student, _index) => (
                 <tr
                   key={student.studentId}
                   className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"

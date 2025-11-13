@@ -9,7 +9,7 @@
  * 5. Deduplication (combine similar chunks from same video)
  */
 
-import { createClient } from '@/lib/db/client';
+import { getServiceSupabase } from '@/lib/db/client';
 import type { VectorSearchResult } from '@/lib/video/vector-search';
 import type { EnhancedSearchResult } from './search';
 
@@ -64,7 +64,7 @@ function calculateRecencyScore(createdAt: string | undefined): number {
  * Calculate popularity score based on video analytics
  */
 async function calculatePopularityScore(videoId: string): Promise<number> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
   // Get last 30 days of analytics
   const thirtyDaysAgo = new Date();
@@ -82,9 +82,9 @@ async function calculatePopularityScore(videoId: string): Promise<number> {
   }
 
   // Aggregate metrics
-  const totalViews = data.reduce((sum, d) => sum + (d.views || 0), 0);
-  const totalInteractions = data.reduce((sum, d) => sum + (d.ai_interactions || 0), 0);
-  const avgCompletionRate = data.reduce((sum, d) => sum + (d.completion_rate || 0), 0) / data.length;
+  const totalViews = data.reduce((sum: number, d: any) => sum + (d.views || 0), 0);
+  const totalInteractions = data.reduce((sum: number, d: any) => sum + (d.ai_interactions || 0), 0);
+  const avgCompletionRate = data.reduce((sum: number, d: any) => sum + (d.completion_rate || 0), 0) / data.length;
 
   // Normalize scores (assuming max 1000 views, 500 interactions)
   const viewScore = Math.min(totalViews / 1000, 1);
@@ -104,7 +104,7 @@ async function calculateViewHistoryScore(
   videoId: string,
   studentId: string
 ): Promise<number> {
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
 
   // Check if student has interacted with this video via chat
   const { data, error } = await supabase
@@ -123,7 +123,7 @@ async function calculateViewHistoryScore(
   const now = Date.now();
   let score = 0;
 
-  for (const message of data) {
+  for (const message of (data as any)) {
     const messageAge = (now - new Date(message.created_at).getTime()) / (1000 * 60 * 60 * 24);
 
     // Exponential decay over 7 days
@@ -198,7 +198,7 @@ export async function rankSearchResults(
   console.log(`Ranking ${results.length} search results...`);
 
   // Fetch video metadata for ranking (created_at dates)
-  const supabase = createClient();
+  const supabase = getServiceSupabase();
   const videoIds = [...new Set(results.map(r => r.video_id))];
 
   const { data: videos, error: videoError } = await supabase
@@ -211,7 +211,7 @@ export async function rankSearchResults(
   }
 
   const videoMetadata = new Map(
-    videos?.map(v => [v.id, { created_at: v.created_at }]) || []
+    videos?.map((v: any) => [v.id, { created_at: v.created_at }]) || []
   );
 
   // Fetch popularity scores in parallel

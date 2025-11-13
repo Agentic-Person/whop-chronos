@@ -10,6 +10,7 @@ import type {
   Activity,
   ActiveUserData,
   SessionDurationData,
+  RetentionData,
 } from '@/components/analytics/engagement-types';
 
 /**
@@ -140,7 +141,7 @@ export function groupActivitiesByDate(
   const grouped = new Map<string, Activity[]>();
 
   activities.forEach((activity) => {
-    const date = new Date(activity.timestamp).toISOString().split('T')[0];
+    const date = new Date(activity.timestamp).toISOString().split('T')[0]!;
     if (!grouped.has(date)) {
       grouped.set(date, []);
     }
@@ -163,7 +164,7 @@ export function calculateActiveUsersOverTime(
   for (let i = 0; i < days; i++) {
     const currentDate = new Date(now);
     currentDate.setDate(currentDate.getDate() - i);
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.toISOString().split('T')[0]!;
 
     const previousDate = new Date(currentDate);
     previousDate.setDate(previousDate.getDate() - 1);
@@ -290,7 +291,7 @@ export function calculateCohortRetention(
         (activeInWeek.length / cohort.students.length) * 100
       );
 
-      retentionData[`week${week}` as keyof RetentionData] = retentionRate;
+      (retentionData as any)[`week${week}`] = retentionRate;
     }
 
     return retentionData as RetentionData;

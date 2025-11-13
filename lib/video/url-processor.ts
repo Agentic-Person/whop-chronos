@@ -62,14 +62,14 @@ export async function extractVideoMetadata(
       noCheckCertificate: true,
       preferFreeFormats: true,
       youtubeSkipDashManifest: true,
-    });
+    } as any);
 
     const metadata: VideoMetadata = {
       title: info.title || 'Untitled Video',
-      duration: parseInt(info.duration as string, 10) || 0,
+      duration: info.duration || 0,
       description: info.description || '',
       thumbnail: info.thumbnail || '',
-      fileSize: info.filesize || info.filesize_approx || undefined,
+      fileSize: info.filesize || (info as any).filesize_approx || undefined,
     };
 
     console.log('[URL Processor] Metadata extracted:', {
@@ -94,7 +94,7 @@ export async function downloadAndUploadVideo(
   url: string,
   creatorId: string,
   videoId: string,
-  onProgress?: (progress: number) => void,
+  _onProgress?: (progress: number) => void,
 ): Promise<ProcessedVideo> {
   let tempFilePath: string | null = null;
 
@@ -134,7 +134,7 @@ export async function downloadAndUploadVideo(
         'referer:youtube.com',
         'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       ],
-    });
+    } as any);
 
     console.log('[URL Processor] Download complete, file size:', fs.statSync(tempFilePath).size);
 

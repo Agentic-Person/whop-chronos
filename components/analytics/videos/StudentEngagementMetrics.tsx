@@ -32,7 +32,7 @@ export function StudentEngagementMetrics({ engagement }: StudentEngagementMetric
     engagement.peak_hours.forEach((peak) => {
       const hourIndex = HOURS.indexOf(peak.hour);
       if (hourIndex !== -1 && peak.day_of_week >= 0 && peak.day_of_week <= 6) {
-        matrix[peak.day_of_week][hourIndex] = peak.activity_count;
+        matrix[peak.day_of_week]![hourIndex] = peak.activity_count;
       }
     });
 
@@ -122,7 +122,7 @@ export function StudentEngagementMetrics({ engagement }: StudentEngagementMetric
               <div key={day} className="flex mb-1">
                 <div className="w-16 text-2 text-gray-11 flex items-center">{day}</div>
                 {HOURS.map((hour, hourIndex) => {
-                  const count = matrix[dayIndex][hourIndex];
+                  const count = matrix[dayIndex]![hourIndex] ?? 0;
                   return (
                     <div
                       key={`${dayIndex}-${hourIndex}`}

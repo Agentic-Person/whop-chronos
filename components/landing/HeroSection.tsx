@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@whop/react/components';
 import { useState } from 'react';
 import Image from 'next/image';
 import { Send } from 'lucide-react';
@@ -38,7 +37,7 @@ export function HeroSection() {
 
   const handleTimestampClick = (timestamp: string) => {
     const parts = timestamp.split(':').map(Number);
-    const seconds = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0] * 3600 + parts[1] * 60 + parts[2];
+    const seconds = parts.length === 2 ? parts[0]! * 60 + parts[1]! : parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
 
     const iframe = document.querySelector('.hero-video-iframe') as HTMLIFrameElement;
     if (iframe?.src) {
@@ -284,7 +283,7 @@ export function HeroSection() {
                         );
                       }
 
-                      const timestamp = match[1];
+                      const timestamp = match[1]!;
                       parts.push(
                         <button
                           key={`timestamp-${match.index}`}

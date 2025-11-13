@@ -126,7 +126,7 @@ async function testEmbeddings(chunks: ReturnType<typeof chunkTranscript>) {
   console.log('');
 
   // Check if OpenAI API key is set
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env['OPENAI_API_KEY']) {
     console.log('⚠ OPENAI_API_KEY not set - skipping actual embedding generation');
     console.log('Set OPENAI_API_KEY in .env to test embedding generation\n');
     return null;

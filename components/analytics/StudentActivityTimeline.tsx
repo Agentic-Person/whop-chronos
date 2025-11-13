@@ -29,8 +29,8 @@ interface StudentActivityTimelineProps {
 type ActivityType = 'videoViews' | 'chatMessages' | 'courseProgress';
 
 export default function StudentActivityTimeline({
-  creatorId,
-  dateRange = '30d',
+  creatorId: _creatorId,
+  dateRange: _dateRange = '30d',
   data = [],
   isLoading = false,
 }: StudentActivityTimelineProps) {

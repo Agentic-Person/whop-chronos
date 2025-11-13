@@ -92,7 +92,7 @@ export async function GET(
     const { data: usageMetrics, error: metricsError } = await metricsQuery;
 
     if (metricsError) {
-      console.error('Error fetching usage metrics:', error);
+      console.error('Error fetching usage metrics:', metricsError);
       return NextResponse.json(
         { error: 'Failed to fetch usage metrics', code: 'FETCH_FAILED' },
         { status: 500 },
@@ -112,7 +112,7 @@ export async function GET(
 
     // Calculate storage metrics
     const totalStorageBytes = videos?.reduce(
-      (sum, video) => sum + (video.file_size_bytes || 0),
+      (sum, video: any) => sum + (video.file_size_bytes || 0),
       0,
     ) || 0;
     const storageUsedGB = totalStorageBytes / (1024 * 1024 * 1024);
@@ -133,38 +133,39 @@ export async function GET(
     };
 
     for (const video of videos || []) {
-      const sourceType = video.source_type || 'upload';
+      const v = video as any;
+      const sourceType = v.source_type || 'upload';
       videoCountBySource[sourceType] = (videoCountBySource[sourceType] || 0) + 1;
 
       // Calculate transcript cost based on source
-      const metadata = video.metadata as { transcript_cost?: number; transcript_method?: string };
+      const metadata = v.metadata as { transcript_cost?: number; transcript_method?: string };
       if (metadata?.transcript_cost) {
         transcriptCostsBySource[sourceType] =
           (transcriptCostsBySource[sourceType] || 0) + metadata.transcript_cost;
       } else {
         // Estimate cost based on source type
         if (sourceType === 'youtube' || sourceType === 'loom' || sourceType === 'mux') {
-          transcriptCostsBySource[sourceType] += 0; // Free
+          transcriptCostsBySource[sourceType] = (transcriptCostsBySource[sourceType] || 0) + 0; // Free
         } else if (sourceType === 'upload') {
           // Estimate Whisper cost: $0.006/minute (assume 10 min average)
-          transcriptCostsBySource[sourceType] += 0.06;
+          transcriptCostsBySource[sourceType] = (transcriptCostsBySource[sourceType] || 0) + 0.06;
         }
       }
     }
 
     // Aggregate usage metrics
     const totalAiCreditsUsed = usageMetrics?.reduce(
-      (sum, day) => sum + (day.ai_credits_used || 0),
+      (sum, day: any) => sum + (day.ai_credits_used || 0),
       0,
     ) || 0;
 
     const totalTranscriptionMinutes = usageMetrics?.reduce(
-      (sum, day) => sum + (Number(day.transcription_minutes) || 0),
+      (sum, day: any) => sum + (Number(day.transcription_minutes) || 0),
       0,
     ) || 0;
 
     const totalActiveStudents = Math.max(
-      ...(usageMetrics?.map((day) => day.active_students || 0) || [0]),
+      ...(usageMetrics?.map((day: any) => day.active_students || 0) || [0]),
     );
 
     // Calculate monthly spend
@@ -176,7 +177,7 @@ export async function GET(
     const monthlySpend = totalTranscriptCost + embeddingCost;
 
     // Get tier limits
-    const tierLimits = getTierLimits(creator.subscription_tier);
+    const tierLimits = getTierLimits((creator as any).subscription_tier);
 
     return NextResponse.json(
       {
@@ -184,7 +185,7 @@ export async function GET(
         data: {
           creator_id: creatorId,
           period,
-          subscription_tier: creator.subscription_tier,
+          subscription_tier: (creator as any).subscription_tier,
 
           // Storage metrics
           storage_used_bytes: totalStorageBytes,

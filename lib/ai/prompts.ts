@@ -128,7 +128,7 @@ Please provide a helpful, accurate answer based on the video content above. Reme
  * Prompt for generating follow-up questions
  */
 export function getFollowUpQuestionsPrompt(
-  conversation: Array<{ role: string; content: string }>,
+  _conversation: Array<{ role: string; content: string }>,
   maxQuestions = 3
 ): string {
   return `Based on this conversation, suggest ${maxQuestions} thoughtful follow-up questions the student might ask to deepen their understanding.
@@ -295,9 +295,9 @@ export function extractVideoReferences(
   let match: RegExpExecArray | null;
 
   while ((match = citationRegex.exec(response)) !== null) {
-    const title = match[1].trim();
-    const minutes = Number.parseInt(match[2]);
-    const seconds = Number.parseInt(match[3]);
+    const title = match[1]!.trim();
+    const minutes = Number.parseInt(match[2]!);
+    const seconds = Number.parseInt(match[3]!);
     const hours = match[4] ? Number.parseInt(match[4]) : 0;
 
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;

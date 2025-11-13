@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       creator_id,
       student_id,
       course_id,
-      module_id,
+      module_id: _module_id,
       metadata = {},
     } = body;
 
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
     // Store event in metadata table (we'll use video_analytics for aggregation)
     // For now, we'll update video_analytics incrementally based on event type
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]!; // YYYY-MM-DD
 
     // Handle different event types
     if (event_type === 'video_started' || event_type === 'video_progress' || event_type === 'video_completed') {
@@ -136,14 +136,14 @@ export async function POST(req: NextRequest) {
         .eq('id', video_id)
         .single();
 
-      const currentMetadata = (currentVideo?.metadata as Record<string, unknown>) || {};
-      const courses = (currentMetadata.courses as string[]) || [];
+      const currentMetadata = ((currentVideo as any)?.metadata as Record<string, unknown>) || {};
+      const courses = (currentMetadata['courses'] as string[]) || [];
 
       if (course_id && !courses.includes(course_id)) {
         courses.push(course_id);
-        await supabase
+        await (supabase
           .from('videos')
-          .update({
+          .update as any)({
             metadata: {
               ...currentMetadata,
               courses,
@@ -208,48 +208,49 @@ async function updateVideoAnalytics(
   } = {
     video_id: videoId,
     date,
-    metadata: existingAnalytics?.metadata || {},
+    metadata: (existingAnalytics as any)?.metadata || {},
   };
 
   if (existingAnalytics) {
     // Update existing record
+    const analytics = existingAnalytics as any;
     if (eventType === 'video_started') {
-      updates.views = (existingAnalytics.views || 0) + 1;
+      updates.views = (analytics.views || 0) + 1;
 
       // Track unique viewers in metadata
       const viewersSet = new Set(
-        ((existingAnalytics.metadata as Record<string, string[]>)?.viewers as string[]) || [],
+        ((analytics.metadata as Record<string, string[]>)?.['viewers'] as string[]) || [],
       );
       if (studentId) viewersSet.add(studentId);
       updates.unique_viewers = viewersSet.size;
       updates.metadata = {
-        ...existingAnalytics.metadata,
+        ...analytics.metadata,
         viewers: Array.from(viewersSet),
       };
     }
 
     if (eventType === 'video_progress' && metadata.watch_time_seconds) {
       updates.total_watch_time_seconds =
-        (existingAnalytics.total_watch_time_seconds || 0) + metadata.watch_time_seconds;
+        (analytics.total_watch_time_seconds || 0) + metadata.watch_time_seconds;
       updates.average_watch_time_seconds =
-        updates.total_watch_time_seconds / (updates.views || existingAnalytics.views || 1);
+        (updates.total_watch_time_seconds || 0) / (updates.views || analytics.views || 1);
     }
 
     if (eventType === 'video_completed') {
-      const completedCount = ((existingAnalytics.metadata as Record<string, number>)?.completed_count as number) || 0;
+      const completedCount = ((analytics.metadata as Record<string, number>)?.['completed_count'] as number) || 0;
       const newCompletedCount = completedCount + 1;
-      const totalViews = existingAnalytics.views || 1;
+      const totalViews = analytics.views || 1;
 
       updates.completion_rate = (newCompletedCount / totalViews) * 100;
       updates.metadata = {
-        ...existingAnalytics.metadata,
+        ...analytics.metadata,
         completed_count: newCompletedCount,
       };
     }
 
-    await supabase
+    await (supabase
       .from('video_analytics')
-      .update(updates)
+      .update as any)(updates)
       .eq('video_id', videoId)
       .eq('date', date);
   } else {
@@ -269,7 +270,7 @@ async function updateVideoAnalytics(
       },
     };
 
-    await supabase.from('video_analytics').insert(initialData);
+    await (supabase.from('video_analytics').insert as any)(initialData);
   }
 }
 

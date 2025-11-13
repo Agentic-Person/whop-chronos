@@ -10,9 +10,6 @@
  */
 
 import { getServiceSupabase } from '@/lib/db/client';
-import type { Database } from '@/lib/db/types';
-
-type Video = Database['public']['Tables']['videos']['Row'];
 
 // Cost constants
 const STORAGE_COST_PER_GB_MONTH = 0.021; // $0.021 per GB/month
@@ -90,7 +87,7 @@ export async function getStorageUsage(
 ): Promise<StorageUsageReport> {
   const supabase = getServiceSupabase();
 
-  const { data: videos, error } = await supabase
+  const { data: videos, error } = await (supabase as any)
     .from('videos')
     .select('file_size_bytes, source_type')
     .eq('creator_id', creatorId)
@@ -102,7 +99,7 @@ export async function getStorageUsage(
 
   // Calculate totals
   const totalBytes = videos.reduce(
-    (sum, video) => sum + (video.file_size_bytes || 0),
+    (sum: number, video: any) => sum + (video.file_size_bytes || 0),
     0
   );
   const totalGB = totalBytes / (1024 * 1024 * 1024);
@@ -111,22 +108,22 @@ export async function getStorageUsage(
   const monthlyCost = totalGB * STORAGE_COST_PER_GB_MONTH;
 
   // Breakdown by source type
-  const uploadVideos = videos.filter((v) => v.source_type === 'upload');
-  const youtubeVideos = videos.filter((v) => v.source_type === 'youtube');
+  const uploadVideos = videos.filter((v: any) => v.source_type === 'upload');
+  const youtubeVideos = videos.filter((v: any) => v.source_type === 'youtube');
   const otherVideos = videos.filter(
-    (v) => v.source_type !== 'upload' && v.source_type !== 'youtube'
+    (v: any) => v.source_type !== 'upload' && v.source_type !== 'youtube'
   );
 
   const uploadBytes = uploadVideos.reduce(
-    (sum, v) => sum + (v.file_size_bytes || 0),
+    (sum: number, v: any) => sum + (v.file_size_bytes || 0),
     0
   );
   const youtubeBytes = youtubeVideos.reduce(
-    (sum, v) => sum + (v.file_size_bytes || 0),
+    (sum: number, v: any) => sum + (v.file_size_bytes || 0),
     0
   );
   const otherBytes = otherVideos.reduce(
-    (sum, v) => sum + (v.file_size_bytes || 0),
+    (sum: number, v: any) => sum + (v.file_size_bytes || 0),
     0
   );
 
@@ -172,7 +169,7 @@ export async function getUploadTranscriptionCosts(
 ): Promise<TranscriptionCostReport> {
   const supabase = getServiceSupabase();
 
-  const { data: videos, error } = await supabase
+  const { data: videos, error } = await (supabase as any)
     .from('videos')
     .select('duration_seconds, created_at')
     .eq('creator_id', creatorId)
@@ -186,7 +183,7 @@ export async function getUploadTranscriptionCosts(
 
   const totalVideos = videos.length;
   const totalDurationSeconds = videos.reduce(
-    (sum, video) => sum + (video.duration_seconds || 0),
+    (sum: number, video: any) => sum + (video.duration_seconds || 0),
     0
   );
   const totalDurationMinutes = totalDurationSeconds / 60;
@@ -288,7 +285,7 @@ export async function getStorageBreakdownByVideo(
 > {
   const supabase = getServiceSupabase();
 
-  const { data: videos, error } = await supabase
+  const { data: videos, error } = await (supabase as any)
     .from('videos')
     .select('id, title, file_size_bytes, source_type, created_at')
     .eq('creator_id', creatorId)
@@ -300,7 +297,7 @@ export async function getStorageBreakdownByVideo(
     throw new Error('Failed to fetch video breakdown');
   }
 
-  return videos.map((video) => {
+  return videos.map((video: any) => {
     const sizeGB = (video.file_size_bytes || 0) / (1024 * 1024 * 1024);
     const monthlyCost = sizeGB * STORAGE_COST_PER_GB_MONTH;
 
@@ -335,7 +332,7 @@ export async function forecastStorageCosts(
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-  const { data: recentVideos } = await supabase
+  const { data: recentVideos } = await (supabase as any)
     .from('videos')
     .select('file_size_bytes, created_at')
     .eq('creator_id', creatorId)
@@ -344,7 +341,7 @@ export async function forecastStorageCosts(
 
   const avgMonthlyUploadBytes =
     recentVideos && recentVideos.length > 0
-      ? recentVideos.reduce((sum, v) => sum + (v.file_size_bytes || 0), 0) / 3
+      ? recentVideos.reduce((sum: number, v: any) => sum + (v.file_size_bytes || 0), 0) / 3
       : 0;
 
   // Get current storage
@@ -384,14 +381,14 @@ export async function getCostSavingsReport(creatorId: string): Promise<{
   const supabase = getServiceSupabase();
 
   // Get YouTube videos
-  const { data: youtubeVideos } = await supabase
+  const { data: youtubeVideos } = await (supabase as any)
     .from('videos')
     .select('duration_seconds')
     .eq('creator_id', creatorId)
     .eq('source_type', 'youtube');
 
   // Get uploaded videos
-  const { data: uploadedVideos } = await supabase
+  const { data: uploadedVideos } = await (supabase as any)
     .from('videos')
     .select('duration_seconds')
     .eq('creator_id', creatorId)
@@ -399,13 +396,13 @@ export async function getCostSavingsReport(creatorId: string): Promise<{
 
   const youtubeDurationMinutes =
     (youtubeVideos?.reduce(
-      (sum, v) => sum + (v.duration_seconds || 0),
+      (sum: number, v: any) => sum + (v.duration_seconds || 0),
       0
     ) || 0) / 60;
 
   const uploadDurationMinutes =
     (uploadedVideos?.reduce(
-      (sum, v) => sum + (v.duration_seconds || 0),
+      (sum: number, v: any) => sum + (v.duration_seconds || 0),
       0
     ) || 0) / 60;
 

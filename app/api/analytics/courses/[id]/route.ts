@@ -38,12 +38,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: courseId } = await params;
+    const { id } = await params;
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || '30d';
     const creatorId = searchParams.get('creator_id');
 
-    if (!courseId) {
+    if (!id) {
       return NextResponse.json(
         { error: 'Missing course ID' },
         { status: 400 },
@@ -74,7 +74,7 @@ export async function GET(
         )
       `,
       )
-      .eq('id', courseId)
+      .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
@@ -86,7 +86,7 @@ export async function GET(
     }
 
     // Check authorization
-    if (course.creator_id !== creatorId) {
+    if ((course as any).creator_id !== creatorId) {
       return NextResponse.json(
         { error: 'Forbidden: You do not own this course', code: 'FORBIDDEN' },
         { status: 403 },
@@ -94,7 +94,7 @@ export async function GET(
     }
 
     // Get all video IDs from all modules
-    const modules = course.course_modules || [];
+    const modules = (course as any).course_modules || [];
     const allVideoIds = modules.flatMap(
       (module: { video_ids: string[] }) => module.video_ids || [],
     );
@@ -105,8 +105,8 @@ export async function GET(
         {
           success: true,
           data: {
-            course_id: courseId,
-            course_title: course.title,
+            course_id: id,
+            course_title: (course as any).title,
             total_views: 0,
             unique_students: 0,
             avg_progress: 0,
@@ -163,8 +163,9 @@ export async function GET(
     > = {};
 
     for (const row of analytics || []) {
-      if (!videoMetrics[row.video_id]) {
-        videoMetrics[row.video_id] = {
+      const r = row as any;
+      if (!videoMetrics[r.video_id]) {
+        videoMetrics[r.video_id] = {
           views: 0,
           unique_viewers: new Set(),
           completion_rate: 0,
@@ -172,13 +173,13 @@ export async function GET(
         };
       }
 
-      videoMetrics[row.video_id].views += row.views || 0;
-      videoMetrics[row.video_id].watch_time += row.total_watch_time_seconds || 0;
+      videoMetrics[r.video_id]!.views += r.views || 0;
+      videoMetrics[r.video_id]!.watch_time += r.total_watch_time_seconds || 0;
 
       // Track completion rate (average across days)
-      if (row.completion_rate) {
-        videoMetrics[row.video_id].completion_rate =
-          (videoMetrics[row.video_id].completion_rate + row.completion_rate) / 2;
+      if (r.completion_rate) {
+        videoMetrics[r.video_id]!.completion_rate =
+          (videoMetrics[r.video_id]!.completion_rate + r.completion_rate) / 2;
       }
     }
 
@@ -198,7 +199,7 @@ export async function GET(
       .in('id', uniqueVideoIds)
       .eq('is_deleted', false);
 
-    const videosMap = new Map(videos?.map((v) => [v.id, v]) || []);
+    const videosMap = new Map(videos?.map((v: any) => [v.id, v]) || []);
 
     // Build top videos list
     const topVideos = Object.entries(videoMetrics)
@@ -242,8 +243,8 @@ export async function GET(
       {
         success: true,
         data: {
-          course_id: courseId,
-          course_title: course.title,
+          course_id: id,
+          course_title: (course as any).title,
           period,
           total_views: totalViews,
           unique_students: 0, // Would need student tracking to implement

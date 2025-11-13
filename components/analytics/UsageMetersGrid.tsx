@@ -18,7 +18,7 @@ interface UsageMetersGridProps {
 
 export function UsageMetersGrid({
   creatorId,
-  tier,
+  tier: _tier,
   onUpgrade,
 }: UsageMetersGridProps) {
   const [usage, setUsage] = useState<UsageStats | null>(null);

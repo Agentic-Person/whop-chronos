@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { DashboardNav } from '@/components/layout/DashboardNav';
-import { AnalyticsProvider } from '@/lib/contexts/AnalyticsContext';
+import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
+import { AuthProvider } from '@/lib/contexts/AuthContext';
 
 export default async function CreatorDashboardLayout({
   children,
@@ -13,13 +14,15 @@ export default async function CreatorDashboardLayout({
   const tier = 'pro';
 
   return (
-    <AnalyticsProvider creatorId={creatorId} tier={tier}>
-      <div className="min-h-screen bg-gray-1">
-        <DashboardNav />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
-      </div>
-    </AnalyticsProvider>
+    <AuthProvider>
+      <AnalyticsProviderWithSuspense creatorId={creatorId} tier={tier}>
+        <div className="min-h-screen bg-gray-1">
+          <DashboardNav />
+          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </main>
+        </div>
+      </AnalyticsProviderWithSuspense>
+    </AuthProvider>
   );
 }

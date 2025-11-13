@@ -95,7 +95,7 @@ export async function getTranscriptCostsBySource(
   const supabase = getServiceSupabase();
 
   // Query video analytics events for transcript extractions
-  let query = supabase
+  let query = (supabase as any)
     .from('video_analytics_events')
     .select('metadata, timestamp')
     .eq('creator_id', creatorId)
@@ -208,12 +208,10 @@ export async function getMonthlyTranscriptSpend(
   creatorId: string,
   month: string // YYYY-MM format
 ): Promise<number> {
-  const supabase = getServiceSupabase();
-
   // Parse month
   const [year, monthNum] = month.split('-').map(Number);
-  const startDate = new Date(year, monthNum - 1, 1);
-  const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+  const startDate = new Date(year!, monthNum! - 1, 1);
+  const endDate = new Date(year!, monthNum!, 0, 23, 59, 59);
 
   const breakdown = await getTranscriptCostsBySource(creatorId, {
     start: startDate,
@@ -247,7 +245,7 @@ export async function getDailyTranscriptCosts(
 ): Promise<DailyCostSummary[]> {
   const supabase = getServiceSupabase();
 
-  const { data: events, error } = await supabase
+  const { data: events, error } = await (supabase as any)
     .from('video_analytics_events')
     .select('metadata, timestamp')
     .eq('creator_id', creatorId)
@@ -434,16 +432,16 @@ export async function getTopExpensiveVideos(
 
   // Fetch video titles
   const videoIds = videos.map(v => v.video_id);
-  const { data: videoData } = await supabase
+  const { data: videoData } = await (supabase as any)
     .from('videos')
     .select('id, title')
     .in('id', videoIds);
 
-  const titleMap = new Map(videoData?.map(v => [v.id, v.title]) || []);
+  const titleMap = new Map(videoData?.map((v: any) => [v.id, v.title]) || []);
 
   return videos.map(v => ({
     ...v,
-    title: titleMap.get(v.video_id),
+    title: titleMap.get(v.video_id) as string | undefined,
   }));
 }
 

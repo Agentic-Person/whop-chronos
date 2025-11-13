@@ -18,7 +18,7 @@ import type {
   ChatUsageMetrics,
   VideoReference,
 } from './types';
-import { calculateCompleteCost, estimateSessionCost } from './cost-calculator';
+import { estimateSessionCost } from './cost-calculator';
 
 /**
  * Get analytics for a specific session
@@ -29,7 +29,7 @@ export async function getSessionAnalytics(
   const supabase = getServiceSupabase();
 
   // Get session
-  const { data: session, error: sessionError } = await supabase
+  const { data: session, error: sessionError } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .select('*')
     .eq('id', sessionId)
@@ -40,7 +40,7 @@ export async function getSessionAnalytics(
   }
 
   // Get all messages
-  const { data: messages, error: messagesError } = await supabase
+  const { data: messages, error: messagesError } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .select('*')
     .eq('session_id', sessionId)
@@ -50,8 +50,8 @@ export async function getSessionAnalytics(
     throw new Error(`Failed to load messages: ${messagesError.message}`);
   }
 
-  const userMessages = messages.filter((m) => m.role === 'user');
-  const assistantMessages = messages.filter((m) => m.role === 'assistant');
+  const userMessages = messages.filter((m: any) => m.role === 'user');
+  const assistantMessages = messages.filter((m: any) => m.role === 'assistant');
 
   // Calculate session duration
   const startTime = new Date(session.created_at).getTime();
@@ -62,7 +62,7 @@ export async function getSessionAnalytics(
 
   // Calculate total tokens and cost
   const totalTokens = messages.reduce(
-    (sum, msg) => sum + (msg.token_count || 0),
+    (sum: number, msg: any) => sum + (msg.token_count || 0),
     0,
   );
   const costBreakdown = estimateSessionCost(
@@ -164,7 +164,7 @@ export async function getCreatorChatAnalytics(
   }
 
   // Get sessions in period
-  const { data: sessions, error: sessionsError } = await supabase
+  const { data: sessions, error: sessionsError } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .select('*')
     .eq('creator_id', creatorId)
@@ -174,14 +174,14 @@ export async function getCreatorChatAnalytics(
     throw new Error(`Failed to load sessions: ${sessionsError.message}`);
   }
 
-  const sessionIds = sessions.map((s) => s.id);
+  const sessionIds = sessions.map((s: any) => s.id);
 
   if (sessionIds.length === 0) {
     return getEmptyAnalytics(creatorId, period);
   }
 
   // Get all messages for these sessions
-  const { data: messages, error: messagesError } = await supabase
+  const { data: messages, error: messagesError } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .select('*')
     .in('session_id', sessionIds);
@@ -191,14 +191,14 @@ export async function getCreatorChatAnalytics(
   }
 
   // Get student info
-  const studentIds = Array.from(new Set(sessions.map((s) => s.student_id)));
-  const { data: students } = await supabase
+  const studentIds = Array.from(new Set(sessions.map((s: any) => s.student_id)));
+  const { data: students } = await (supabase as any)
     .from(Tables.STUDENTS)
     .select('id, name')
     .in('id', studentIds);
 
   const studentMap = new Map(
-    students?.map((s) => [s.id, s.name || 'Unknown']) || [],
+    students?.map((s: any) => [s.id, s.name || 'Unknown']) || [],
   );
 
   // Calculate metrics
@@ -207,7 +207,7 @@ export async function getCreatorChatAnalytics(
   const totalStudents = studentIds.length;
 
   const totalTokens = messages?.reduce(
-    (sum, msg) => sum + (msg.token_count || 0),
+    (sum: number, msg: any) => sum + (msg.token_count || 0),
     0,
   ) || 0;
 
@@ -244,7 +244,7 @@ export async function getCreatorChatAnalytics(
   }
 
   for (const message of messages || []) {
-    const session = sessions.find((s) => s.id === message.session_id);
+    const session = sessions.find((s: any) => s.id === message.session_id);
     if (session && message.role === 'user') {
       const activity = studentActivity.get(session.student_id);
       if (activity) {
@@ -256,7 +256,7 @@ export async function getCreatorChatAnalytics(
   const mostActiveStudents = Array.from(studentActivity.entries())
     .map(([student_id, activity]) => ({
       student_id,
-      student_name: studentMap.get(student_id) || null,
+      student_name: (studentMap.get(student_id) as string | undefined) || null,
       session_count: activity.session_count,
       message_count: activity.message_count,
     }))
@@ -300,7 +300,7 @@ export async function getCreatorChatAnalytics(
 
   // Extract common topics from user messages
   const commonTopics = extractCommonTopics(
-    messages?.filter((m) => m.role === 'user').map((m) => m.content) || [],
+    messages?.filter((m: any) => m.role === 'user').map((m: any) => m.content) || [],
   );
 
   // Peak usage hours
@@ -509,7 +509,7 @@ export async function trackChatUsage(
   const today = new Date().toISOString().split('T')[0];
 
   // Upsert usage metrics
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from(Tables.USAGE_METRICS)
     .upsert(
       {
@@ -543,7 +543,7 @@ export async function getChatUsageMetrics(
 ): Promise<ChatUsageMetrics[]> {
   const supabase = getServiceSupabase();
 
-  const { data: metrics, error } = await supabase
+  const { data: metrics, error } = await (supabase as any)
     .from(Tables.USAGE_METRICS)
     .select('*')
     .eq('creator_id', creatorId)
@@ -556,7 +556,7 @@ export async function getChatUsageMetrics(
   }
 
   // Calculate session durations
-  const { data: sessions } = await supabase
+  const { data: sessions } = await (supabase as any)
     .from(Tables.CHAT_SESSIONS)
     .select('created_at, last_message_at')
     .eq('creator_id', creatorId)
@@ -565,7 +565,7 @@ export async function getChatUsageMetrics(
 
   const avgDuration =
     sessions && sessions.length > 0
-      ? sessions.reduce((sum, s) => {
+      ? sessions.reduce((sum: number, s: any) => {
           if (s.last_message_at) {
             const duration =
               (new Date(s.last_message_at).getTime() -
@@ -578,7 +578,7 @@ export async function getChatUsageMetrics(
       : 0;
 
   return (
-    metrics?.map((m) => ({
+    metrics?.map((m: any) => ({
       creator_id: m.creator_id,
       date: m.date,
       sessions_created: 0, // Would need to query separately

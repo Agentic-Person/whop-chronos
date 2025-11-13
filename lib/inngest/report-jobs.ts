@@ -31,9 +31,9 @@ export async function generateScheduledReport(
       title: schedule.name,
       dateRange: getDateRangeForFrequency(schedule.frequency),
       generatedAt: new Date().toISOString(),
-      creatorName: schedule.options.creatorName,
-      companyName: schedule.options.companyName,
-      branding: schedule.options.branding,
+      creatorName: schedule.options['creatorName'],
+      companyName: schedule.options['companyName'],
+      branding: schedule.options['branding'],
     };
 
     // 4. Generate HTML
@@ -166,8 +166,8 @@ export const monthlyReportJob = {
 // Helper functions (to be implemented with actual database/storage)
 
 async function fetchAnalyticsData(
-  creatorId: string,
-  options: Record<string, any>
+  _creatorId: string,
+  _options: Record<string, any>
 ): Promise<AnalyticsData> {
   // TODO: Implement actual analytics data fetching from Supabase
   // This should aggregate data based on date range and filters
@@ -189,7 +189,7 @@ async function fetchAnalyticsData(
 }
 
 async function fetchActiveSchedules(
-  frequency: 'daily' | 'weekly' | 'monthly'
+  _frequency: 'daily' | 'weekly' | 'monthly'
 ): Promise<ReportSchedule[]> {
   // TODO: Fetch from database
   return [];
@@ -217,10 +217,10 @@ async function convertHTMLToPDF(html: string): Promise<Buffer> {
 }
 
 async function saveReportToStorage(
-  creatorId: string,
-  scheduleId: string,
-  name: string,
-  reportPDF: Buffer
+  _creatorId: string,
+  _scheduleId: string,
+  _name: string,
+  _reportPDF: Buffer
 ): Promise<{ id: string; file_url: string }> {
   // TODO: Upload to Supabase Storage and create report_history record
 
@@ -257,7 +257,7 @@ function getDateRangeForFrequency(
   }
 
   return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
+    start: start.toISOString().split('T')[0]!,
+    end: end.toISOString().split('T')[0]!,
   };
 }

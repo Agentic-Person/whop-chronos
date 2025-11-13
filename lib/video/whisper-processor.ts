@@ -20,11 +20,9 @@
 
 import {
   transcribeVideo,
-  calculateTranscriptionCost,
   estimateTranscriptionCost,
   type TranscriptionResult,
   type TranscriptionOptions,
-  type TranscriptSegment,
 } from './transcription';
 
 /**
@@ -104,7 +102,7 @@ export async function processWithWhisper(
   console.log(`[Whisper Processor] File size: ${(videoBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
   // Step 1: Validate API key
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env['OPENAI_API_KEY']) {
     throw new WhisperProcessorError(
       'OPENAI_API_KEY environment variable not set. Please configure your OpenAI API key.',
       WhisperErrorCode.OPENAI_API_KEY_MISSING

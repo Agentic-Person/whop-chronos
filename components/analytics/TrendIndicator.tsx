@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import type { TrendData } from './types';
 
 interface TrendIndicatorProps {
   currentValue: number;
@@ -21,7 +20,7 @@ const defaultFormatValue = (value: number): string => {
 export const TrendIndicator: React.FC<TrendIndicatorProps> = React.memo(({
   currentValue,
   previousValue,
-  metric,
+  metric: _metric,
   period = 'vs last period',
   className = '',
   showValue = true,
@@ -100,8 +99,8 @@ TrendIndicator.displayName = 'TrendIndicator';
 export const CompactTrendIndicator: React.FC<Omit<TrendIndicatorProps, 'showValue'>> = React.memo(({
   currentValue,
   previousValue,
-  metric,
-  period,
+  metric: _metric,
+  period: _period,
   className = '',
 }) => {
   const change = currentValue - previousValue;

@@ -27,7 +27,7 @@ export async function trackAnalyticsEvent(event: AnalyticsEvent): Promise<void> 
   try {
     const supabase = getServiceSupabase();
 
-    await supabase
+    await (supabase as any)
       .from('video_analytics_events')
       .insert({
         event_type: event.event_type,
@@ -86,7 +86,7 @@ export async function trackVideoImported(
 export async function getSourceUsageStats(creatorId: string) {
   const supabase = getServiceSupabase();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('video_analytics_events')
     .select('metadata')
     .eq('creator_id', creatorId)
@@ -98,15 +98,15 @@ export async function getSourceUsageStats(creatorId: string) {
   }
 
   // Count by source type
-  const stats = data.reduce((acc, event) => {
+  const stats = data.reduce((acc: Record<string, number>, event: any) => {
     const sourceType = event.metadata?.source_type || 'unknown';
     acc[sourceType] = (acc[sourceType] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const total = Object.values(stats).reduce((sum, count) => sum + count, 0);
+  const total = (Object.values(stats) as number[]).reduce((sum, count) => sum + count, 0);
 
-  return Object.entries(stats).map(([source_type, count]) => ({
+  return (Object.entries(stats) as [string, number][]).map(([source_type, count]) => ({
     source_type,
     import_count: count,
     percentage: total > 0 ? Math.round((count / total) * 100) : 0,
@@ -130,7 +130,7 @@ export async function getGlobalSourceStats() {
   }
 
   // Count by source type
-  const stats = data.reduce((acc, event) => {
+  const stats = data.reduce((acc: Record<string, number>, event: any) => {
     const sourceType = event.metadata?.source_type || 'unknown';
     acc[sourceType] = (acc[sourceType] || 0) + 1;
     return acc;

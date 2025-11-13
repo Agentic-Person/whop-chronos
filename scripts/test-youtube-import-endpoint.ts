@@ -9,8 +9,8 @@
 
 import 'dotenv/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-const TEST_CREATOR_ID = process.env.TEST_CREATOR_ID || 'test-creator-id';
+const API_BASE_URL = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
+const TEST_CREATOR_ID = process.env['TEST_CREATOR_ID'] || 'test-creator-id';
 
 interface TestCase {
   name: string;

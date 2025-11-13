@@ -133,7 +133,7 @@ export async function invalidateVideoCache(videoId: string): Promise<number> {
   try {
     // Scan for all cache keys
     const pattern = `${CACHE_PREFIX}*`;
-    let cursor = 0;
+    let cursor = '0';
     let deletedCount = 0;
 
     do {
@@ -147,7 +147,7 @@ export async function invalidateVideoCache(videoId: string): Promise<number> {
         await kv.del(...keys);
         deletedCount += keys.length;
       }
-    } while (cursor !== 0);
+    } while (cursor !== '0');
 
     console.log(`Invalidated ${deletedCount} cached responses for video ${videoId}`);
     return deletedCount;
@@ -163,7 +163,7 @@ export async function invalidateVideoCache(videoId: string): Promise<number> {
 export async function invalidateAllCache(): Promise<number> {
   try {
     const pattern = `${CACHE_PREFIX}*`;
-    let cursor = 0;
+    let cursor = '0';
     let deletedCount = 0;
 
     do {
@@ -175,7 +175,7 @@ export async function invalidateAllCache(): Promise<number> {
         await kv.del(...keys);
         deletedCount += keys.length;
       }
-    } while (cursor !== 0);
+    } while (cursor !== '0');
 
     console.log(`Invalidated all ${deletedCount} cached responses`);
     return deletedCount;
@@ -263,7 +263,7 @@ export async function getCacheInfo(): Promise<{
 }> {
   try {
     const pattern = `${CACHE_PREFIX}*`;
-    let cursor = 0;
+    let cursor = '0';
     let count = 0;
 
     do {
@@ -271,7 +271,7 @@ export async function getCacheInfo(): Promise<{
       cursor = result[0];
       const keys = result[1] as string[];
       count += keys.length;
-    } while (cursor !== 0);
+    } while (cursor !== '0');
 
     const stats = await getCacheStats();
 

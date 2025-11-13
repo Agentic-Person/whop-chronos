@@ -2,24 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Area,
-  AreaChart,
 } from 'recharts';
-
-const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
 
 interface UsageData {
   lastUpdated: string;
@@ -135,29 +124,6 @@ function CircularGauge({ percentage, size = 120, strokeWidth = 12 }: { percentag
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-bold text-gray-12">{percentage.toFixed(0)}%</span>
-      </div>
-    </div>
-  );
-}
-
-// Horizontal progress bar
-function HorizontalMeter({ percentage, label, showValue }: { percentage: number; label: string; showValue?: string }) {
-  let barColor = 'bg-green-9';
-  if (percentage >= 90) barColor = 'bg-red-9';
-  else if (percentage >= 75) barColor = 'bg-orange-9';
-  else if (percentage >= 50) barColor = 'bg-yellow-9';
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-11">{label}</span>
-        <span className="text-gray-12 font-medium">{showValue || `${percentage.toFixed(1)}%`}</span>
-      </div>
-      <div className="h-2 bg-gray-a3 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${barColor} transition-all duration-1000 ease-out`}
-          style={{ width: `${Math.min(percentage, 100)}%` }}
-        />
       </div>
     </div>
   );
@@ -300,7 +266,7 @@ export default function UsagePage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"

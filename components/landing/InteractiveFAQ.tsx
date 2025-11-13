@@ -127,10 +127,10 @@ export function InteractiveFAQ() {
   const parseTimestampToSeconds = (timestamp: string): number => {
     const parts = timestamp.split(':').map((p) => parseInt(p, 10));
     if (parts.length === 3) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
     }
     if (parts.length === 2) {
-      return parts[0] * 60 + parts[1];
+      return parts[0]! * 60 + parts[1]!;
     }
     return parts[0] || 0;
   };
@@ -157,7 +157,7 @@ export function InteractiveFAQ() {
       }
 
       // Add clickable timestamp
-      const timestamp = match[1];
+      const timestamp = match[1]!;
       parts.push(
         <button
           key={`timestamp-${match.index}`}

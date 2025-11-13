@@ -4,14 +4,14 @@
  */
 
 import { inngest } from './client';
-import { transcribeVideo, calculateTranscriptionCost } from '@/lib/video/transcription';
+import { transcribeVideo } from '@/lib/video/transcription';
 import { createClient } from '@supabase/supabase-js';
 import type { TranscribeVideoEvent } from './client';
 
 // Initialize Supabase client with service role key
 function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+  const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
 
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error('Missing Supabase credentials');
@@ -83,7 +83,12 @@ export const transcribeVideoFunction = inngest.createFunction(
       logger.info('Starting Whisper transcription');
 
       try {
-        const result = await transcribeVideo(videoBuffer, originalFilename, {
+        // Convert serialized buffer back to Buffer if needed
+        const buffer = Buffer.isBuffer(videoBuffer)
+          ? videoBuffer
+          : Buffer.from((videoBuffer as any).data);
+
+        const result = await transcribeVideo(buffer, originalFilename, {
           language,
           responseFormat: 'verbose_json', // Get segments for better chunking
           temperature: 0, // Deterministic output

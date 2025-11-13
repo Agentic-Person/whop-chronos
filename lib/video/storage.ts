@@ -6,7 +6,6 @@
  */
 
 import { getServiceSupabase } from '@/lib/db/client';
-import type { Database } from '@/lib/db/types';
 import type { SubscriptionTier } from './config';
 import {
   formatBytes,
@@ -19,9 +18,6 @@ import {
 
 const VIDEOS_BUCKET = 'videos';
 const THUMBNAILS_BUCKET = 'thumbnails';
-
-type Creator = Database['public']['Tables']['creators']['Row'];
-type UsageMetrics = Database['public']['Tables']['usage_metrics']['Row'];
 
 /**
  * Storage validation result
@@ -53,7 +49,7 @@ export async function validateVideoUpload(
   const warnings: string[] = [];
 
   // Get creator info
-  const { data: creator, error: creatorError } = await supabase
+  const { data: creator, error: creatorError } = await (supabase as any)
     .from('creators')
     .select('*')
     .eq('id', creatorId)
@@ -90,8 +86,8 @@ export async function validateVideoUpload(
   }
 
   // Get current usage metrics
-  const today = new Date().toISOString().split('T')[0];
-  const { data: usageMetrics } = await supabase
+  const today = new Date().toISOString().split('T')[0]!;
+  const { data: usageMetrics } = await (supabase as any)
     .from('usage_metrics')
     .select('*')
     .eq('creator_id', creatorId)
@@ -193,7 +189,7 @@ export function generateThumbnailPath(
  */
 export async function createUploadUrl(
   path: string,
-  expiresIn = 3600, // 1 hour
+  _expiresIn = 3600, // 1 hour
 ): Promise<{ url: string; token: string } | null> {
   const supabase = getServiceSupabase();
 
@@ -305,10 +301,10 @@ export async function updateUsageMetrics(
   durationSeconds: number,
 ): Promise<void> {
   const supabase = getServiceSupabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0]!;
 
   // Upsert usage metrics
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('usage_metrics')
     .upsert(
       {
@@ -342,14 +338,14 @@ export async function getStorageUsage(creatorId: string): Promise<{
   const supabase = getServiceSupabase();
 
   // Get total file size from videos
-  const { data: videos } = await supabase
+  const { data: videos } = await (supabase as any)
     .from('videos')
     .select('file_size_bytes')
     .eq('creator_id', creatorId)
     .eq('is_deleted', false);
 
   const totalBytes = videos?.reduce(
-    (sum, video) => sum + (video.file_size_bytes || 0),
+    (sum: number, video: any) => sum + (video.file_size_bytes || 0),
     0,
   ) || 0;
 
@@ -382,6 +378,6 @@ export async function listCreatorFiles(
 
   return data.map((file) => ({
     name: file.name,
-    size: file.metadata?.size || 0,
+    size: file.metadata?.['size'] || 0,
   }));
 }

@@ -28,9 +28,10 @@ export const runtime = 'nodejs';
  *   session_id: string
  * }
  */
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const sessionId = params.id;
+    const { id } = await params;
+    const sessionId = id;
     const body = await req.json();
     const { percent_complete, watch_time_seconds, current_time_seconds, completed } = body;
 
@@ -80,14 +81,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     // Store current time in metadata if provided
     if (current_time_seconds !== undefined) {
       updates.metadata = {
-        ...(session.metadata as Record<string, unknown>),
+        ...((session as any).metadata as Record<string, unknown>),
         current_time_seconds,
         last_updated: new Date().toISOString(),
       };
     }
 
     // Update session
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('video_watch_sessions')
       .update(updates)
       .eq('id', sessionId);

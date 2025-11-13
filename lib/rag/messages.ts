@@ -28,7 +28,7 @@ export async function createMessage(
 ): Promise<ChatMessage> {
   const supabase = getServiceSupabase();
 
-  const { data: message, error } = await supabase
+  const { data: message, error } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .insert({
       session_id: data.session_id,
@@ -123,7 +123,7 @@ export async function updateMessage(
 ): Promise<ChatMessage> {
   const supabase = getServiceSupabase();
 
-  const { data: message, error } = await supabase
+  const { data: message, error } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .update(updates)
     .eq('id', messageId)
@@ -254,7 +254,7 @@ export async function exportSessionAsJSON(
       role: m.role,
       content: m.content,
       created_at: m.created_at,
-      video_references: m.video_references as VideoReference[] | undefined,
+      video_references: m.video_references as unknown as VideoReference[] | undefined,
     })),
     analytics,
     exported_at: new Date().toISOString(),
@@ -331,7 +331,7 @@ export async function getMessagesWithVideoRefs(
 
   return messages.map((m) => ({
     ...m,
-    video_references_parsed: (m.video_references as VideoReference[]) || [],
+    video_references_parsed: (m.video_references as unknown as VideoReference[]) || [],
   }));
 }
 
@@ -345,7 +345,7 @@ export async function countMessagesByRole(sessionId: string): Promise<{
 }> {
   const supabase = getServiceSupabase();
 
-  const { data: messages, error } = await supabase
+  const { data: messages, error } = await (supabase as any)
     .from(Tables.CHAT_MESSAGES)
     .select('role')
     .eq('session_id', sessionId);
@@ -360,7 +360,7 @@ export async function countMessagesByRole(sessionId: string): Promise<{
     system: 0,
   };
 
-  for (const message of messages || []) {
+  for (const message of (messages as any) || []) {
     counts[message.role as keyof typeof counts]++;
   }
 

@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Format data based on dataType
-    const { data, columns } = formatDataForExport(options.dataType, mockAnalyticsData);
+    const { data, columns } = formatDataForExport(options.dataType as any, mockAnalyticsData);
 
     // Filter by date range if specified
     let filteredData = data;

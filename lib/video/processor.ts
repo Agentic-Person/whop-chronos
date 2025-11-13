@@ -178,7 +178,7 @@ export async function updateVideoStatus(
   const supabase = getServiceSupabase();
 
   // Get current video status
-  const { data: currentVideo, error: fetchError } = await supabase
+  const { data: currentVideo, error: fetchError } = await (supabase as any)
     .from('videos')
     .select('status, metadata')
     .eq('id', videoId)
@@ -238,7 +238,7 @@ export async function updateVideoStatus(
   }
 
   // Update video status
-  const { error: updateError } = await supabase
+  const { error: updateError } = await (supabase as any)
     .from('videos')
     .update(updateData)
     .eq('id', videoId);
@@ -261,7 +261,7 @@ export async function transitionToNextStage(videoId: string): Promise<VideoStatu
   const supabase = getServiceSupabase();
 
   // Get current status
-  const { data: video, error } = await supabase
+  const { data: video, error } = await (supabase as any)
     .from('videos')
     .select('status')
     .eq('id', videoId)
@@ -288,7 +288,7 @@ export async function transitionToNextStage(videoId: string): Promise<VideoStatu
   }
 
   // For failed state, allow retry to pending
-  const nextStatus = video.status === 'failed' ? 'pending' : nextStates[0];
+  const nextStatus = video.status === 'failed' ? 'pending' : nextStates[0]!;
 
   // Update to next status
   await updateVideoStatus(videoId, nextStatus);
@@ -317,7 +317,7 @@ export async function markVideoAsFailed(
   }
 
   // Get current metadata
-  const { data: video } = await supabase
+  const { data: video } = await (supabase as any)
     .from('videos')
     .select('metadata')
     .eq('id', videoId)
@@ -337,7 +337,7 @@ export async function markVideoAsFailed(
   };
 
   // Update to failed status
-  await supabase
+  await (supabase as any)
     .from('videos')
     .update({
       status: 'failed',
@@ -355,7 +355,7 @@ export async function retryFailedVideo(videoId: string): Promise<void> {
   const supabase = getServiceSupabase();
 
   // Get video details
-  const { data: video, error } = await supabase
+  const { data: video, error } = await (supabase as any)
     .from('videos')
     .select('status, metadata')
     .eq('id', videoId)
@@ -394,7 +394,7 @@ export async function retryFailedVideo(videoId: string): Promise<void> {
   }
 
   // Reset to pending with retry metadata
-  await supabase
+  await (supabase as any)
     .from('videos')
     .update({
       status: 'pending',
@@ -447,7 +447,7 @@ export async function getVideosByStatus(
 export async function getProcessingStats(creatorId?: string) {
   const supabase = getServiceSupabase();
 
-  let query = supabase
+  let query = (supabase as any)
     .from('videos')
     .select('status')
     .eq('is_deleted', false);
@@ -474,7 +474,7 @@ export async function getProcessingStats(creatorId?: string) {
   };
 
   for (const video of data || []) {
-    stats[video.status]++;
+    stats[video.status as VideoStatus]++;
   }
 
   return stats;
@@ -486,7 +486,7 @@ export async function getProcessingStats(creatorId?: string) {
 export async function getStuckVideos(): Promise<Database['public']['Tables']['videos']['Row'][]> {
   const supabase = getServiceSupabase();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('videos')
     .select('*')
     .in('status', ['uploading', 'transcribing', 'processing', 'embedding'])

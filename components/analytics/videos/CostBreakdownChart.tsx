@@ -86,10 +86,10 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
             fill="#8884d8"
             dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[data[index].method] || COLORS.unknown}
+                fill={COLORS[data[index]?.method ?? 'unknown'] || COLORS['unknown']}
               />
             ))}
           </Pie>
@@ -128,7 +128,7 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
               <div
                 className="w-3 h-3 rounded-full"
                 style={{
-                  backgroundColor: COLORS[data[index].method] || COLORS.unknown,
+                  backgroundColor: COLORS[data[index]?.method ?? 'unknown'] || COLORS['unknown'],
                 }}
               />
               <span className="text-gray-11">{item.name}</span>

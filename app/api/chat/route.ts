@@ -15,7 +15,7 @@ import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
 // RAG Infrastructure
-import { enhancedSearch, searchWithinCourse, searchCreatorContent } from '@/lib/rag/search';
+import { searchWithinCourse, searchCreatorContent } from '@/lib/rag/search';
 import { buildContext, buildSystemPrompt, estimateTokens } from '@/lib/rag/context-builder';
 import {
   getOrCreateSession,
@@ -26,9 +26,9 @@ import {
 import { createMessage, getMessages } from '@/lib/rag/messages';
 import {
   calculateCompleteCost,
-  formatCost,
-  type CostBreakdown
+  formatCost
 } from '@/lib/rag/cost-calculator';
+import type { CostBreakdown } from '@/lib/rag/types';
 
 // AI Integration
 import { createSSEStream, createStreamingResponse } from '@/lib/ai/streaming';
@@ -45,7 +45,7 @@ const MAX_OUTPUT_TOKENS = 4096;
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
+  apiKey: process.env['ANTHROPIC_API_KEY'] || '',
 });
 
 interface ChatRequest {
@@ -113,7 +113,6 @@ export async function POST(req: NextRequest) {
     console.log(`[Chat API] Processing message for creator ${creatorId}, session ${sessionId || 'NEW'}`);
 
     // Get or create session
-    const supabase = getServiceSupabase();
     let session;
 
     if (sessionId) {
@@ -262,7 +261,6 @@ Important guidelines:
         message,
         systemPrompt,
         conversationHistory,
-        searchResults,
         context,
         inputTokens,
         creatorId
@@ -301,7 +299,6 @@ async function handleStreamingResponse(
   userMessage: string,
   systemPrompt: string,
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
-  searchResults: any[],
   context: any,
   inputTokens: number,
   creatorId: string
@@ -390,7 +387,7 @@ async function handleStreamingResponse(
         .eq('id', sessionId)
         .single();
 
-      if (!session?.title) {
+      if (!(session as any)?.title) {
         await generateAndSetTitle(sessionId, userMessage);
       }
 
@@ -503,7 +500,7 @@ async function handleNonStreamingResponse(
     .eq('id', sessionId)
     .single();
 
-  if (!session?.title) {
+  if (!(session as any)?.title) {
     await generateAndSetTitle(sessionId, userMessage);
   }
 
@@ -530,7 +527,7 @@ async function handleNonStreamingResponse(
  */
 async function trackCostInDatabase(creatorId: string, costBreakdown: CostBreakdown): Promise<void> {
   const supabase = getServiceSupabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0]!;
 
   try {
     // Check if entry exists for today
@@ -543,23 +540,23 @@ async function trackCostInDatabase(creatorId: string, costBreakdown: CostBreakdo
 
     if (existing) {
       // Update existing entry
-      await supabase
+      await (supabase as any)
         .from('usage_metrics')
         .update({
-          ai_credits_used: existing.ai_credits_used + 1,
-          chat_messages_sent: existing.chat_messages_sent + 1,
+          ai_credits_used: (existing as any).ai_credits_used + 1,
+          chat_messages_sent: (existing as any).chat_messages_sent + 1,
           metadata: {
-            ...existing.metadata,
-            total_input_tokens: (existing.metadata?.total_input_tokens || 0) + costBreakdown.input_tokens,
-            total_output_tokens: (existing.metadata?.total_output_tokens || 0) + costBreakdown.output_tokens,
-            total_ai_cost_usd: (existing.metadata?.total_ai_cost_usd || 0) + costBreakdown.total_cost,
+            ...(existing as any).metadata,
+            total_input_tokens: ((existing as any).metadata?.total_input_tokens || 0) + costBreakdown.input_tokens,
+            total_output_tokens: ((existing as any).metadata?.total_output_tokens || 0) + costBreakdown.output_tokens,
+            total_ai_cost_usd: ((existing as any).metadata?.total_ai_cost_usd || 0) + costBreakdown.total_cost,
           },
         })
         .eq('creator_id', creatorId)
         .eq('date', today);
     } else {
       // Create new entry
-      await supabase.from('usage_metrics').insert({
+      await (supabase as any).from('usage_metrics').insert({
         creator_id: creatorId,
         date: today,
         ai_credits_used: 1,

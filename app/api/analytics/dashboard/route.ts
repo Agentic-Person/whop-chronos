@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
     // Get most viewed course
     let mostViewedCourse = null;
     if (courseViewsData.data && courseViewsData.data.length > 0) {
-      const topVideo = courseViewsData.data[0];
-      if (topVideo.videos) {
+      const topVideo = courseViewsData.data[0] as any;
+      if (topVideo && topVideo.videos) {
         mostViewedCourse = {
           title: topVideo.videos.title || 'Untitled Course',
           views: topVideo.views || 0,
@@ -130,16 +130,16 @@ export async function GET(request: NextRequest) {
         .limit(1),
     ]);
 
-    const totalViews = viewsData.data?.reduce((sum, record) => sum + (record.views || 0), 0) || 0;
-    const totalWatchTimeMinutes = watchTimeData.data?.reduce((sum, record) => sum + (record.watch_time || 0), 0) || 0;
+    const totalViews = viewsData.data?.reduce((sum, record: any) => sum + (record.views || 0), 0) || 0;
+    const totalWatchTimeMinutes = watchTimeData.data?.reduce((sum, record: any) => sum + (record.watch_time || 0), 0) || 0;
     const avgCompletionRate = completionData.data && completionData.data.length > 0
-      ? Math.round((completionData.data.reduce((sum, record) => sum + (record.completion_rate || 0), 0) / completionData.data.length) * 100)
+      ? Math.round((completionData.data.reduce((sum, record: any) => sum + (record.completion_rate || 0), 0) / completionData.data.length) * 100)
       : 0;
 
-    const topVideo = topVideoData.data && topVideoData.data.length > 0 && topVideoData.data[0].videos
+    const topVideo = topVideoData.data && topVideoData.data.length > 0 && (topVideoData.data[0] as any).videos
       ? {
-          title: topVideoData.data[0].videos.title || 'Untitled Video',
-          views: topVideoData.data[0].views || 0,
+          title: (topVideoData.data[0] as any).videos.title || 'Untitled Video',
+          views: (topVideoData.data[0] as any).views || 0,
         }
       : null;
 
@@ -150,13 +150,13 @@ export async function GET(request: NextRequest) {
       .eq('creator_id', creatorId)
       .single();
 
-    const storageUsed = usageData.data?.storage_used_bytes
-      ? Math.round((usageData.data.storage_used_bytes / (1024 * 1024 * 1024)) * 100) / 100
+    const storageUsed = (usageData.data as any)?.storage_used_bytes
+      ? Math.round(((usageData.data as any).storage_used_bytes / (1024 * 1024 * 1024)) * 100) / 100
       : 0;
     const storageLimit = 10; // 10 GB default
-    const aiCreditsUsed = usageData.data?.ai_credits_used || 0;
+    const aiCreditsUsed = (usageData.data as any)?.ai_credits_used || 0;
     const aiCreditsLimit = 1000;
-    const apiCallsThisMonth = usageData.data?.api_calls_count || 0;
+    const apiCallsThisMonth = (usageData.data as any)?.api_calls_count || 0;
     const nearLimit = (storageUsed / storageLimit) >= 0.8 || (aiCreditsUsed / aiCreditsLimit) >= 0.8;
 
     // Fetch chat data
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
 
     // Get most asked question (simplified - just get most recent user message)
     const mostAskedQuestion = recentMessagesData.data && recentMessagesData.data.length > 0
-      ? recentMessagesData.data[0].content
+      ? (recentMessagesData.data[0] as any).content
       : null;
 
     // Format recent activity

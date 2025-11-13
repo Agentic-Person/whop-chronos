@@ -106,7 +106,7 @@ export function VideoReferenceHeatmap({ creatorId }: VideoReferenceHeatmapProps)
             </tr>
           </thead>
           <tbody>
-            {data.map((video, index) => (
+            {data.map((video, _index) => (
               <tr
                 key={video.videoId}
                 className={`border-b border-gray-200 dark:border-gray-700 ${

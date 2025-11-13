@@ -13,7 +13,6 @@ import { getServiceSupabase } from '@/lib/db/client';
 import type { Database } from '@/lib/db/types';
 
 type SubscriptionTier = 'basic' | 'pro' | 'enterprise';
-type Creator = Database['public']['Tables']['creators']['Row'];
 type Video = Database['public']['Tables']['videos']['Row'];
 
 /**
@@ -114,7 +113,7 @@ export async function getStorageUsage(creatorId: string): Promise<{
   }
 
   const totalBytes = videos?.reduce(
-    (sum, video) => sum + (video.file_size_bytes || 0),
+    (sum: number, video: any) => sum + (video.file_size_bytes || 0),
     0
   ) || 0;
 
@@ -126,7 +125,7 @@ export async function getStorageUsage(creatorId: string): Promise<{
   startOfMonth.setHours(0, 0, 0, 0);
 
   const monthlyUploads = videos?.filter(
-    (video) => new Date(video.created_at) >= startOfMonth
+    (video: any) => new Date(video.created_at) >= startOfMonth
   ).length || 0;
 
   return {
@@ -143,7 +142,7 @@ export async function getQuotaInfo(creatorId: string): Promise<QuotaInfo> {
   const supabase = getServiceSupabase();
 
   // Get creator info
-  const { data: creator, error: creatorError } = await supabase
+  const { data: creator, error: creatorError } = await (supabase as any)
     .from('creators')
     .select('*')
     .eq('id', creatorId)
@@ -282,10 +281,10 @@ export async function updateStorageUsage(
   durationSeconds: number
 ): Promise<void> {
   const supabase = getServiceSupabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0] as string;
 
   // Get current usage for today
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from('usage_metrics')
     .select('*')
     .eq('creator_id', creatorId)
@@ -294,7 +293,7 @@ export async function updateStorageUsage(
 
   if (existing) {
     // Update existing record
-    await supabase
+    await (supabase as any)
       .from('usage_metrics')
       .update({
         storage_used_bytes: (existing.storage_used_bytes || 0) + fileSizeBytes,
@@ -307,7 +306,7 @@ export async function updateStorageUsage(
       .eq('date', today);
   } else {
     // Create new record
-    await supabase.from('usage_metrics').insert({
+    await (supabase as any).from('usage_metrics').insert({
       creator_id: creatorId,
       date: today,
       storage_used_bytes: fileSizeBytes,

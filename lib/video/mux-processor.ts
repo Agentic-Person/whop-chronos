@@ -86,17 +86,6 @@ interface MuxAssetResponse {
   };
 }
 
-interface MuxTrackResponse {
-  data: {
-    id: string;
-    type: string;
-    text_type?: string;
-    name?: string;
-    language_code?: string;
-    closed_captions?: boolean;
-  };
-}
-
 /**
  * WebVTT cue interface
  */
@@ -110,8 +99,8 @@ interface VTTCue {
  * Get Mux API credentials from environment
  */
 function getMuxCredentials(): { tokenId: string; tokenSecret: string } {
-  const tokenId = process.env.MUX_TOKEN_ID;
-  const tokenSecret = process.env.MUX_TOKEN_SECRET;
+  const tokenId = process.env['MUX_TOKEN_ID'];
+  const tokenSecret = process.env['MUX_TOKEN_SECRET'];
 
   if (!tokenId || !tokenSecret) {
     throw new MuxProcessorError(
@@ -272,24 +261,24 @@ function parseWebVTT(vttContent: string): VTTCue[] {
     let i = 0;
 
     // Skip WEBVTT header and any metadata
-    while (i < lines.length && !lines[i].includes('-->')) {
+    while (i < lines.length && !lines[i]?.includes('-->')) {
       i++;
     }
 
     while (i < lines.length) {
-      const line = lines[i].trim();
+      const line = (lines[i] || '').trim();
 
       // Look for timestamp line (e.g., "00:00:00.000 --> 00:00:03.500")
       if (line.includes('-->')) {
         const [startStr, endStr] = line.split('-->').map(s => s.trim());
-        const start = parseVTTTimestamp(startStr);
-        const end = parseVTTTimestamp(endStr);
+        const start = parseVTTTimestamp(startStr!);
+        const end = parseVTTTimestamp(endStr!);
 
         // Collect text lines until we hit an empty line or another timestamp
         const textLines: string[] = [];
         i++;
-        while (i < lines.length && lines[i].trim() && !lines[i].includes('-->')) {
-          textLines.push(lines[i].trim());
+        while (i < lines.length && (lines[i] || '').trim() && !lines[i]?.includes('-->')) {
+          textLines.push((lines[i] || '').trim());
           i++;
         }
 
@@ -336,18 +325,18 @@ function parseVTTTimestamp(timestamp: string): number {
 
   if (parts.length === 3) {
     // HH:MM:SS.mmm
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    const secondsParts = parts[2].split('.');
-    const secs = parseInt(secondsParts[0], 10);
+    const hours = parseInt(parts[0]!, 10);
+    const minutes = parseInt(parts[1]!, 10);
+    const secondsParts = parts[2]!.split('.');
+    const secs = parseInt(secondsParts[0]!, 10);
     const ms = parseInt(secondsParts[1] || '0', 10);
 
     seconds = hours * 3600 + minutes * 60 + secs + ms / 1000;
   } else if (parts.length === 2) {
     // MM:SS.mmm
-    const minutes = parseInt(parts[0], 10);
-    const secondsParts = parts[1].split('.');
-    const secs = parseInt(secondsParts[0], 10);
+    const minutes = parseInt(parts[0]!, 10);
+    const secondsParts = parts[1]!.split('.');
+    const secs = parseInt(secondsParts[0]!, 10);
     const ms = parseInt(secondsParts[1] || '0', 10);
 
     seconds = minutes * 60 + secs + ms / 1000;
@@ -477,7 +466,7 @@ export function extractMuxId(idOrUrl: string): string {
   // Check if it's a stream URL
   const streamUrlMatch = cleanInput.match(/stream\.mux\.com\/([^/.]+)/);
   if (streamUrlMatch) {
-    return streamUrlMatch[1];
+    return streamUrlMatch[1]!;
   }
 
   // Check if it looks like an asset ID or playback ID
