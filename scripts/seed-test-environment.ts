@@ -125,6 +125,7 @@ async function createTestUsers() {
     .insert({
       id: TEST_CREATOR_ID,
       whop_company_id: 'biz_test_creator_001',
+      whop_user_id: 'user_test_creator_001',
       email: 'creator@test.chronos.ai',
       name: 'Test Creator',
       subscription_tier: 'pro',
@@ -145,6 +146,8 @@ async function createTestUsers() {
     .insert({
       id: TEST_STUDENT_ID,
       whop_user_id: 'user_test_student_001',
+      whop_membership_id: 'mem_test_student_001',
+      creator_id: TEST_CREATOR_ID,
       email: 'student@test.chronos.ai',
       name: 'Test Student',
       preferences: {
@@ -176,7 +179,7 @@ async function createTestVideos() {
       youtube_video_id: 'dQw4w9WgXcQ',
       title: 'Introduction to Trading Psychology',
       description: 'Learn the psychological aspects of successful trading',
-      duration: 212,
+      duration_seconds: 212,
       thumbnail_url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
       status: 'completed',
       metadata: {
@@ -191,7 +194,7 @@ async function createTestVideos() {
       youtube_video_id: 'jNQXAC9IVRw',
       title: 'Technical Analysis Basics',
       description: 'Understanding charts, patterns, and indicators',
-      duration: 1845,
+      duration_seconds: 1845,
       thumbnail_url: 'https://i.ytimg.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
       status: 'completed',
       metadata: {
@@ -206,7 +209,7 @@ async function createTestVideos() {
       youtube_video_id: 'yPYZpwSpKmA',
       title: 'Risk Management Strategies',
       description: 'How to protect your capital and manage risk',
-      duration: 1567,
+      duration_seconds: 1567,
       thumbnail_url: 'https://i.ytimg.com/vi/yPYZpwSpKmA/maxresdefault.jpg',
       status: 'completed',
       metadata: {
@@ -223,7 +226,7 @@ async function createTestVideos() {
       loom_video_id: 'test-loom-001',
       title: 'Live Trading Session #1',
       description: 'Watch me execute trades in real-time',
-      duration: 2400,
+      duration_seconds: 2400,
       thumbnail_url: 'https://cdn.loom.com/sessions/thumbnails/test-loom-001.jpg',
       status: 'completed',
       metadata: {
@@ -237,7 +240,7 @@ async function createTestVideos() {
       loom_video_id: 'test-loom-002',
       title: 'Setting Up Your Trading Platform',
       description: 'Step-by-step platform configuration guide',
-      duration: 1200,
+      duration_seconds: 1200,
       thumbnail_url: 'https://cdn.loom.com/sessions/thumbnails/test-loom-002.jpg',
       status: 'completed',
       metadata: {
@@ -251,7 +254,7 @@ async function createTestVideos() {
       loom_video_id: 'test-loom-003',
       title: 'Common Trading Mistakes to Avoid',
       description: 'Learn from my biggest mistakes as a trader',
-      duration: 1680,
+      duration_seconds: 1680,
       thumbnail_url: 'https://cdn.loom.com/sessions/thumbnails/test-loom-003.jpg',
       status: 'completed',
       metadata: {
@@ -268,7 +271,7 @@ async function createTestVideos() {
       mux_playback_id: 'test-mux-playback-001',
       title: 'Advanced Options Trading',
       description: 'Master complex options strategies',
-      duration: 3600,
+      duration_seconds: 3600,
       thumbnail_url: 'https://image.mux.com/test-mux-playback-001/thumbnail.jpg',
       status: 'completed',
       metadata: {
@@ -284,7 +287,7 @@ async function createTestVideos() {
       mux_playback_id: 'test-mux-playback-002',
       title: 'Cryptocurrency Trading Fundamentals',
       description: 'Navigate the crypto markets with confidence',
-      duration: 2700,
+      duration_seconds: 2700,
       thumbnail_url: 'https://image.mux.com/test-mux-playback-002/thumbnail.jpg',
       status: 'completed',
       metadata: {
@@ -300,7 +303,7 @@ async function createTestVideos() {
       mux_playback_id: 'test-mux-playback-003',
       title: 'Forex Trading Masterclass',
       description: 'Trade the foreign exchange markets like a pro',
-      duration: 4200,
+      duration_seconds: 4200,
       thumbnail_url: 'https://image.mux.com/test-mux-playback-003/thumbnail.jpg',
       status: 'completed',
       metadata: {
@@ -317,7 +320,7 @@ async function createTestVideos() {
       storage_path: 'videos/test-upload-001.mp4',
       title: 'Day Trading Strategy Deep Dive',
       description: 'My personal day trading strategy explained',
-      duration: 2880,
+      duration_seconds: 2880,
       thumbnail_url: 'https://placeholder.com/thumbnail-001.jpg',
       status: 'completed',
       metadata: {
@@ -332,7 +335,7 @@ async function createTestVideos() {
       storage_path: 'videos/test-upload-002.mp4',
       title: 'Reading Market Sentiment',
       description: 'How to gauge market psychology and sentiment',
-      duration: 1920,
+      duration_seconds: 1920,
       thumbnail_url: 'https://placeholder.com/thumbnail-002.jpg',
       status: 'completed',
       metadata: {
@@ -347,7 +350,7 @@ async function createTestVideos() {
       storage_path: 'videos/test-upload-003.mp4',
       title: 'Building a Trading Plan',
       description: 'Create a comprehensive trading plan that works',
-      duration: 2160,
+      duration_seconds: 2160,
       thumbnail_url: 'https://placeholder.com/thumbnail-003.jpg',
       status: 'completed',
       metadata: {
@@ -357,14 +360,14 @@ async function createTestVideos() {
     },
   ];
 
-  const { data, error } = await supabase
+  const { data, error: videosError } = await supabase
     .from('videos')
     .insert(videos)
     .select('id, title, source_type');
 
-  if (error) {
-    error(`Failed to create test videos: ${error.message}`);
-    throw error;
+  if (videosError) {
+    error(`Failed to create test videos: ${videosError.message}`);
+    throw videosError;
   }
 
   success(`Created ${data?.length || 0} test videos`);
