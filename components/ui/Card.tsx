@@ -24,7 +24,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg border border-gray-200 bg-white shadow-sm",
+        "rounded-lg border border-gray-a4 bg-gray-2 shadow-sm",
         paddingClasses[padding],
         hover && "transition-shadow hover:shadow-md",
         className
@@ -55,7 +55,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h3 className={cn("text-lg font-semibold text-gray-900", className)}>
+    <h3 className={cn("text-lg font-semibold text-gray-12", className)}>
       {children}
     </h3>
   );
@@ -71,7 +71,7 @@ export function CardDescription({
   className,
 }: CardDescriptionProps) {
   return (
-    <p className={cn("text-sm text-gray-600", className)}>{children}</p>
+    <p className={cn("text-sm text-gray-11", className)}>{children}</p>
   );
 }
 

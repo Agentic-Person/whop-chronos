@@ -30,13 +30,13 @@ interface VideoFiltersProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'completed', label: 'Completed', color: 'text-green-600 bg-green-100' },
-  { value: 'processing', label: 'Processing', color: 'text-yellow-600 bg-yellow-100' },
-  { value: 'transcribing', label: 'Transcribing', color: 'text-yellow-600 bg-yellow-100' },
-  { value: 'embedding', label: 'Embedding', color: 'text-yellow-600 bg-yellow-100' },
-  { value: 'pending', label: 'Pending', color: 'text-blue-600 bg-blue-100' },
-  { value: 'uploading', label: 'Uploading', color: 'text-blue-600 bg-blue-100' },
-  { value: 'failed', label: 'Failed', color: 'text-red-600 bg-red-100' },
+  { value: 'completed', label: 'Completed', color: 'text-green-11 bg-green-3' },
+  { value: 'processing', label: 'Processing', color: 'text-amber-11 bg-amber-3' },
+  { value: 'transcribing', label: 'Transcribing', color: 'text-amber-11 bg-amber-3' },
+  { value: 'embedding', label: 'Embedding', color: 'text-amber-11 bg-amber-3' },
+  { value: 'pending', label: 'Pending', color: 'text-blue-11 bg-blue-3' },
+  { value: 'uploading', label: 'Uploading', color: 'text-blue-11 bg-blue-3' },
+  { value: 'failed', label: 'Failed', color: 'text-red-11 bg-red-3' },
 ];
 
 const SOURCE_TYPE_OPTIONS = [
@@ -159,19 +159,19 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-11" />
           <input
             type="text"
             placeholder="Search videos by title or description..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-a4 rounded-lg bg-gray-3 text-gray-12 placeholder:text-gray-11 focus:ring-2 focus:ring-purple-9 focus:border-transparent"
             aria-label="Search videos"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-11 hover:text-gray-12"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
@@ -207,7 +207,7 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
         <Card className="space-y-6">
           {/* Status Filter */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Status</h3>
+            <h3 className="text-sm font-semibold text-gray-12 mb-3">Status</h3>
             <div className="flex flex-wrap gap-2">
               {STATUS_OPTIONS.map((option) => (
                 <button
@@ -217,7 +217,7 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                     filters.status.includes(option.value)
                       ? option.color
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-3 text-gray-11 hover:bg-gray-4'
                   )}
                 >
                   {option.label}
@@ -228,7 +228,7 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
 
           {/* Source Type Filter */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Source Type</h3>
+            <h3 className="text-sm font-semibold text-gray-12 mb-3">Source Type</h3>
             <div className="flex flex-wrap gap-2">
               {SOURCE_TYPE_OPTIONS.map((option) => (
                 <button
@@ -237,8 +237,8 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                     filters.sourceType.includes(option.value)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-purple-9 text-white'
+                      : 'bg-gray-3 text-gray-11 hover:bg-gray-4'
                   )}
                 >
                   {option.label}
@@ -249,7 +249,7 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
 
           {/* Date Range Filter */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Date Range</h3>
+            <h3 className="text-sm font-semibold text-gray-12 mb-3">Date Range</h3>
             <div className="space-y-3">
               {/* Presets */}
               <div className="flex flex-wrap gap-2">
@@ -260,8 +260,8 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
                     className={cn(
                       'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                       datePreset === preset.value
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-blue-9 text-white'
+                        : 'bg-gray-3 text-gray-11 hover:bg-gray-4'
                     )}
                   >
                     {preset.label}
@@ -271,25 +271,25 @@ export function VideoFilters({ filters, onFiltersChange }: VideoFiltersProps) {
 
               {/* Custom Date Inputs */}
               {datePreset === 'custom' && (
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                  <Calendar className="h-5 w-5 text-gray-400" />
+                <div className="flex items-center gap-3 p-4 bg-gray-3 rounded-lg">
+                  <Calendar className="h-5 w-5 text-gray-11" />
                   <div className="flex-1 flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">From</label>
+                      <label className="block text-xs text-gray-11 mb-1">From</label>
                       <input
                         type="date"
                         value={customDateFrom}
                         onChange={(e) => setCustomDateFrom(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-a4 rounded-lg bg-gray-2 text-gray-12 text-sm focus:ring-2 focus:ring-purple-9 focus:border-transparent"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">To</label>
+                      <label className="block text-xs text-gray-11 mb-1">To</label>
                       <input
                         type="date"
                         value={customDateTo}
                         onChange={(e) => setCustomDateTo(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-a4 rounded-lg bg-gray-2 text-gray-12 text-sm focus:ring-2 focus:ring-purple-9 focus:border-transparent"
                       />
                     </div>
                     <Button

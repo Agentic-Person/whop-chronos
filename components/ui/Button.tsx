@@ -26,17 +26,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+      "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-9 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
     const variantClasses = {
       primary:
-        "bg-gradient-to-br from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700",
+        "bg-gradient-to-br from-purple-9 to-blue-9 text-white hover:from-purple-10 hover:to-blue-10",
       secondary:
-        "bg-gray-900 text-white hover:bg-gray-800",
+        "bg-gray-12 text-white hover:bg-gray-11",
       outline:
-        "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50",
-      ghost: "text-gray-700 hover:bg-gray-100",
-      danger: "bg-red-600 text-white hover:bg-red-700",
+        "border border-gray-a4 bg-gray-2 text-gray-12 hover:bg-gray-3",
+      ghost: "text-gray-11 hover:bg-gray-3",
+      danger: "bg-red-9 text-white hover:bg-red-10",
     };
 
     const sizeClasses = {

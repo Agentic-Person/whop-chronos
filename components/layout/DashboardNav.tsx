@@ -6,6 +6,7 @@ import { Button } from '@whop/react/components';
 import {
   LayoutDashboard,
   BookOpen,
+  Video,
   BarChart,
   Activity,
   MessageSquare,
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
   { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
+  { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
   { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart },
   { name: 'Usage', href: '/dashboard/creator/usage', icon: Activity },
   { name: 'Chat', href: '/dashboard/creator/chat', icon: MessageSquare },

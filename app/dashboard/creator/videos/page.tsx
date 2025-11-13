@@ -37,7 +37,7 @@ export default function VideosPage() {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [_showUploadModal, setShowUploadModal] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     status: [],
     sourceType: [],
@@ -49,7 +49,8 @@ export default function VideosPage() {
   const [totalVideos, setTotalVideos] = useState(0);
 
   // TODO: Get creator ID from auth context
-  const creatorId = 'temp-creator-id';
+  // Using a valid UUID format for development (this will return empty results if creator doesn't exist)
+  const creatorId = '00000000-0000-0000-0000-000000000000';
 
   // Fetch videos
   const fetchVideos = async () => {
@@ -237,8 +238,8 @@ export default function VideosPage() {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Video Library</h1>
-            <p className="mt-1 text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-12">Video Library</h1>
+            <p className="mt-1 text-gray-11">
               Manage your video content and processing status
             </p>
           </div>
@@ -256,30 +257,30 @@ export default function VideosPage() {
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card padding="sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{totalVideos}</div>
-              <div className="text-sm text-gray-600">Total Videos</div>
+              <div className="text-2xl font-bold text-gray-12">{totalVideos}</div>
+              <div className="text-sm text-gray-11">Total Videos</div>
             </div>
           </Card>
           <Card padding="sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-11">
                 {videos.filter((v) => v.status === 'completed').length}
               </div>
-              <div className="text-sm text-gray-600">Completed</div>
+              <div className="text-sm text-gray-11">Completed</div>
             </div>
           </Card>
           <Card padding="sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{processingCount}</div>
-              <div className="text-sm text-gray-600">Processing</div>
+              <div className="text-2xl font-bold text-amber-11">{processingCount}</div>
+              <div className="text-sm text-gray-11">Processing</div>
             </div>
           </Card>
           <Card padding="sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-red-11">
                 {videos.filter((v) => v.status === 'failed').length}
               </div>
-              <div className="text-sm text-gray-600">Failed</div>
+              <div className="text-sm text-gray-11">Failed</div>
             </div>
           </Card>
         </div>
@@ -290,8 +291,8 @@ export default function VideosPage() {
         <div className="mb-8">
           <ProcessingMonitor
             creatorId={creatorId}
-            supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL || ''}
-            supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}
+            supabaseUrl={process.env['NEXT_PUBLIC_SUPABASE_URL'] || ''}
+            supabaseAnonKey={process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] || ''}
             initialVideos={videos
               .filter((v) =>
                 ['pending', 'uploading', 'transcribing', 'processing', 'embedding'].includes(
@@ -333,9 +334,9 @@ export default function VideosPage() {
 
       {/* Error State */}
       {error && (
-        <Card className="mb-6 bg-red-50 border-red-200">
+        <Card className="mb-6 bg-red-2 border-red-a4">
           <div className="flex items-center gap-3">
-            <div className="text-red-600">
+            <div className="text-red-11">
               <svg
                 className="h-5 w-5"
                 fill="currentColor"
@@ -349,8 +350,8 @@ export default function VideosPage() {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800">Error loading videos</p>
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm font-medium text-red-12">Error loading videos</p>
+              <p className="text-sm text-red-11">{error}</p>
             </div>
             <Button variant="outline" size="sm" onClick={fetchVideos}>
               Retry
@@ -362,11 +363,11 @@ export default function VideosPage() {
       {/* Empty State */}
       {!isLoading && videos.length === 0 && !error && (
         <Card className="text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
-            <Video className="h-8 w-8 text-purple-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-3 mb-4">
+            <Video className="h-8 w-8 text-purple-11" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No videos yet</h3>
-          <p className="text-gray-600 mb-6">
+          <h3 className="text-lg font-semibold text-gray-12 mb-2">No videos yet</h3>
+          <p className="text-gray-11 mb-6">
             {filters.search || filters.status.length > 0
               ? 'No videos match your current filters'
               : 'Upload your first video to get started with your learning platform'}
@@ -396,7 +397,7 @@ export default function VideosPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-11">
                 Showing page {page} of {totalPages} ({totalVideos} total videos)
               </p>
               <div className="flex items-center gap-2">
@@ -426,8 +427,8 @@ export default function VideosPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading videos...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-9 border-r-transparent"></div>
+            <p className="mt-4 text-gray-11">Loading videos...</p>
           </div>
         </div>
       )}
