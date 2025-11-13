@@ -48,7 +48,7 @@ export default function CoursesPage() {
             coverImage: course.thumbnail_url || '',
             aspectRatio: '16:9' as const, // Default aspect ratio
             chapters: course.module_count || 0,
-            lessons: 0, // Will be calculated later
+            lessons: course.lesson_count || 0, // Get lesson count from API
             lastEdited: course.updated_at || course.created_at,
           }));
 
