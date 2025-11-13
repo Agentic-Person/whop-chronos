@@ -123,7 +123,8 @@ export async function getSession(): Promise<WhopSession | null> {
         email: 'creator@test.chronos.ai',
         username: 'test_creator',
         profile_pic_url: null,
-        social_accounts: [],
+        social_accounts: {},
+        created_at: Date.now(),
       },
     };
   }
@@ -220,13 +221,10 @@ export async function validateUserMembership(
         plan_id: 'plan_test_pro',
         status: 'active',
         valid: true,
-        expires_at: null,
+        cancel_at_period_end: false,
         renewal_period_start: Date.now(),
         renewal_period_end: Date.now() + (1000 * 60 * 60 * 24 * 30),
-        access_pass: {
-          name: 'Test Pro Pass',
-          slug: 'test-pro',
-        },
+        created_at: Date.now(),
       },
       tier: 'pro',
       isValid: true,
