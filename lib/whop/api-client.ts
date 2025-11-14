@@ -236,8 +236,14 @@ export async function exchangeCodeForToken(code: string): Promise<{
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    console.error('[Whop API] Token exchange failed:', {
+      status: response.status,
+      error: error.error,
+      description: error.error_description,
+      fullError: error,
+    });
     throw new WhopApiError(
-      error.error_description || 'Failed to exchange code for token',
+      error.error_description || `Failed to exchange code for token (${response.status})`,
       response.status,
       error.error
     );
