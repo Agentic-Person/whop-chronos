@@ -41,10 +41,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   } catch (error) {
     console.error('OAuth callback failed:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
 
     return NextResponse.redirect(
       new URL(
-        `/?error=${encodeURIComponent('oauth_failed')}`,
+        `/?error=${encodeURIComponent('oauth_failed')}&details=${encodeURIComponent(error instanceof Error ? error.message : 'unknown')}`,
         request.url
       )
     );
