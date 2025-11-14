@@ -2,41 +2,47 @@
 
 import { type VideoReference } from "./ChatInterface";
 import { Card } from "@/components/ui/Card";
-import { Play, Clock } from "lucide-react";
+import { TimestampBadge } from "./TimestampBadge";
+import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VideoReferenceCardProps {
   reference: VideoReference;
-  onPlay?: (videoId: string, timestamp: number) => void;
+  onTimestampClick?: (seconds: number, videoId: string) => void;
+  onPlay?: (videoId: string, timestamp: number) => void; // Deprecated: use onTimestampClick
+  isCurrentVideo?: boolean;
   className?: string;
 }
 
 export function VideoReferenceCard({
   reference,
+  onTimestampClick,
   onPlay,
+  isCurrentVideo = false,
   className,
 }: VideoReferenceCardProps) {
-  const formatTimestamp = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  const handleCardClick = () => {
+    // Support both old and new callback patterns
+    onPlay?.(reference.videoId, reference.timestamp);
+    onTimestampClick?.(reference.timestamp, reference.videoId);
   };
 
-  const handleClick = () => {
-    onPlay?.(reference.videoId, reference.timestamp);
+  const handleTimestampClick = () => {
+    onTimestampClick?.(reference.timestamp, reference.videoId);
   };
 
   return (
     <Card
       className={cn(
         "group cursor-pointer overflow-hidden transition-all hover:shadow-lg",
+        isCurrentVideo && "ring-2 ring-purple-9 ring-offset-2",
         className
       )}
       padding="none"
       hover
     >
       <button
-        onClick={handleClick}
+        onClick={handleCardClick}
         className="flex w-full gap-3 p-3 text-left"
         type="button"
       >
@@ -61,12 +67,13 @@ export function VideoReferenceCard({
             </div>
           </div>
 
-          {/* Timestamp badge */}
-          <div className="absolute bottom-1 right-1 flex items-center gap-1 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
-            <Clock className="h-3 w-3" />
-            <span className="font-medium">
-              {formatTimestamp(reference.timestamp)}
-            </span>
+          {/* Clickable Timestamp badge */}
+          <div className="absolute bottom-1 right-1 z-10">
+            <TimestampBadge
+              seconds={reference.timestamp}
+              onClick={handleTimestampClick}
+              isActive={isCurrentVideo}
+            />
           </div>
         </div>
 
@@ -84,7 +91,9 @@ export function VideoReferenceCard({
 
           {/* Footer */}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Click to play</span>
+            <span className="text-xs text-gray-500">
+              {isCurrentVideo ? "Playing now" : "Click to play"}
+            </span>
 
             {/* Relevance score (optional) */}
             {reference.relevanceScore !== undefined && (

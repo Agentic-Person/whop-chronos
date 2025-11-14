@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/utils/toast";
 
 export interface Message {
   id: string;
@@ -30,13 +31,17 @@ export interface VideoReference {
 
 interface ChatInterfaceProps {
   sessionId?: string;
+  currentVideoId?: string;
   onSessionChange?: (sessionId: string) => void;
+  onTimestampClick?: (seconds: number, videoId: string) => void;
   className?: string;
 }
 
 export function ChatInterface({
   sessionId,
+  currentVideoId,
   onSessionChange,
+  onTimestampClick,
   className,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -116,6 +121,27 @@ export function ChatInterface({
     onSessionChange?.("");
   };
 
+  const handleTimestampClick = (seconds: number, videoId: string) => {
+    // Check if this is a reference to the current video
+    if (currentVideoId && videoId !== currentVideoId) {
+      // Show notification about different video
+      const videoReference = messages
+        .flatMap(m => m.videoReferences || [])
+        .find(ref => ref.videoId === videoId);
+
+      const videoTitle = videoReference?.videoTitle || 'another video';
+
+      toast.warning(
+        `This timestamp is from "${videoTitle}". Switch to that video to view this moment.`,
+        7000
+      );
+      return;
+    }
+
+    // Call parent handler to seek to timestamp
+    onTimestampClick?.(seconds, videoId);
+  };
+
   return (
     <div className={cn("flex h-full w-full", className)}>
       {/* Mobile sidebar toggle */}
@@ -175,7 +201,11 @@ export function ChatInterface({
                 </div>
               </div>
             ) : (
-              <MessageList messages={messages} />
+              <MessageList
+                messages={messages}
+                currentVideoId={currentVideoId}
+                onTimestampClick={handleTimestampClick}
+              />
             )}
 
             {/* Loading indicator */}
