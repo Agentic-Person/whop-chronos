@@ -159,6 +159,12 @@ export function HeroSection() {
               </span>
             </button>
             <button
+              onClick={() => {
+                document.getElementById('why-chronos')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+              }}
               type="button"
               className="px-6 text-sm font-semibold border-2 rounded-xl bg-transparent text-gray-12 hover:bg-gray-3 transition-all flex items-center justify-center"
               style={{ borderColor: '#F03C09', height: '40px' }}
