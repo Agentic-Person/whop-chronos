@@ -4,6 +4,9 @@ import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { requireAuth } from '@/lib/whop/auth';
 
+// Force dynamic rendering since we use cookies for authentication
+export const dynamic = 'force-dynamic';
+
 export default async function CreatorDashboardLayout({
   children,
 }: {
