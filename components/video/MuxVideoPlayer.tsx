@@ -1,7 +1,7 @@
 'use client';
 
 import MuxPlayer from '@mux/mux-player-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { VideoAnalyticsTracker } from '@/lib/video/player-analytics';
 
 interface MuxVideoPlayerProps {
@@ -43,7 +43,7 @@ interface MuxVideoPlayerProps {
  * @param autoPlay - Whether to autoplay the video
  * @param className - Additional CSS classes
  */
-export default function MuxVideoPlayer({
+const MuxVideoPlayer = forwardRef<any, MuxVideoPlayerProps>(({
   playbackId,
   videoId,
   title,
@@ -58,13 +58,20 @@ export default function MuxVideoPlayer({
   autoPlay = false,
   className = '',
   enableAnalytics = true,
-}: MuxVideoPlayerProps) {
+}, ref) => {
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [milestonesReached, setMilestonesReached] = useState<Set<number>>(new Set());
   const playerRef = useRef<any>(null);
   const lastTimeUpdateRef = useRef<number>(0);
   const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Expose player ref
+  useEffect(() => {
+    if (ref && typeof ref === 'object' && playerRef.current) {
+      (ref as any).current = playerRef.current;
+    }
+  }, [ref]);
 
   // Initialize analytics tracker
   useEffect(() => {
@@ -202,4 +209,8 @@ export default function MuxVideoPlayer({
       />
     </div>
   );
-}
+});
+
+MuxVideoPlayer.displayName = 'MuxVideoPlayer';
+
+export default MuxVideoPlayer;

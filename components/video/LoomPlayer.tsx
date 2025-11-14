@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { VideoAnalyticsTracker } from '@/lib/video/player-analytics';
 
 interface LoomPlayerProps {
@@ -48,7 +48,7 @@ interface LoomPlayerProps {
  * @param autoPlay - Whether to autoplay the video
  * @param className - Additional CSS classes
  */
-export default function LoomPlayer({
+const LoomPlayer = forwardRef<HTMLIFrameElement, LoomPlayerProps>(({
   loomVideoId,
   videoId,
   title,
@@ -63,7 +63,7 @@ export default function LoomPlayer({
   autoPlay = false,
   className = '',
   enableAnalytics = true,
-}: LoomPlayerProps) {
+}, ref) => {
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [milestonesReached, setMilestonesReached] = useState<Set<number>>(new Set());
@@ -72,6 +72,13 @@ export default function LoomPlayer({
   const durationRef = useRef<number>(0);
   const lastTimeUpdateRef = useRef<number>(0);
   const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+
+  // Expose iframe ref
+  useEffect(() => {
+    if (ref && typeof ref === 'object' && iframeRef.current) {
+      (ref as any).current = iframeRef.current;
+    }
+  }, [ref]);
 
   // Initialize analytics tracker
   useEffect(() => {
@@ -245,4 +252,8 @@ export default function LoomPlayer({
       />
     </div>
   );
-}
+});
+
+LoomPlayer.displayName = 'LoomPlayer';
+
+export default LoomPlayer;
