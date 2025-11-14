@@ -9,6 +9,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { OperationBreakdown } from '@/components/analytics/OperationBreakdown';
+import { CostComparisonChart } from '@/components/analytics/CostComparisonChart';
+import { exportOperationBreakdownToCSV } from '@/lib/utils/export-csv';
 
 interface UsageData {
   lastUpdated: string;
@@ -638,6 +641,88 @@ export default function UsagePage() {
                 : '0.00'}
             </div>
             <div className="text-xs text-gray-11 mt-1">Average cost per day</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Operation Breakdown Section - NEW */}
+      <div className="bg-gray-a2 rounded-lg p-6 border border-gray-a6">
+        <h2 className="text-5 font-semibold text-gray-12 mb-4">Cost Breakdown by Operation</h2>
+        <p className="text-sm text-gray-11 mb-6">
+          Detailed breakdown of costs by operation type: Transcription, Embeddings, Storage, and Chat
+        </p>
+
+        {/* Cost Comparison Chart */}
+        <div className="mb-6">
+          <CostComparisonChart
+            transcriptionCost={usageData.openai.totalCost * 0.6}
+            embeddingsCost={usageData.openai.totalCost * 0.4}
+            storageCost={usageData.supabase.estimatedCost}
+            chatCost={usageData.anthropic.totalCost}
+          />
+        </div>
+
+        {/* Operation Breakdown Component */}
+        <OperationBreakdown
+          creatorId={CREATOR_ID}
+          onExport={(data) => {
+            try {
+              exportOperationBreakdownToCSV(data);
+            } catch (error) {
+              console.error('Failed to export CSV:', error);
+              alert('Failed to export CSV. Please try again.');
+            }
+          }}
+        />
+      </div>
+
+      {/* Additional Cost Optimization Tips */}
+      <div className="bg-gradient-to-br from-green-a3 to-blue-a3 rounded-lg p-6 border border-gray-a6">
+        <h2 className="text-5 font-semibold text-gray-12 mb-4">Cost Optimization Recommendations</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-a2 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎥</span>
+              <div>
+                <div className="font-medium text-gray-12">Use YouTube videos when possible (100% free transcripts)</div>
+                <div className="text-sm text-gray-11 mt-1">
+                  YouTube transcripts are extracted for free, saving $0.006 per minute vs. Whisper
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-a2 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎙️</span>
+              <div>
+                <div className="font-medium text-gray-12">Use Loom for screencasts (100% free transcripts)</div>
+                <div className="text-sm text-gray-11 mt-1">
+                  Loom API provides free transcripts for all recordings
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-a2 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">📦</span>
+              <div>
+                <div className="font-medium text-gray-12">Batch upload videos to optimize processing</div>
+                <div className="text-sm text-gray-11 mt-1">
+                  Batch processing reduces overhead and optimizes resource usage
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-a2 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💾</span>
+              <div>
+                <div className="font-medium text-gray-12">Monitor storage usage to avoid quota overages</div>
+                <div className="text-sm text-gray-11 mt-1">
+                  Current usage: {usageData.supabase.percentage.toFixed(1)}% of {usageData.supabase.limitGB} GB limit
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
