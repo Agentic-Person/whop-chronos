@@ -135,7 +135,7 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => {
-                window.location.href = '/api/whop/oauth';
+                window.location.href = '/api/whop/auth/login';
               }}
               type="button"
               className="relative overflow-hidden px-6 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
@@ -339,7 +339,7 @@ export function HeroSection() {
                   <div className="flex justify-center pt-4">
                     <button
                       onClick={() => {
-                        window.location.href = '/api/whop/oauth';
+                        window.location.href = '/api/whop/auth/login';
                       }}
                       type="button"
                       className="relative overflow-hidden px-6 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
