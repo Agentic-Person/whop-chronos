@@ -261,7 +261,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
-  const response = await fetch('https://api.whop.com/oauth/token', {
+  const response = await fetch('https://api.whop.com/v5/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
