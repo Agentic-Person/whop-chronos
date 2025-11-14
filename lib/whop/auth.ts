@@ -339,16 +339,21 @@ export async function hasValidMembership(membershipId: string): Promise<boolean>
 
 export async function handleOAuthCallback(code: string): Promise<WhopSession> {
   try {
+    console.log('[OAuth] Exchanging code for token...');
     const tokens = await whopApi.exchangeCodeForToken(code);
+    console.log('[OAuth] Token exchange successful, creating session...');
     const session = await createSession(
       tokens.access_token,
       tokens.refresh_token,
       tokens.expires_in
     );
+    console.log('[OAuth] Session created successfully');
     return session;
   } catch (error) {
     console.error('OAuth callback failed:', error);
-    throw new WhopAuthError('Failed to complete OAuth flow');
+    // Re-throw with original error message for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new WhopAuthError(`Failed to complete OAuth flow: ${errorMessage}`);
   }
 }
 
