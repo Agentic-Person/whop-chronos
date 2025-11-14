@@ -7,6 +7,7 @@ import AddLessonDialog from './AddLessonDialog';
 import VideoLibraryPicker from './VideoLibraryPicker';
 import VideoUploader from './VideoUploader';
 import VideoUrlUploader from './VideoUrlUploader';
+import { LessonCard } from './LessonCard';
 
 interface Chapter {
   id: string;
@@ -23,6 +24,7 @@ interface Lesson {
   videoId?: string;
   thumbnail?: string;
   duration?: number;
+  source_type?: 'youtube' | 'loom' | 'mux' | 'upload';
   lesson_order: number;
 }
 
@@ -98,6 +100,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
                 videoId: lesson.video_id,
                 thumbnail: lesson.video?.thumbnail_url,
                 duration: lesson.video?.duration_seconds,
+                source_type: lesson.video?.source_type || 'upload',
                 lesson_order: lesson.lesson_order,
               })),
               isExpanded: true,
@@ -260,6 +263,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
         videoId: video.id,
         thumbnail: video.thumbnail,
         duration: video.duration,
+        source_type: video.source_type || 'upload',
         lesson_order: nextOrder,
       };
 
@@ -345,6 +349,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
         videoId: videoData.id,
         thumbnail: videoData.thumbnail,
         duration: videoData.duration,
+        source_type: videoData.source_type || 'upload',
         lesson_order: nextOrder,
       };
 
@@ -500,7 +505,7 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
 
                 {/* Lessons */}
                 {chapter.isExpanded && (
-                  <div className="ml-6 space-y-1">
+                  <div className="ml-6 space-y-2">
                     {chapter.lessons.length === 0 ? (
                       <div className="py-4 text-center">
                         <p className="text-xs text-gray-10 mb-2">No lessons in this chapter</p>
@@ -513,25 +518,28 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
                       </div>
                     ) : (
                       chapter.lessons.map((lesson) => (
-                        <div
-                          key={lesson.id}
-                          onClick={() => {
-                            setSelectedChapterId(chapter.id);
-                            setSelectedLessonId(lesson.id);
-                          }}
-                          className={`flex items-center gap-2 px-2 py-2 rounded cursor-pointer group ${
-                            selectedLessonId === lesson.id
-                              ? 'bg-blue-3 text-blue-11'
-                              : 'hover:bg-gray-3 text-gray-11'
-                          }`}
-                        >
-                          <span className="text-xs flex-1 truncate">{lesson.title}</span>
+                        <div key={lesson.id} className="relative group">
+                          <LessonCard
+                            lesson={{
+                              id: lesson.id,
+                              title: lesson.title,
+                              thumbnail: lesson.thumbnail || null,
+                              duration_seconds: lesson.duration || 0,
+                              source_type: lesson.source_type || 'upload',
+                            }}
+                            isSelected={selectedLessonId === lesson.id}
+                            onSelect={(lessonId) => {
+                              setSelectedChapterId(chapter.id);
+                              setSelectedLessonId(lessonId);
+                            }}
+                          />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteLesson(chapter.id, lesson.id);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-3 rounded"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 bg-red-3 hover:bg-red-4 rounded border border-red-6 transition-opacity z-10"
+                            title="Delete lesson"
                           >
                             <Trash2 className="w-3 h-3 text-red-9" />
                           </button>
