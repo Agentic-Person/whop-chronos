@@ -2,19 +2,20 @@ import { ReactNode } from 'react';
 import { DashboardNav } from '@/components/layout/DashboardNav';
 import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
+import { requireAuth } from '@/lib/whop/auth';
 
 export default async function CreatorDashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  // BYPASS WHOP AUTH FOR TESTING
-  // TODO: Re-enable Whop authentication when ready for production
-  const creatorId = 'test-creator-123';
-  const tier = 'pro';
+  // Get authenticated Whop session
+  const session = await requireAuth();
+  const creatorId = session.user.id;
+  const tier = 'pro'; // TODO: Get tier from Whop membership validation
 
   return (
-    <AuthProvider>
+    <AuthProvider session={session}>
       <AnalyticsProviderWithSuspense creatorId={creatorId} tier={tier}>
         <div className="min-h-screen bg-gray-1">
           <DashboardNav />

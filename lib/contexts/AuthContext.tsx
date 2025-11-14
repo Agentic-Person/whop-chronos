@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
+import type { WhopSession } from '@/lib/whop/types';
 
 export interface AuthContextType {
   creatorId: string;
@@ -12,29 +13,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: React.ReactNode;
+  session: WhopSession;
 }
 
 /**
  * AuthContext provides authentication state across the app
- *
- * For development: Uses mock IDs when DEV_BYPASS_AUTH is enabled
- * For production: Will use Whop OAuth user data
+ * Uses real Whop OAuth session data
  */
-export function AuthProvider({ children }: AuthProviderProps) {
-  // For development mode with bypass enabled, use mock creator ID
-  // In production, this would come from Whop OAuth session
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const devBypass = process.env['DEV_BYPASS_AUTH'] === 'true';
-
+export function AuthProvider({ children, session }: AuthProviderProps) {
   const value: AuthContextType = {
-    // Use a consistent UUID for development
-    creatorId: isDevelopment && devBypass
-      ? '00000000-0000-0000-0000-000000000001'
-      : '00000000-0000-0000-0000-000000000001', // TODO: Get from Whop session
-    userId: isDevelopment && devBypass
-      ? 'dev-user-001'
-      : 'dev-user-001', // TODO: Get from Whop session
-    isAuthenticated: true, // Always true when DEV_BYPASS_AUTH is enabled
+    creatorId: session.user.id,
+    userId: session.user.id,
+    isAuthenticated: true,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
