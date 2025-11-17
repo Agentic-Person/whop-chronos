@@ -220,6 +220,14 @@ export async function exchangeCodeForToken(code: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
+  console.log('[Whop OAuth] Token exchange request:', {
+    client_id: WHOP_CLIENT_ID,
+    client_secret: WHOP_CLIENT_SECRET ? `${WHOP_CLIENT_SECRET.substring(0, 10)}...` : 'MISSING',
+    redirect_uri: WHOP_REDIRECT_URI,
+    grant_type: 'authorization_code',
+    code_length: code?.length,
+  });
+
   const response = await fetch('https://api.whop.com/v5/oauth/token', {
     method: 'POST',
     headers: {
