@@ -9,3 +9,5 @@ export { VideoCard } from './VideoCard';
 export { VideoFilters } from './VideoFilters';
 export { BulkActions } from './BulkActions';
 export { VideoDetailModal } from './VideoDetailModal';
+export { VideoMetadataPanel } from './VideoMetadataPanel';
+// export { ProgressIndicator } from './ProgressIndicator'; // TODO: File doesn't exist
