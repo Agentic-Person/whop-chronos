@@ -93,3 +93,5 @@ ui.mcp.json
 *_SUMMARY.md
 *_COMPLETION_REPORT.md
 AGENT_*.md
+.env.update
+.env.vercel.backup
