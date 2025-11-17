@@ -32,12 +32,16 @@ interface ChatInterfaceProps {
   sessionId?: string;
   onSessionChange?: (sessionId: string) => void;
   className?: string;
+  currentVideoId?: string;
+  onTimestampClick?: (seconds: number, videoId: string) => void;
 }
 
 export function ChatInterface({
   sessionId,
   onSessionChange,
   className,
+  currentVideoId,
+  onTimestampClick,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -175,7 +179,11 @@ export function ChatInterface({
                 </div>
               </div>
             ) : (
-              <MessageList messages={messages} />
+              <MessageList
+                messages={messages}
+                currentVideoId={currentVideoId}
+                onTimestampClick={onTimestampClick}
+              />
             )}
 
             {/* Loading indicator */}

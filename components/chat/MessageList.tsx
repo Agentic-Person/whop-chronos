@@ -10,10 +10,17 @@ import { formatDistanceToNow } from "date-fns";
 
 interface MessageListProps {
   messages: Message[];
+  currentVideoId?: string;
+  onTimestampClick?: (seconds: number, videoId: string) => void;
   onRegenerate?: (messageId: string) => void;
 }
 
-export function MessageList({ messages, onRegenerate }: MessageListProps) {
+export function MessageList({
+  messages,
+  currentVideoId,
+  onTimestampClick,
+  onRegenerate
+}: MessageListProps) {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -144,7 +151,12 @@ export function MessageList({ messages, onRegenerate }: MessageListProps) {
                 </p>
                 <div className="flex flex-col gap-2">
                   {message.videoReferences.map((ref, index) => (
-                    <VideoReferenceCard key={index} reference={ref} />
+                    <VideoReferenceCard
+                      key={index}
+                      reference={ref}
+                      onTimestampClick={onTimestampClick}
+                      isCurrentVideo={currentVideoId === ref.videoId}
+                    />
                   ))}
                 </div>
               </div>

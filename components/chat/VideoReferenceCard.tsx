@@ -8,12 +8,16 @@ import { cn } from "@/lib/utils";
 interface VideoReferenceCardProps {
   reference: VideoReference;
   onPlay?: (videoId: string, timestamp: number) => void;
+  onTimestampClick?: (seconds: number, videoId: string) => void;
+  isCurrentVideo?: boolean;
   className?: string;
 }
 
 export function VideoReferenceCard({
   reference,
   onPlay,
+  onTimestampClick,
+  isCurrentVideo,
   className,
 }: VideoReferenceCardProps) {
   const formatTimestamp = (seconds: number): string => {
@@ -24,12 +28,14 @@ export function VideoReferenceCard({
 
   const handleClick = () => {
     onPlay?.(reference.videoId, reference.timestamp);
+    onTimestampClick?.(reference.timestamp, reference.videoId);
   };
 
   return (
     <Card
       className={cn(
         "group cursor-pointer overflow-hidden transition-all hover:shadow-lg",
+        isCurrentVideo && "ring-2 ring-purple-500",
         className
       )}
       padding="none"
