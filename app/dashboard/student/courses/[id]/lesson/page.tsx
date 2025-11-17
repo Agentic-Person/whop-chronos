@@ -18,7 +18,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import VideoPlayer, { type VideoPlayerHandle } from '@/components/video/VideoPlayer';
 import { VideoMetadataPanel } from '@/components/video/VideoMetadataPanel';
-import { ChatInterface } from '@/components/chat/ChatInterface';
+import { ChatInterface } from '@/components/chat';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { supabase } from '@/lib/db/client-browser';
