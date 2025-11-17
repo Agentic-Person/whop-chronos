@@ -44,8 +44,12 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
       isAuthenticated: true,
     };
   } else {
-    // No session and not in dev mode
-    throw new Error('AuthProvider requires a session prop in production mode');
+    // No session - unauthenticated state (for static pages, public routes, etc.)
+    value = {
+      creatorId: undefined,
+      userId: undefined,
+      isAuthenticated: false,
+    };
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
