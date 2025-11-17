@@ -58,6 +58,12 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!creatorId) {
+      setLoading(false);
+      setError('Not authenticated');
+      return;
+    }
+
     async function fetchDashboard() {
       try {
         setLoading(true);

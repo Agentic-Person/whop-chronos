@@ -45,6 +45,11 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
       return;
     }
 
+    if (!creatorId) {
+      setError('Not authenticated');
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
 

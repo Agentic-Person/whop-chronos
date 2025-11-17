@@ -25,6 +25,18 @@ export default function VideoUploader({
 }: VideoUploaderProps) {
   const { creatorId, tier } = useAnalytics();
 
+  // Early return if no creatorId
+  if (!creatorId) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-gray-2 border border-gray-6 rounded-lg shadow-xl p-6">
+          <p className="text-gray-11">Not authenticated</p>
+        </div>
+      </div>
+    );
+  }
+
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [status, setStatus] = useState<UploadStatus>('idle');

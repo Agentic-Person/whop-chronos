@@ -53,6 +53,12 @@ export default function VideosPage() {
 
   // Fetch videos
   const fetchVideos = async () => {
+    if (!creatorId) {
+      setError('Not authenticated');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -109,7 +115,7 @@ export default function VideosPage() {
   // Fetch videos on mount and when filters/page change
   useEffect(() => {
     fetchVideos();
-  }, [filters, page]);
+  }, [creatorId, filters, page]);
 
   // Handle video update
   const handleVideoUpdate = async (id: string, updates: Partial<Video>) => {
@@ -286,7 +292,7 @@ export default function VideosPage() {
       </div>
 
       {/* Processing Monitor (if any videos processing) */}
-      {processingCount > 0 && (
+      {processingCount > 0 && creatorId && (
         <div className="mb-8">
           <ProcessingMonitor
             creatorId={creatorId}
@@ -433,7 +439,7 @@ export default function VideosPage() {
       )}
 
       {/* Video Upload Modal */}
-      {showUploadModal && (
+      {showUploadModal && creatorId && (
         <VideoSourceSelector
           creatorId={creatorId}
           isOpen={showUploadModal}

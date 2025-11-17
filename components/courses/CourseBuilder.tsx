@@ -51,6 +51,17 @@ export default function CourseBuilder({ course, onBack }: CourseBuilderProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Early return if no creatorId
+  if (!creatorId) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-11">Not authenticated</p>
+        </div>
+      </div>
+    );
+  }
+
   const selectedChapter = chapters.find((c) => c.id === selectedChapterId);
   const selectedLesson = selectedChapter?.lessons.find((l) => l.id === selectedLessonId);
 

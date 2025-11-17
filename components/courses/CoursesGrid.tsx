@@ -35,7 +35,12 @@ export default function CoursesGrid({ courses, onCourseCreated, onCourseClick, o
   };
 
   const handleConfirmDelete = async () => {
-    if (!deleteConfirm || !creatorId) return;
+    if (!deleteConfirm) return;
+
+    if (!creatorId) {
+      alert('Not authenticated');
+      return;
+    }
 
     setIsDeleting(true);
     try {

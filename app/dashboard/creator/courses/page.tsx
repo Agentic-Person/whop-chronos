@@ -27,6 +27,12 @@ export default function CoursesPage() {
 
   // Load courses from database on mount
   useEffect(() => {
+    if (!creatorId) {
+      setIsLoading(false);
+      setError('Not authenticated');
+      return;
+    }
+
     async function loadCourses() {
       try {
         setIsLoading(true);
