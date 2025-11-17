@@ -1,6 +1,6 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, forwardRef, useImperativeHandle } from 'react';
 import YouTube, { YouTubeProps } from 'react-youtube';
 import { useState, useRef, useEffect } from 'react';
 import type { Database } from '@/lib/db/types';
@@ -11,6 +11,11 @@ const MuxVideoPlayer = lazy(() => import('./MuxVideoPlayer'));
 const LoomPlayer = lazy(() => import('./LoomPlayer'));
 
 type Video = Database['public']['Tables']['videos']['Row'];
+
+export interface VideoPlayerHandle {
+  seekTo: (seconds: number) => void;
+  getDuration: () => number;
+}
 
 interface VideoPlayerProps {
   video: Video;
@@ -50,7 +55,7 @@ interface VideoPlayerProps {
  * @param className - Additional CSS classes for the container
  * @param enableAnalytics - Whether to track analytics (default: true)
  */
-export default function VideoPlayer({
+const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer({
   video,
   studentId,
   creatorId,
@@ -64,7 +69,24 @@ export default function VideoPlayer({
   autoplay = false,
   className = '',
   enableAnalytics = true,
-}: VideoPlayerProps) {
+}, ref) {
+  const youtubePlayerRef = useRef<any>(null);
+
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    seekTo: (seconds: number) => {
+      if (video.source_type === 'youtube' && youtubePlayerRef.current) {
+        youtubePlayerRef.current.seekTo(seconds, true);
+      }
+      // TODO: Add support for other player types
+    },
+    getDuration: () => {
+      if (video.source_type === 'youtube' && youtubePlayerRef.current) {
+        return youtubePlayerRef.current.getDuration();
+      }
+      return video.duration_seconds || 0;
+    },
+  }));
   /**
    * Loading fallback for lazy-loaded components
    */
@@ -98,6 +120,7 @@ export default function VideoPlayer({
     case 'youtube':
       return (
         <YouTubePlayer
+          ref={youtubePlayerRef}
           video={video}
           studentId={studentId}
           creatorId={creatorId || video.creator_id}
@@ -199,7 +222,7 @@ export default function VideoPlayer({
 /**
  * YouTube Player Component
  */
-function YouTubePlayer({
+const YouTubePlayer = forwardRef<any, Omit<VideoPlayerProps, 'onTimeUpdate'>>(function YouTubePlayer({
   video,
   studentId,
   creatorId,
@@ -212,9 +235,13 @@ function YouTubePlayer({
   autoplay = false,
   className = '',
   enableAnalytics = true,
-}: Omit<VideoPlayerProps, 'onTimeUpdate'>) {
+}, ref) {
   const [error, setError] = useState<string | null>(null);
   const analyticsRef = useRef<VideoAnalyticsTracker | null>(null);
+  const playerRef = useRef<any>(null);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => playerRef.current);
 
   // Initialize analytics tracker
   useEffect(() => {
@@ -295,6 +322,7 @@ function YouTubePlayer({
         </div>
       ) : (
         <YouTube
+          ref={playerRef}
           videoId={video.youtube_video_id!}
           className="w-full h-full"
           iframeClassName="w-full h-full"
@@ -306,7 +334,7 @@ function YouTubePlayer({
       )}
     </div>
   );
-}
+});
 
 /**
  * HTML5 Video Player Component (for uploaded videos)
@@ -435,4 +463,6 @@ function HTML5VideoPlayer({
       )}
     </div>
   );
-}
+});
+
+export default VideoPlayer;

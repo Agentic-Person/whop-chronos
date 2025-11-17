@@ -16,7 +16,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import VideoPlayer from '@/components/video/VideoPlayer';
+import VideoPlayer, { type VideoPlayerHandle } from '@/components/video/VideoPlayer';
 import { VideoMetadataPanel } from '@/components/video/VideoMetadataPanel';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { Button } from '@/components/ui/Button';
@@ -60,7 +60,7 @@ export default function IntegratedLessonViewerPage() {
   const videoId = searchParams.get('videoId');
 
   // Refs
-  const videoPlayerRef = useRef<any>(null); // TODO: Define VideoPlayerHandle type
+  const videoPlayerRef = useRef<VideoPlayerHandle>(null);
   const progressSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // State
