@@ -28,7 +28,7 @@ export interface VideoReference {
   relevanceScore?: number;
 }
 
-interface ChatInterfaceProps {
+export interface ChatInterfaceProps {
   sessionId?: string;
   onSessionChange?: (sessionId: string) => void;
   className?: string;
