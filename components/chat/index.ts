@@ -5,4 +5,4 @@ export { VideoReferenceCard } from "./VideoReferenceCard";
 export { SessionSidebar } from "./SessionSidebar";
 export { StreamingMessage } from "./StreamingMessage";
 
-export type { Message, VideoReference } from "./ChatInterface";
+export type { Message, VideoReference, ChatInterfaceProps } from "./ChatInterface";
