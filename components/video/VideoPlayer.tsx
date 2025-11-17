@@ -463,6 +463,6 @@ function HTML5VideoPlayer({
       )}
     </div>
   );
-});
+}
 
 export default VideoPlayer;
