@@ -4,8 +4,8 @@ import React, { createContext, useContext } from 'react';
 import type { WhopSession } from '@/lib/whop/types';
 
 export interface AuthContextType {
-  creatorId: string;
-  userId: string;
+  creatorId: string | undefined;
+  userId: string | undefined;
   isAuthenticated: boolean;
 }
 
