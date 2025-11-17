@@ -217,7 +217,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
         />
       );
   }
-}
+});
 
 /**
  * YouTube Player Component
