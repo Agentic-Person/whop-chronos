@@ -186,7 +186,7 @@ export function ChatCostTracker({
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
             Daily Cost Trend
           </h4>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={250} aspect={2}>
             <LineChart data={costData.byDate}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
               <XAxis
@@ -225,7 +225,7 @@ export function ChatCostTracker({
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
             Cost by Model
           </h4>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={250} aspect={2}>
             <PieChart>
               <Pie
                 data={pieData}

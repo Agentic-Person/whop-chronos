@@ -38,7 +38,7 @@ export function ViewsOverTimeChart({ data }: ViewsOverTimeChartProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} aspect={2}>
       <LineChart data={formattedData}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
         <XAxis

@@ -126,7 +126,7 @@ export function StorageBreakdownChart({
         Storage Breakdown
       </h3>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} aspect={2}>
         <PieChart>
           <Pie
             data={chartData as any}

@@ -123,7 +123,7 @@ export function AICreditsUsageChart({
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height={320} aspect={2}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
           <XAxis

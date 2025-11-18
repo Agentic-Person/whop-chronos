@@ -152,7 +152,7 @@ export const WatchTimeChart: React.FC<WatchTimeChartProps> = React.memo(({
 
   return (
     <div className={`w-full ${className}`}>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} aspect={2}>
         <BarChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 60 }}

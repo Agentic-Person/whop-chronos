@@ -133,7 +133,7 @@ export default function CourseProgressDistribution({
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={400} aspect={2}>
         <BarChart
           data={chartData}
           layout="vertical"

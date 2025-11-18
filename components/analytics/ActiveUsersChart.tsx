@@ -155,7 +155,7 @@ export default function ActiveUsersChart({
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} aspect={2}>
         <LineChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"

@@ -102,7 +102,7 @@ export default function SessionDurationChart({
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} aspect={2}>
         <BarChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"

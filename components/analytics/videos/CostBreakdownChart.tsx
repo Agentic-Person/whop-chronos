@@ -74,7 +74,7 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
       </div>
 
       {/* Pie Chart */}
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={240} aspect={2}>
         <PieChart>
           <Pie
             data={chartData}

@@ -245,7 +245,7 @@ export const VideoComparisonChart: React.FC<VideoComparisonChartProps> = React.m
       <div className="mb-2 text-sm font-medium text-gray-300">
         Comparing {getMetricLabel(metric)}
       </div>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} aspect={2}>
         <LineChart
           data={chartData}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}

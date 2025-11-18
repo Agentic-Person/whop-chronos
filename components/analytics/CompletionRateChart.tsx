@@ -179,7 +179,7 @@ export const CompletionRateChart: React.FC<CompletionRateChartProps> = React.mem
   return (
     <div className={`w-full relative ${className}`}>
       <CenterLabel value={overallRate} />
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} aspect={2}>
         <PieChart>
           <Pie
             data={chartData}

@@ -1,6 +1,8 @@
 import { WhopApp } from "@whop/react/components";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/lib/contexts/AuthContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,6 +34,19 @@ export const metadata: Metadata = {
 	authors: [{ name: "Chronos AI" }],
 	creator: "Chronos AI",
 	publisher: "Chronos AI",
+	manifest: "/site.webmanifest",
+	icons: {
+		icon: [
+			{ url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+			{ url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+			{ url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+			{ url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+			{ url: "/icon.svg", type: "image/svg+xml" },
+		],
+		apple: [
+			{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+		],
+	},
 	openGraph: {
 		type: "website",
 		locale: "en_US",
@@ -81,7 +96,12 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<WhopApp>{children}</WhopApp>
+				<WhopApp>
+					<AuthProvider>
+						{children}
+					</AuthProvider>
+				</WhopApp>
+				<Toaster position="top-right" theme="dark" richColors />
 			</body>
 		</html>
 	);

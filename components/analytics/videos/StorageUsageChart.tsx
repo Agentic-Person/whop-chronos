@@ -93,7 +93,7 @@ export function StorageUsageChart({ data, quotaGb = 10 }: StorageUsageChartProps
       </div>
 
       {/* Area Chart */}
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={240} aspect={2}>
         <AreaChart data={formattedData}>
           <defs>
             <linearGradient id="colorStorage" x1="0" y1="0" x2="0" y2="1">

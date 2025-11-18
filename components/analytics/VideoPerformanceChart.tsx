@@ -134,7 +134,7 @@ export const VideoPerformanceChart: React.FC<VideoPerformanceChartProps> = React
 
   return (
     <div className={`w-full ${className}`}>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} aspect={2}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
