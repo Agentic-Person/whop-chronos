@@ -1,0 +1,5 @@
+🚀 Adding environment variables to Vercel production...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Error: A variable with the name `NEXT_PUBLIC_WHOP_APP_ID` already exists for the target preview,production on branch undefined

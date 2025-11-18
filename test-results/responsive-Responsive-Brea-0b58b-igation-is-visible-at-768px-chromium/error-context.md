@@ -1,0 +1,132 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e6]:
+        - link "Chronos Chronos" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard/creator/overview
+          - img "Chronos" [ref=e9]
+          - generic [ref=e10]: Chronos
+        - button [ref=e12]:
+          - img [ref=e13]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Dashboard" [level=1] [ref=e17]
+          - text: Quick overview of your Chronos workspace
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - img [ref=e24]
+              - generic [ref=e29]:
+                - heading "Student Enrollment" [level=1] [ref=e30]
+                - text: Whop membership data
+            - generic [ref=e32]:
+              - img [ref=e33]
+              - generic [ref=e36]: +100%
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - text: Total Members
+              - heading "1" [level=1] [ref=e39]
+            - generic [ref=e40]:
+              - text: Active Members
+              - heading "1" [level=1] [ref=e41]
+            - generic [ref=e42]:
+              - text: New This Week
+              - heading "1" [level=1] [ref=e43]
+            - generic [ref=e44]:
+              - text: New This Month
+              - heading "1" [level=1] [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e49]:
+            - generic [ref=e51]:
+              - img [ref=e53]
+              - generic [ref=e56]:
+                - heading "Courses" [level=1] [ref=e57]
+                - text: Content overview
+            - generic [ref=e58]:
+              - generic [ref=e59]:
+                - generic [ref=e60]: Total Courses
+                - generic [ref=e61]: "3"
+              - generic [ref=e62]:
+                - generic [ref=e63]: Total Videos
+                - generic [ref=e64]: "12"
+            - link "View All Courses" [ref=e65] [cursor=pointer]:
+              - /url: /dashboard/creator/courses
+              - button "View All Courses" [ref=e66]:
+                - generic [ref=e67]:
+                  - generic [ref=e68]: View All Courses
+                  - img [ref=e69]
+          - generic [ref=e73]:
+            - generic [ref=e75]:
+              - img [ref=e77]
+              - generic [ref=e79]:
+                - heading "Analytics" [level=1] [ref=e80]
+                - text: Video performance
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e83]: Total Views
+                - generic [ref=e84]: "0"
+              - generic [ref=e85]:
+                - generic [ref=e86]: Watch Time
+                - generic [ref=e87]: 0m
+              - generic [ref=e88]:
+                - generic [ref=e89]: Avg Completion
+                - generic [ref=e90]: 0%
+            - link "View Analytics" [ref=e91] [cursor=pointer]:
+              - /url: /dashboard/creator/analytics
+              - button "View Analytics" [ref=e92]:
+                - generic [ref=e93]:
+                  - generic [ref=e94]: View Analytics
+                  - img [ref=e95]
+          - generic [ref=e99]:
+            - generic [ref=e101]:
+              - img [ref=e103]
+              - generic [ref=e107]:
+                - heading "Usage" [level=1] [ref=e108]
+                - text: Resources & limits
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: Storage
+                  - generic [ref=e113]: 0 / 10 GB
+                - generic [ref=e115]: 0.0% used
+              - generic [ref=e116]:
+                - generic [ref=e117]:
+                  - generic [ref=e118]: AI Credits
+                  - generic [ref=e119]: 0 / 1,000 credits
+                - generic [ref=e121]: 0.0% used
+              - generic [ref=e122]:
+                - generic [ref=e123]: API Calls This Month
+                - generic [ref=e124]: "0"
+            - link "View Usage Details" [ref=e125] [cursor=pointer]:
+              - /url: /dashboard/creator/usage
+              - button "View Usage Details" [ref=e126]:
+                - generic [ref=e127]:
+                  - generic [ref=e128]: View Usage Details
+                  - img [ref=e129]
+          - generic [ref=e133]:
+            - generic [ref=e135]:
+              - img [ref=e137]
+              - generic [ref=e139]:
+                - heading "Chat Activity" [level=1] [ref=e140]
+                - text: AI conversations
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e143]: Total Sessions
+                - generic [ref=e144]: "0"
+              - generic [ref=e145]:
+                - generic [ref=e146]: Messages This Week
+                - generic [ref=e147]: "0"
+            - link "View All Chats" [ref=e148] [cursor=pointer]:
+              - /url: /dashboard/creator/chat
+              - button "View All Chats" [ref=e149]:
+                - generic [ref=e150]:
+                  - generic [ref=e151]: View All Chats
+                  - img [ref=e152]
+  - button "Open Next.js Dev Tools" [ref=e159] [cursor=pointer]:
+    - img [ref=e160]
+  - alert [ref=e163]
+```

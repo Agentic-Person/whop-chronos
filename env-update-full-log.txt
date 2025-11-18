@@ -1,0 +1,191 @@
+🔧 Updating all Vercel production environment variables...
+
+📦 Updating WHOP Variables...
+
+Updating NEXT_PUBLIC_WHOP_COMPANY_ID...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_WHOP_COMPANY_ID to Project chronos [186ms]
+  ✅ NEXT_PUBLIC_WHOP_COMPANY_ID updated
+
+Updating WHOP_API_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_API_KEY to Project chronos [198ms]
+  ✅ WHOP_API_KEY updated
+
+Updating WHOP_CLIENT_ID...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_CLIENT_ID to Project chronos [182ms]
+  ✅ WHOP_CLIENT_ID updated
+
+Updating WHOP_CLIENT_SECRET...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_CLIENT_SECRET to Project chronos [180ms]
+  ✅ WHOP_CLIENT_SECRET updated
+
+Updating WHOP_OAUTH_REDIRECT_URI...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_OAUTH_REDIRECT_URI to Project chronos [189ms]
+  ✅ WHOP_OAUTH_REDIRECT_URI updated
+
+Updating WHOP_WEBHOOK_SECRET...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_WEBHOOK_SECRET to Project chronos [178ms]
+  ✅ WHOP_WEBHOOK_SECRET updated
+
+Updating WHOP_TOKEN_ENCRYPTION_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable WHOP_TOKEN_ENCRYPTION_KEY to Project chronos [199ms]
+  ✅ WHOP_TOKEN_ENCRYPTION_KEY updated
+
+Updating NEXT_PUBLIC_WHOP_BASIC_CHECKOUT_URL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_WHOP_BASIC_CHECKOUT_URL to Project chronos [255ms]
+  ✅ NEXT_PUBLIC_WHOP_BASIC_CHECKOUT_URL updated
+
+Updating NEXT_PUBLIC_WHOP_PRO_CHECKOUT_URL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_WHOP_PRO_CHECKOUT_URL to Project chronos [174ms]
+  ✅ NEXT_PUBLIC_WHOP_PRO_CHECKOUT_URL updated
+
+Updating NEXT_PUBLIC_WHOP_ENTERPRISE_CHECKOUT_URL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_WHOP_ENTERPRISE_CHECKOUT_URL to Project chronos [177ms]
+  ✅ NEXT_PUBLIC_WHOP_ENTERPRISE_CHECKOUT_URL updated
+
+🗄️  Updating Supabase Variables...
+
+Updating NEXT_PUBLIC_SUPABASE_URL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_SUPABASE_URL to Project chronos [214ms]
+  ✅ NEXT_PUBLIC_SUPABASE_URL updated
+
+Updating NEXT_PUBLIC_SUPABASE_ANON_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_SUPABASE_ANON_KEY to Project chronos [202ms]
+  ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY updated
+
+Updating SUPABASE_SERVICE_ROLE_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable SUPABASE_SERVICE_ROLE_KEY to Project chronos [175ms]
+  ✅ SUPABASE_SERVICE_ROLE_KEY updated
+
+Updating SUPABASE_PROJECT_ID...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable SUPABASE_PROJECT_ID to Project chronos [191ms]
+  ✅ SUPABASE_PROJECT_ID updated
+
+Updating SUPABASE_ACCESS_TOKEN...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable SUPABASE_ACCESS_TOKEN to Project chronos [180ms]
+  ✅ SUPABASE_ACCESS_TOKEN updated
+
+Updating SUPABASE_PASSWORD...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable SUPABASE_PASSWORD to Project chronos [199ms]
+  ✅ SUPABASE_PASSWORD updated
+
+🤖 Updating AI Services...
+
+Updating ANTHROPIC_API_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable ANTHROPIC_API_KEY to Project chronos [176ms]
+  ✅ ANTHROPIC_API_KEY updated
+
+Updating ANTHROPIC_MODEL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable ANTHROPIC_MODEL to Project chronos [190ms]
+  ✅ ANTHROPIC_MODEL updated
+
+Updating OPENAI_API_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable OPENAI_API_KEY to Project chronos [176ms]
+  ✅ OPENAI_API_KEY updated
+
+📺 Updating YouTube...
+
+Updating YOUTUBE_API_KEY...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable YOUTUBE_API_KEY to Project chronos [167ms]
+  ✅ YOUTUBE_API_KEY updated
+
+⚙️  Updating App Configuration...
+
+Updating NEXT_PUBLIC_APP_URL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NEXT_PUBLIC_APP_URL to Project chronos [182ms]
+  ✅ NEXT_PUBLIC_APP_URL updated
+
+Updating NODE_ENV...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable NODE_ENV to Project chronos [173ms]
+  ✅ NODE_ENV updated
+
+Updating LOG_LEVEL...
+Vercel CLI 47.0.5
+Retrieving project…
+Saving
+Added Environment Variable LOG_LEVEL to Project chronos [203ms]
+  ✅ LOG_LEVEL updated
+
+
+🎉 All critical variables updated successfully!
+
+📝 Important: WHOP_OAUTH_REDIRECT_URI is now: https://chronos.vercel.app/api/whop/auth/callback
+
+🔍 Verifying variables were set correctly...
+Vercel CLI 47.0.5
+Retrieving project…
+> Downloading `production` Environment Variables for jimihacks-projects/chronos
+Downloading
+Created .env.final-check file  [137ms]
+
+✅ Variables file saved to .env.final-check
+
+Next steps:
+1. Update Whop dashboard redirect URIs to: https://chronos.vercel.app/api/whop/auth/callback
+2. Trigger a new deployment: vercel --prod
+3. Test OAuth login at https://chronos.vercel.app

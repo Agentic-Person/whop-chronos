@@ -38,7 +38,7 @@ interface Course {
  * Dropdown selector for chat context - allows students to focus chat on specific videos
  */
 export function VideoContextSelector({
-  studentId,
+  studentId: _studentId,
   creatorId,
   selectedCourseId,
   selectedVideoId,

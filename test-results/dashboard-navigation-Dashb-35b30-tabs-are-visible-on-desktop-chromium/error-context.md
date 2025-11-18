@@ -1,0 +1,166 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e7]:
+        - link "Chronos Chronos" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard/creator/overview
+          - img "Chronos" [ref=e9]
+          - generic [ref=e10]: Chronos
+        - generic [ref=e11]:
+          - link "Dashboard" [ref=e12] [cursor=pointer]:
+            - /url: /dashboard/creator/overview
+            - button "Dashboard" [ref=e13]:
+              - img [ref=e14]
+              - generic [ref=e19]: Dashboard
+          - link "Courses" [ref=e20] [cursor=pointer]:
+            - /url: /dashboard/creator/courses
+            - button "Courses" [ref=e21]:
+              - img [ref=e22]
+              - generic [ref=e24]: Courses
+          - link "Videos" [ref=e25] [cursor=pointer]:
+            - /url: /dashboard/creator/videos
+            - button "Videos" [ref=e26]:
+              - img [ref=e27]
+              - generic [ref=e30]: Videos
+          - link "Analytics" [ref=e31] [cursor=pointer]:
+            - /url: /dashboard/creator/analytics
+            - button "Analytics" [ref=e32]:
+              - img [ref=e33]
+              - generic [ref=e34]: Analytics
+          - link "Usage" [ref=e35] [cursor=pointer]:
+            - /url: /dashboard/creator/usage
+            - button "Usage" [ref=e36]:
+              - img [ref=e37]
+              - generic [ref=e39]: Usage
+          - link "Chat" [ref=e40] [cursor=pointer]:
+            - /url: /dashboard/creator/chat
+            - button "Chat" [ref=e41]:
+              - img [ref=e42]
+              - generic [ref=e44]: Chat
+    - main [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - heading "Dashboard" [level=1] [ref=e48]
+          - text: Quick overview of your Chronos workspace
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - img [ref=e55]
+              - generic [ref=e60]:
+                - heading "Student Enrollment" [level=1] [ref=e61]
+                - text: Whop membership data
+            - generic [ref=e63]:
+              - img [ref=e64]
+              - generic [ref=e67]: +100%
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - text: Total Members
+              - heading "1" [level=1] [ref=e70]
+            - generic [ref=e71]:
+              - text: Active Members
+              - heading "1" [level=1] [ref=e72]
+            - generic [ref=e73]:
+              - text: New This Week
+              - heading "1" [level=1] [ref=e74]
+            - generic [ref=e75]:
+              - text: New This Month
+              - heading "1" [level=1] [ref=e76]
+        - generic [ref=e77]:
+          - generic [ref=e80]:
+            - generic [ref=e82]:
+              - img [ref=e84]
+              - generic [ref=e87]:
+                - heading "Courses" [level=1] [ref=e88]
+                - text: Content overview
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: Total Courses
+                - generic [ref=e92]: "3"
+              - generic [ref=e93]:
+                - generic [ref=e94]: Total Videos
+                - generic [ref=e95]: "12"
+            - link "View All Courses" [ref=e96] [cursor=pointer]:
+              - /url: /dashboard/creator/courses
+              - button "View All Courses" [ref=e97]:
+                - generic [ref=e98]:
+                  - generic [ref=e99]: View All Courses
+                  - img [ref=e100]
+          - generic [ref=e104]:
+            - generic [ref=e106]:
+              - img [ref=e108]
+              - generic [ref=e110]:
+                - heading "Analytics" [level=1] [ref=e111]
+                - text: Video performance
+            - generic [ref=e112]:
+              - generic [ref=e113]:
+                - generic [ref=e114]: Total Views
+                - generic [ref=e115]: "0"
+              - generic [ref=e116]:
+                - generic [ref=e117]: Watch Time
+                - generic [ref=e118]: 0m
+              - generic [ref=e119]:
+                - generic [ref=e120]: Avg Completion
+                - generic [ref=e121]: 0%
+            - link "View Analytics" [ref=e122] [cursor=pointer]:
+              - /url: /dashboard/creator/analytics
+              - button "View Analytics" [ref=e123]:
+                - generic [ref=e124]:
+                  - generic [ref=e125]: View Analytics
+                  - img [ref=e126]
+          - generic [ref=e130]:
+            - generic [ref=e132]:
+              - img [ref=e134]
+              - generic [ref=e138]:
+                - heading "Usage" [level=1] [ref=e139]
+                - text: Resources & limits
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - generic [ref=e142]:
+                  - generic [ref=e143]: Storage
+                  - generic [ref=e144]: 0 / 10 GB
+                - generic [ref=e146]: 0.0% used
+              - generic [ref=e147]:
+                - generic [ref=e148]:
+                  - generic [ref=e149]: AI Credits
+                  - generic [ref=e150]: 0 / 1,000 credits
+                - generic [ref=e152]: 0.0% used
+              - generic [ref=e153]:
+                - generic [ref=e154]: API Calls This Month
+                - generic [ref=e155]: "0"
+            - link "View Usage Details" [ref=e156] [cursor=pointer]:
+              - /url: /dashboard/creator/usage
+              - button "View Usage Details" [ref=e157]:
+                - generic [ref=e158]:
+                  - generic [ref=e159]: View Usage Details
+                  - img [ref=e160]
+          - generic [ref=e164]:
+            - generic [ref=e166]:
+              - img [ref=e168]
+              - generic [ref=e170]:
+                - heading "Chat Activity" [level=1] [ref=e171]
+                - text: AI conversations
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - generic [ref=e174]: Total Sessions
+                - generic [ref=e175]: "0"
+              - generic [ref=e176]:
+                - generic [ref=e177]: Messages This Week
+                - generic [ref=e178]: "0"
+            - link "View All Chats" [ref=e179] [cursor=pointer]:
+              - /url: /dashboard/creator/chat
+              - button "View All Chats" [ref=e180]:
+                - generic [ref=e181]:
+                  - generic [ref=e182]: View All Chats
+                  - img [ref=e183]
+  - button "Open Next.js Dev Tools" [ref=e190] [cursor=pointer]:
+    - generic [ref=e193]:
+      - text: Compiling
+      - generic [ref=e194]:
+        - generic [ref=e195]: .
+        - generic [ref=e196]: .
+        - generic [ref=e197]: .
+  - alert [ref=e198]
+```
