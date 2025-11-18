@@ -2,12 +2,17 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, ChevronRight, ChevronLeft, HelpCircle } from 'lucide-react';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import { CourseSidebar } from '@/components/courses/CourseSidebar';
 import { LessonMetadata } from '@/components/courses/LessonMetadata';
 import { NavigationControls } from '@/components/courses/NavigationControls';
+import { ChatInterface } from '@/components/chat/ChatInterface';
+import { CompletionModal } from '@/components/courses/CompletionModal';
+import { KeyboardShortcutsHelp } from '@/components/courses/KeyboardShortcutsHelp';
 import { Button } from '@/components/ui/Button';
+import { toast } from 'sonner';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Database } from '@/lib/db/types';
 
 type Course = Database['public']['Tables']['courses']['Row'];
@@ -59,10 +64,16 @@ export default function StudentCourseViewerPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params['id'] as string;
+  // Get authenticated user IDs from auth context
+  const { userId: studentId, creatorId, isAuthenticated } = useAuth();
 
-  // Temporary hardcoded student ID (replace with real auth)
-  const TEMP_STUDENT_ID = 'temp-student-123';
-  const TEMP_CREATOR_ID = 'temp-creator-456';
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+  const creatorId = 'temp-creator-456';
 
   // State
   const [courseData, setCourseData] = useState<CourseData | null>(null);
@@ -72,6 +83,18 @@ export default function StudentCourseViewerPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(false);
+
+  // Chat and UI state
+  const [isChatOpen, setIsChatOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('course-chat-open') !== 'false';
+    }
+    return true;
+  });
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [resumePosition, setResumePosition] = useState<number | null>(null);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
 
   // Flatten lessons from all modules
   const allLessons: Lesson[] = courseData
@@ -84,6 +107,14 @@ export default function StudentCourseViewerPage() {
   const isCurrentLessonCompleted = progress
     ? progress.completed_lesson_ids.includes(currentLesson?.id || '')
     : false;
+
+  // Check if all lessons are completed
+  const allLessonsCompleted =
+    allLessons.length > 0 &&
+    progress &&
+    allLessons.every((lesson) =>
+      progress.completed_lesson_ids.includes(lesson.id)
+    );
 
   /**
    * Fetch course data with modules and lessons
@@ -134,7 +165,7 @@ export default function StudentCourseViewerPage() {
   const fetchProgress = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/courses/${courseId}/progress?student_id=${TEMP_STUDENT_ID}`
+        `/api/courses/${courseId}/progress?student_id=${studentId}`
       );
       if (!res.ok) {
         console.error('Failed to fetch progress');
@@ -145,7 +176,7 @@ export default function StudentCourseViewerPage() {
     } catch (err) {
       console.error('Error fetching progress:', err);
     }
-  }, [courseId, TEMP_STUDENT_ID]);
+  }, [courseId, studentId]);
 
   /**
    * Save watch progress
@@ -159,7 +190,7 @@ export default function StudentCourseViewerPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            student_id: TEMP_STUDENT_ID,
+            student_id: studentId,
             video_id: currentLesson.video_id,
             percent_complete: percentComplete,
             watch_time_seconds: watchTime,
@@ -173,7 +204,7 @@ export default function StudentCourseViewerPage() {
         console.error('Error saving progress:', err);
       }
     },
-    [currentLesson, courseId, TEMP_STUDENT_ID, fetchProgress]
+    [currentLesson, courseId, studentId, fetchProgress]
   );
 
   /**
@@ -188,7 +219,7 @@ export default function StudentCourseViewerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student_id: TEMP_STUDENT_ID,
+          student_id: studentId,
           video_id: currentLesson.video_id,
           percent_complete: 100,
           watch_time_seconds: currentLesson.video.duration_seconds || 0,
@@ -211,7 +242,42 @@ export default function StudentCourseViewerPage() {
     } finally {
       setIsSavingProgress(false);
     }
-  }, [currentLesson, courseId, TEMP_STUDENT_ID, fetchProgress, autoAdvance, hasNext]);
+  }, [currentLesson, courseId, studentId, fetchProgress, autoAdvance, hasNext]);
+
+  /**
+   * Toggle chat panel
+   */
+  const toggleChat = () => {
+    const newState = !isChatOpen;
+    setIsChatOpen(newState);
+    localStorage.setItem('course-chat-open', String(newState));
+  };
+
+  /**
+   * Handle certificate download
+   */
+  const handleDownloadCertificate = () => {
+    toast.success('Certificate download started!');
+    // TODO: Implement certificate generation and download
+    console.log('Download certificate for course:', courseId);
+  };
+
+  /**
+   * Handle share achievement
+   */
+  const handleShareAchievement = () => {
+    const shareText = `I just completed "${courseData?.course.title}" on Chronos! 🎉`;
+    navigator.clipboard.writeText(shareText);
+    toast.success('Achievement copied to clipboard!');
+  };
+
+  /**
+   * Handle start next course (placeholder)
+   */
+  const handleStartNextCourse = () => {
+    // TODO: Navigate to recommended next course
+    router.push('/dashboard/student/courses');
+  };
 
   /**
    * Navigation handlers
@@ -266,6 +332,47 @@ export default function StudentCourseViewerPage() {
     fetchCourseData();
     fetchProgress();
   }, [fetchCourseData, fetchProgress]);
+
+  /**
+   * Fetch resume position for current video
+   */
+  useEffect(() => {
+    const fetchResumePosition = async () => {
+      if (!currentLesson?.video_id) return;
+
+      try {
+        // TODO: Implement watch-sessions API endpoint
+        // For now, we'll skip this feature
+        // const response = await fetch(
+        //   `/api/analytics/watch-sessions?video_id=${currentLesson.video_id}&student_id=${studentId}&latest=true`
+        // );
+        // const data = await response.json();
+        // if (data.furthestPoint > 0 && data.furthestPoint < currentLesson.video.duration_seconds) {
+        //   setResumePosition(data.furthestPoint);
+        //   setShowResumeBanner(true);
+        // }
+      } catch (err) {
+        console.error('Error fetching resume position:', err);
+      }
+    };
+
+    fetchResumePosition();
+  }, [currentLesson?.video_id, studentId]);
+
+  /**
+   * Check for course completion and show celebration
+   */
+  useEffect(() => {
+    if (allLessonsCompleted && courseData && !showCompletionModal) {
+      const hasShownCelebration = localStorage.getItem(
+        `course-${courseId}-celebrated`
+      );
+      if (!hasShownCelebration) {
+        setShowCompletionModal(true);
+        localStorage.setItem(`course-${courseId}-celebrated`, 'true');
+      }
+    }
+  }, [allLessonsCompleted, courseId, courseData, showCompletionModal]);
 
   /**
    * Keyboard shortcuts
@@ -387,8 +494,8 @@ export default function StudentCourseViewerPage() {
                 <div className="max-w-7xl mx-auto">
                   <VideoPlayer
                     video={currentLesson.video}
-                    studentId={TEMP_STUDENT_ID}
-                    creatorId={TEMP_CREATOR_ID}
+                    studentId={studentId}
+                    creatorId={creatorId}
                     courseId={courseId}
                     moduleId={currentLesson.module_id}
                     onProgress={handleVideoProgress}
