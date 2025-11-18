@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, MessageSquare, ChevronRight, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, ChevronRight, ChevronLeft, HelpCircle } from 'lucide-react';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import { CourseSidebar } from '@/components/courses/CourseSidebar';
 import { LessonMetadata } from '@/components/courses/LessonMetadata';
@@ -12,12 +12,11 @@ import { CompletionModal } from '@/components/courses/CompletionModal';
 import { KeyboardShortcutsHelp } from '@/components/courses/KeyboardShortcutsHelp';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Database } from '@/lib/db/types';
 
 type Course = Database['public']['Tables']['courses']['Row'];
 type Module = Database['public']['Tables']['course_modules']['Row'];
-type Video = Database['public']['Tables']['courses']['Row'];
+type Video = Database['public']['Tables']['videos']['Row'];
 
 type Lesson = {
   id: string;
@@ -50,7 +49,7 @@ interface ProgressData {
 }
 
 /**
- * StudentCourseViewer - Enhanced student course viewing page
+ * StudentCourseViewer - Main student course viewing page
  *
  * Features:
  * - Video playback with analytics
@@ -58,24 +57,16 @@ interface ProgressData {
  * - Progress tracking
  * - Lesson completion
  * - Auto-advance option
- * - Chat integration (collapsible)
- * - Completion celebration modal
- * - Keyboard shortcuts
- * - Auto-resume (placeholder for future)
  * - Mobile responsive
  */
 export default function StudentCourseViewerPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params['id'] as string;
-  const { userId: studentId, creatorId, isAuthenticated } = useAuth();
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, router]);
+  // Temporary hardcoded student ID (replace with real auth)
+  const TEMP_STUDENT_ID = 'temp-student-123';
+  const TEMP_CREATOR_ID = 'temp-creator-456';
 
   // State
   const [courseData, setCourseData] = useState<CourseData | null>(null);
@@ -95,7 +86,7 @@ export default function StudentCourseViewerPage() {
   });
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [resumePosition] = useState<number | null>(null);
+  const [resumePosition, setResumePosition] = useState<number | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
 
   // Flatten lessons from all modules
@@ -126,6 +117,7 @@ export default function StudentCourseViewerPage() {
       setIsLoading(true);
       setError(null);
 
+      // Fetch course with modules
       const courseRes = await fetch(`/api/courses/${courseId}`);
       if (!courseRes.ok) {
         throw new Error('Failed to fetch course');
@@ -133,6 +125,7 @@ export default function StudentCourseViewerPage() {
       const courseJson = await courseRes.json();
       const course = courseJson.data;
 
+      // Fetch lessons for each module
       const modulesWithLessons: ModuleWithLessons[] = [];
       for (const module of course.course_modules || []) {
         const lessonsRes = await fetch(`/api/modules/${module.id}/lessons`);
@@ -165,7 +158,7 @@ export default function StudentCourseViewerPage() {
   const fetchProgress = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/courses/${courseId}/progress?student_id=${studentId}`
+        `/api/courses/${courseId}/progress?student_id=${TEMP_STUDENT_ID}`
       );
       if (!res.ok) {
         console.error('Failed to fetch progress');
@@ -176,7 +169,7 @@ export default function StudentCourseViewerPage() {
     } catch (err) {
       console.error('Error fetching progress:', err);
     }
-  }, [courseId, studentId]);
+  }, [courseId, TEMP_STUDENT_ID]);
 
   /**
    * Save watch progress
@@ -190,7 +183,7 @@ export default function StudentCourseViewerPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            student_id: studentId,
+            student_id: TEMP_STUDENT_ID,
             video_id: currentLesson.video_id,
             percent_complete: percentComplete,
             watch_time_seconds: watchTime,
@@ -198,12 +191,13 @@ export default function StudentCourseViewerPage() {
           }),
         });
 
+        // Refresh progress
         await fetchProgress();
       } catch (err) {
         console.error('Error saving progress:', err);
       }
     },
-    [currentLesson, courseId, studentId, fetchProgress]
+    [currentLesson, courseId, TEMP_STUDENT_ID, fetchProgress]
   );
 
   /**
@@ -218,7 +212,7 @@ export default function StudentCourseViewerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student_id: studentId,
+          student_id: TEMP_STUDENT_ID,
           video_id: currentLesson.video_id,
           percent_complete: 100,
           watch_time_seconds: currentLesson.video.duration_seconds || 0,
@@ -227,8 +221,10 @@ export default function StudentCourseViewerPage() {
         }),
       });
 
+      // Refresh progress
       await fetchProgress();
 
+      // Auto-advance if enabled and there's a next lesson
       if (autoAdvance && hasNext) {
         setTimeout(() => {
           goToNextLesson();
@@ -239,7 +235,7 @@ export default function StudentCourseViewerPage() {
     } finally {
       setIsSavingProgress(false);
     }
-  }, [currentLesson, courseId, studentId, fetchProgress, autoAdvance, hasNext]);
+  }, [currentLesson, courseId, TEMP_STUDENT_ID, fetchProgress, autoAdvance, hasNext]);
 
   /**
    * Toggle chat panel
@@ -255,6 +251,7 @@ export default function StudentCourseViewerPage() {
    */
   const handleDownloadCertificate = () => {
     toast.success('Certificate download started!');
+    // TODO: Implement certificate generation and download
     console.log('Download certificate for course:', courseId);
   };
 
@@ -262,15 +259,16 @@ export default function StudentCourseViewerPage() {
    * Handle share achievement
    */
   const handleShareAchievement = () => {
-    const shareText = `I just completed "${courseData?.course.title}" on Chronos!`;
+    const shareText = `I just completed "${courseData?.course.title}" on Chronos! 🎉`;
     navigator.clipboard.writeText(shareText);
     toast.success('Achievement copied to clipboard!');
   };
 
   /**
-   * Handle start next course
+   * Handle start next course (placeholder)
    */
   const handleStartNextCourse = () => {
+    // TODO: Navigate to recommended next course
     router.push('/dashboard/student/courses');
   };
 
@@ -310,6 +308,7 @@ export default function StudentCourseViewerPage() {
       100
     );
 
+    // Save progress every 10% milestone
     if (percentComplete % 10 === 0) {
       saveProgress(percentComplete, Math.floor(currentTime));
     }
@@ -328,25 +327,11 @@ export default function StudentCourseViewerPage() {
   }, [fetchCourseData, fetchProgress]);
 
   /**
-   * Check for course completion and show celebration
-   */
-  useEffect(() => {
-    if (allLessonsCompleted && courseData && !showCompletionModal) {
-      const hasShownCelebration = localStorage.getItem(
-        `course-${courseId}-celebrated`
-      );
-      if (!hasShownCelebration) {
-        setShowCompletionModal(true);
-        localStorage.setItem(`course-${courseId}-celebrated`, 'true');
-      }
-    }
-  }, [allLessonsCompleted, courseId, courseData, showCompletionModal]);
-
-  /**
-   * Enhanced keyboard shortcuts
+   * Keyboard shortcuts
    */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -363,27 +348,16 @@ export default function StudentCourseViewerPage() {
           e.preventDefault();
           goToNextLesson();
           break;
-        case 'c':
-        case 'C':
-          e.preventDefault();
-          toggleChat();
-          break;
-        case 'Escape':
-          e.preventDefault();
-          setShowCompletionModal(false);
-          setShowShortcutsHelp(false);
-          break;
-        case '?':
-          e.preventDefault();
-          setShowShortcutsHelp(true);
-          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentLessonIndex, hasPrevious, hasNext, isChatOpen]);
+  }, [currentLessonIndex, hasPrevious, hasNext]);
 
+  /**
+   * Loading state
+   */
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -395,6 +369,9 @@ export default function StudentCourseViewerPage() {
     );
   }
 
+  /**
+   * Error state
+   */
   if (error || !courseData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -408,6 +385,9 @@ export default function StudentCourseViewerPage() {
     );
   }
 
+  /**
+   * No lessons state
+   */
   if (allLessons.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -424,7 +404,7 @@ export default function StudentCourseViewerPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex h-screen overflow-hidden">
-        {/* Course Sidebar */}
+        {/* Sidebar */}
         <CourseSidebar
           course={courseData.course}
           modules={courseData.modules}
@@ -434,159 +414,78 @@ export default function StudentCourseViewerPage() {
           className="w-80 flex-shrink-0"
         />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Video and Lesson Content */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200 p-4">
-              <div className="max-w-7xl mx-auto flex items-center gap-4">
-                <Button
-                  onClick={() => router.push('/dashboard/student/courses')}
-                  variant="ghost"
-                  size="sm"
-                  icon={<ArrowLeft className="h-4 w-4" />}
-                  iconPosition="left"
-                >
-                  Back to Courses
-                </Button>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-500 truncate">
-                    {courseData.course.title}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Lesson {currentLessonIndex + 1} of {allLessons.length}
-                  </p>
-                </div>
-
-                {/* Keyboard shortcuts help button */}
-                <button
-                  onClick={() => setShowShortcutsHelp(true)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Keyboard shortcuts (Press ?)"
-                >
-                  <HelpCircle className="h-5 w-5" />
-                </button>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="max-w-7xl mx-auto flex items-center gap-4">
+              <Button
+                onClick={() => router.push('/dashboard/student/courses')}
+                variant="ghost"
+                size="sm"
+                icon={<ArrowLeft className="h-4 w-4" />}
+                iconPosition="left"
+              >
+                Back to Courses
+              </Button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-500 truncate">
+                  {courseData.course.title}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Lesson {currentLessonIndex + 1} of {allLessons.length}
+                </p>
               </div>
             </div>
-
-            {/* Resume Banner (placeholder for future) */}
-            {showResumeBanner && resumePosition !== null && (
-              <div className="bg-blue-50 border-b border-blue-200 p-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                  <span className="text-sm text-blue-900">
-                    Resume from {Math.floor(resumePosition / 60)}:{String(Math.floor(resumePosition % 60)).padStart(2, '0')}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowResumeBanner(false)}
-                    >
-                      Resume
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowResumeBanner(false)}
-                    >
-                      Start Over
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Video Player */}
-            {currentLesson && (
-              <>
-                <div className="bg-black">
-                  <div className="max-w-7xl mx-auto">
-                    <VideoPlayer
-                      video={currentLesson.video}
-                      studentId={studentId}
-                      creatorId={creatorId}
-                      courseId={courseId}
-                      moduleId={currentLesson.module_id}
-                      onProgress={handleVideoProgress}
-                      onComplete={handleVideoComplete}
-                      enableAnalytics={true}
-                    />
-                  </div>
-                </div>
-
-                {/* Lesson Metadata */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <LessonMetadata
-                      title={currentLesson.title}
-                      description={currentLesson.description}
-                      estimatedDuration={currentLesson.estimated_duration_minutes}
-                      metadata={currentLesson.metadata}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Navigation Controls */}
-            <NavigationControls
-              hasPrevious={hasPrevious}
-              hasNext={hasNext}
-              isCompleted={isCurrentLessonCompleted}
-              isLoading={isSavingProgress}
-              autoAdvance={autoAdvance}
-              onPrevious={goToPreviousLesson}
-              onNext={goToNextLesson}
-              onMarkComplete={markLessonComplete}
-              onAutoAdvanceToggle={setAutoAdvance}
-              className="sticky bottom-0"
-            />
           </div>
 
-          {/* Chat Panel (Collapsible) */}
-          {isChatOpen && (
-            <div className="w-96 border-l border-gray-200 flex flex-col h-full bg-white">
-              <ChatInterface
-                sessionId={undefined}
-                currentVideoId={currentLesson?.video_id}
-                className="h-full"
-              />
-            </div>
+          {/* Video Player */}
+          {currentLesson && (
+            <>
+              <div className="bg-black">
+                <div className="max-w-7xl mx-auto">
+                  <VideoPlayer
+                    video={currentLesson.video}
+                    studentId={TEMP_STUDENT_ID}
+                    creatorId={TEMP_CREATOR_ID}
+                    courseId={courseId}
+                    moduleId={currentLesson.module_id}
+                    onProgress={handleVideoProgress}
+                    onComplete={handleVideoComplete}
+                    enableAnalytics={true}
+                  />
+                </div>
+              </div>
+
+              {/* Lesson Metadata */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                  <LessonMetadata
+                    title={currentLesson.title}
+                    description={currentLesson.description}
+                    estimatedDuration={currentLesson.estimated_duration_minutes}
+                    metadata={currentLesson.metadata}
+                  />
+                </div>
+              </div>
+            </>
           )}
 
-          {/* Chat Toggle Button */}
-          <button
-            onClick={toggleChat}
-            className="fixed right-4 top-20 z-10 p-3 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors"
-            title={isChatOpen ? 'Hide chat (Press C)' : 'Show chat (Press C)'}
-          >
-            {isChatOpen ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
-              <MessageSquare className="h-5 w-5" />
-            )}
-          </button>
+          {/* Navigation Controls */}
+          <NavigationControls
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+            isCompleted={isCurrentLessonCompleted}
+            isLoading={isSavingProgress}
+            autoAdvance={autoAdvance}
+            onPrevious={goToPreviousLesson}
+            onNext={goToNextLesson}
+            onMarkComplete={markLessonComplete}
+            onAutoAdvanceToggle={setAutoAdvance}
+            className="sticky bottom-0"
+          />
         </div>
       </div>
-
-      {/* Completion Modal */}
-      {showCompletionModal && (
-        <CompletionModal
-          courseTitle={courseData.course.title}
-          courseThumbnail={courseData.course.thumbnail_url || undefined}
-          completionDate={new Date()}
-          onDownloadCertificate={handleDownloadCertificate}
-          onShareAchievement={handleShareAchievement}
-          onStartNextCourse={handleStartNextCourse}
-          onClose={() => setShowCompletionModal(false)}
-        />
-      )}
-
-      {/* Keyboard Shortcuts Help */}
-      {showShortcutsHelp && (
-        <KeyboardShortcutsHelp onClose={() => setShowShortcutsHelp(false)} />
-      )}
     </div>
   );
 }

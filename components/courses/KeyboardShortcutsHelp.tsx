@@ -2,7 +2,6 @@
 
 import { X, Keyboard } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 
 interface KeyboardShortcutsHelpProps {
   onClose: () => void;
@@ -67,15 +66,15 @@ const shortcuts: Shortcut[] = [
  */
 export function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelpProps) {
   // Group shortcuts by category
-  const groupedShortcuts = shortcuts.reduce(
+  const groupedShortcuts = shortcuts.reduce<Record<string, Shortcut[]>>(
     (acc, shortcut) => {
       if (!acc[shortcut.category]) {
         acc[shortcut.category] = [];
       }
-      acc[shortcut.category].push(shortcut);
+      acc[shortcut.category]?.push(shortcut);
       return acc;
     },
-    {} as Record<string, Shortcut[]>
+    {}
   );
 
   return (

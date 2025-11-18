@@ -15,11 +15,11 @@ interface LessonNotesProps {
   defaultExpanded?: boolean;
 }
 
-interface NoteData {
-  id?: string;
-  content: string;
-  updated_at?: string;
-}
+// interface NoteData {
+//   id?: string;
+//   content: string;
+//   updated_at?: string;
+// }
 
 /**
  * LessonNotes Component
@@ -297,7 +297,7 @@ export function LessonNotes({
 
                 <Button
                   onClick={saveNotes}
-                  variant="default"
+                  variant="primary"
                   size="sm"
                   icon={<Save className="h-4 w-4" />}
                   iconPosition="left"
