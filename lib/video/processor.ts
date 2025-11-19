@@ -9,6 +9,7 @@
 
 import { getServiceSupabase } from '@/lib/db/client';
 import type { Database } from '@/lib/db/types';
+import { inngest } from '@/inngest/client';
 
 type VideoStatus = Database['public']['Tables']['videos']['Row']['status'];
 
@@ -512,6 +513,99 @@ export async function getStuckVideos(): Promise<Database['public']['Tables']['vi
   return stuckVideos;
 }
 
+/**
+ * Get detailed diagnostic information for a stuck video
+ * Useful for understanding why a video is stuck and what recovery actions are available
+ */
+export async function getVideoDiagnostics(videoId: string): Promise<{
+  video: Database['public']['Tables']['videos']['Row'] | null;
+  hasTranscript: boolean;
+  chunkCount: number;
+  embeddingCount: number;
+  isStuck: boolean;
+  stuckDurationMinutes: number | null;
+  recoveryAttempts: number;
+  lastRecoveryAttempt: string | null;
+  recommendedAction: string | null;
+}> {
+  const supabase = getServiceSupabase();
+
+  // Get video
+  const { data: video } = await (supabase as any)
+    .from('videos')
+    .select('*')
+    .eq('id', videoId)
+    .single();
+
+  if (!video) {
+    return {
+      video: null,
+      hasTranscript: false,
+      chunkCount: 0,
+      embeddingCount: 0,
+      isStuck: false,
+      stuckDurationMinutes: null,
+      recoveryAttempts: 0,
+      lastRecoveryAttempt: null,
+      recommendedAction: null,
+    };
+  }
+
+  // Check transcript
+  const hasTranscript = video.transcript && video.transcript.trim().length > 0;
+
+  // Count chunks
+  const { count: chunkCount } = await (supabase as any)
+    .from('video_chunks')
+    .select('id', { count: 'exact', head: true })
+    .eq('video_id', videoId);
+
+  // Count embeddings
+  const { count: embeddingCount } = await (supabase as any)
+    .from('video_chunks')
+    .select('id', { count: 'exact', head: true })
+    .eq('video_id', videoId)
+    .not('embedding', 'is', null);
+
+  // Check if stuck
+  const stageMetadata = getStageMetadata(video.status);
+  const updatedAt = new Date(video.updated_at).getTime();
+  const now = Date.now();
+  const elapsedMinutes = (now - updatedAt) / (1000 * 60);
+  const isStuck = elapsedMinutes > stageMetadata.timeoutMinutes;
+
+  // Get recovery metadata
+  const metadata = (video.metadata || {}) as any;
+  const recoveryAttempts = metadata.recovery_attempts || 0;
+  const lastRecoveryAttempt = metadata.last_recovery_attempt || null;
+
+  // Determine recommended action
+  let recommendedAction: string | null = null;
+  if (isStuck) {
+    if (!hasTranscript) {
+      recommendedAction = 'mark-failed';
+    } else if (!chunkCount || chunkCount === 0) {
+      recommendedAction = 'retry-embeddings';
+    } else if (!embeddingCount || embeddingCount === 0) {
+      recommendedAction = 'retry-embeddings';
+    } else if (chunkCount > 0 && embeddingCount > 0) {
+      recommendedAction = 'fix-status';
+    }
+  }
+
+  return {
+    video,
+    hasTranscript,
+    chunkCount: chunkCount || 0,
+    embeddingCount: embeddingCount || 0,
+    isStuck,
+    stuckDurationMinutes: isStuck ? elapsedMinutes : null,
+    recoveryAttempts,
+    lastRecoveryAttempt,
+    recommendedAction,
+  };
+}
+
 // =====================================================
 // HELPER FUNCTIONS
 // =====================================================
@@ -564,4 +658,141 @@ export function getProcessingDuration(
   const startTime = new Date(startedAt).getTime();
 
   return Math.floor((endTime - startTime) / 1000);
+}
+
+// =====================================================
+// INNGEST HEALTH & VALIDATION
+// =====================================================
+
+/**
+ * Error thrown when Inngest connection validation fails
+ */
+export class InngestConnectionError extends Error {
+  constructor(
+    message: string,
+    public readonly healthy: boolean,
+    public readonly details?: Record<string, any>
+  ) {
+    super(message);
+    this.name = 'InngestConnectionError';
+  }
+}
+
+/**
+ * Validate Inngest connection and availability
+ *
+ * This function checks if the Inngest Dev Server is running and accessible.
+ * Should be called before attempting to send events to Inngest.
+ *
+ * @throws {InngestConnectionError} If Inngest is not available
+ * @returns {Promise<boolean>} True if Inngest is healthy
+ */
+export async function validateInngestConnection(): Promise<boolean> {
+  const startTime = Date.now();
+
+  try {
+    // Check if client is configured
+    if (!inngest) {
+      throw new InngestConnectionError(
+        'Inngest client is not configured',
+        false,
+        { clientConfigured: false }
+      );
+    }
+
+    // Send test event to verify connectivity
+    await inngest.send({
+      name: 'test/connection-check',
+      data: {
+        timestamp: new Date().toISOString(),
+        source: 'validateInngestConnection',
+      },
+    });
+
+    const responseTimeMs = Date.now() - startTime;
+
+    // Warn if slow response (> 5 seconds)
+    if (responseTimeMs > 5000) {
+      console.warn('[Inngest Validation] Slow response time:', responseTimeMs, 'ms');
+    }
+
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const responseTimeMs = Date.now() - startTime;
+
+    throw new InngestConnectionError(
+      'Inngest Dev Server is not responding. Please ensure it is running at http://localhost:3007/api/inngest',
+      false,
+      {
+        clientConfigured: !!inngest,
+        responseTimeMs,
+        error: errorMessage,
+        troubleshooting: [
+          'Start Inngest Dev Server: npx inngest-cli dev -u http://localhost:3007/api/inngest',
+          'Verify dashboard at: http://localhost:8288',
+          'Check that port 3007 is not blocked',
+        ],
+      }
+    );
+  }
+}
+
+/**
+ * Check if Inngest is healthy (non-throwing version)
+ *
+ * Returns health status without throwing errors.
+ * Useful for health check endpoints and monitoring.
+ *
+ * @returns {Promise<{healthy: boolean, message: string, details?: any}>}
+ */
+export async function checkInngestHealth(): Promise<{
+  healthy: boolean;
+  message: string;
+  details?: Record<string, any>;
+}> {
+  try {
+    await validateInngestConnection();
+    return {
+      healthy: true,
+      message: 'Inngest background processing system is operational',
+    };
+  } catch (error) {
+    if (error instanceof InngestConnectionError) {
+      return {
+        healthy: error.healthy,
+        message: error.message,
+        details: error.details,
+      };
+    }
+
+    return {
+      healthy: false,
+      message: 'Unexpected error during Inngest health check',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+}
+
+/**
+ * Validate Inngest before processing video
+ *
+ * Call this before triggering any Inngest jobs to fail fast if the system is unavailable.
+ *
+ * @throws {InngestConnectionError} If Inngest is not available
+ */
+export async function ensureInngestAvailable(): Promise<void> {
+  const isHealthy = await validateInngestConnection();
+
+  if (!isHealthy) {
+    throw new InngestConnectionError(
+      'Cannot process video: Inngest background processing system is unavailable',
+      false,
+      {
+        recommendation: 'Please start Inngest Dev Server before importing videos',
+      }
+    );
+  }
 }

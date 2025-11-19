@@ -15,8 +15,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Video } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import { VideoLibraryGrid } from '@/components/video/VideoLibraryGrid';
 import { VideoFilters } from '@/components/video/VideoFilters';
 import { BulkActions } from '@/components/video/BulkActions';

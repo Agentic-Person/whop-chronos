@@ -180,8 +180,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       status: video.status,
     });
 
-    // Step 3: Trigger Inngest job to chunk transcript and generate embeddings (optional)
-    // Don't fail the import if Inngest is not configured
+    // Step 3: Trigger Inngest job to chunk transcript and generate embeddings
+    // This is CRITICAL - fail loudly if Inngest is unavailable
     try {
       console.log('[YouTube Import API] Triggering chunking/embedding job');
       await inngest.send({
@@ -194,9 +194,42 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       });
       console.log('[YouTube Import API] Successfully triggered background job');
     } catch (inngestError) {
-      // Log but don't fail - the video is already saved to database
-      console.warn('[YouTube Import API] Failed to trigger Inngest job (this is OK in development):', inngestError);
-      console.warn('[YouTube Import API] Video saved successfully, but embeddings will need to be generated manually');
+      // CRITICAL ERROR: Background processing system is unavailable
+      // Mark video as failed and return error to user
+      console.error('[YouTube Import API] CRITICAL: Inngest job trigger failed:', inngestError);
+
+      // Update video status to failed
+      await (supabase as any)
+        .from('videos')
+        .update({
+          status: 'failed',
+          error_message: 'Background processing system unavailable. Please ensure Inngest Dev Server is running at http://localhost:3007/api/inngest',
+          metadata: {
+            ...(video.metadata || {}),
+            failed_at: new Date().toISOString(),
+            failure_reason: 'inngest_unavailable',
+            inngest_error: inngestError instanceof Error ? inngestError.message : String(inngestError),
+          },
+        })
+        .eq('id', video.id);
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Background processing system unavailable',
+          details: {
+            message: 'Video was imported but cannot be processed without Inngest Dev Server.',
+            troubleshooting: [
+              '1. Start Inngest Dev Server: npx inngest-cli dev -u http://localhost:3007/api/inngest',
+              '2. Verify the server is running at http://localhost:8288',
+              '3. Retry the video import',
+            ],
+            videoId: video.id,
+            videoTitle: video.title,
+          },
+        },
+        { status: 503 } // Service Unavailable
+      );
     }
 
     // Step 4: Return success response

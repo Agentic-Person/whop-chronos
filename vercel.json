@@ -4,5 +4,11 @@
   "framework": "nextjs",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/recover-stuck-videos",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

@@ -41,10 +41,19 @@ export async function GET(
 
     const supabase = getServiceSupabase();
 
-    // Fetch video
+    // Fetch video with all fields including multi-source support
     const { data: video, error } = await supabase
       .from('videos')
-      .select('*')
+      .select(`
+        *,
+        youtube_video_id,
+        youtube_channel_id,
+        mux_asset_id,
+        mux_playback_id,
+        embed_type,
+        embed_id,
+        source_type
+      `)
       .eq('id', id)
       .eq('is_deleted', false)
       .single();
@@ -68,7 +77,7 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('video_id', id);
 
-    // Format response
+    // Format response with multi-source support fields
     return NextResponse.json(
       {
         success: true,
@@ -85,6 +94,17 @@ export async function GET(
           transcript: (video as any).transcript,
           transcriptLanguage: (video as any).transcript_language,
           chunksCount: chunksCount || 0,
+          // Multi-source video fields
+          sourceType: (video as any).source_type,
+          youtubeVideoId: (video as any).youtube_video_id,
+          youtubeChannelId: (video as any).youtube_channel_id,
+          muxAssetId: (video as any).mux_asset_id,
+          muxPlaybackId: (video as any).mux_playback_id,
+          embedType: (video as any).embed_type,
+          embedId: (video as any).embed_id,
+          url: (video as any).url,
+          storagePath: (video as any).storage_path,
+          // Timestamps
           createdAt: (video as any).created_at,
           updatedAt: (video as any).updated_at,
           processingStartedAt: (video as any).processing_started_at,
