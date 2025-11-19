@@ -159,5 +159,43 @@ Chronos is a clean rebuild of a video learning platform for Whop creators. After
 
 ---
 
+## 🐛 Remaining Known Issues (Non-Blocking)
+
+### YouTube Embedding Breaks CourseBuilder (P1)
+**Severity:** HIGH
+**Priority:** P1
+**Impact:** Course creation workflow degraded (not broken)
+**Status:** Fix plan documented, ready for implementation
+
+**Problem:**
+- YouTube video import backend works perfectly
+- Frontend CourseBuilder UI breaks when YouTube videos imported
+- Videos appear as empty blue boxes (no thumbnails)
+- Drag-drop becomes non-functional
+
+**Root Cause:** Data structure mismatch between VideoUrlUploader (passes ID string) and CourseBuilder (expects full object with thumbnail, title, duration)
+
+**Fix Plan:** [YouTube CourseBuilder Fix Plan](./features/videos/YOUTUBE_COURSEBUILDER_FIX_PLAN.md)
+- Comprehensive 4-phase strategy documented
+- Estimated time: 3-4 hours
+- Investigation complete, ready for implementation
+- Fix code already present (needs verification and testing)
+
+**Workaround:** Use direct upload or Loom/Mux videos instead
+
+**Documentation:**
+- Fix Plan: `docs/features/videos/YOUTUBE_COURSEBUILDER_FIX_PLAN.md`
+- Implementation Status: `docs/YOUTUBE_EMBEDDING_IMPLEMENTATION_STATUS.md`
+
+### Dev Auth Bypass Not Configured (P2)
+**Severity:** LOW
+**Priority:** P2
+**Impact:** Cannot test frontend without Whop account
+
+**Fix:** Add `DEV_BYPASS_AUTH=true` environment variable
+**Estimated Fix Time:** 30 minutes
+
+---
+
 **Last Updated:** November 18, 2025 (Evening)
 **Status:** Production Ready 🚀 (All P0 blockers resolved)
