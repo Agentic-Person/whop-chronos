@@ -277,8 +277,8 @@ export async function validateWhopUser(token: string) {
 # Start Next.js dev server
 npm run dev
 
-# OPTIONAL: Start Inngest Dev Server (for background job debugging)
-# NOTE: Currently YouTube import has broken frontend so this doesn't matter
+# CRITICAL: Start Inngest Dev Server (REQUIRED - NOT OPTIONAL)
+# ⚠️ WITHOUT THIS, VIDEO PROCESSING STOPS AT 50%
 npx inngest-cli dev -u http://localhost:3007/api/inngest
 
 # Inngest Dashboard: http://localhost:8288
@@ -295,12 +295,24 @@ npm run type-check
 # Linting (uses Biome)
 npm run lint
 
-# Utility Scripts (for debugging broken YouTube feature)
+# Utility Scripts (for debugging broken video pipeline)
 npx tsx scripts/trigger-embeddings.ts    # Manually trigger embeddings for stuck videos
 npx tsx scripts/check-database.ts        # Check video statuses and database state
 ```
 
-**WARNING:** YouTube embedding feature has broken frontend (CourseBuilder UI). Backend processing works but videos don't display. System is NOT usable. See `docs/YOUTUBE_EMBEDDING_IMPLEMENTATION_STATUS.md`.
+**⚠️ CRITICAL BLOCKER - CHRON-002 (P0):**
+The video processing pipeline is currently broken. Videos get stuck at "Chunking content" (50% progress) because **Inngest Dev Server is not running**. This is a **critical blocker** that prevents:
+- Video embeddings from being generated
+- AI chat from functioning (no vector search data)
+- Production deployment
+
+**Required Action:**
+1. Run `npx inngest-cli dev -u http://localhost:3007/api/inngest` in a separate terminal
+2. Start Next.js dev server with `npm run dev`
+3. Verify Inngest dashboard at `http://localhost:8288`
+4. Test video import workflow
+
+See `docs/PROJECT_STATUS.md` section "CHRON-002: Video Processing Pipeline Stuck at 50%" for full details.
 
 ## Environment Variables
 
@@ -328,7 +340,44 @@ UPSTASH_REDIS_REST_TOKEN=
 # Monitoring
 SENTRY_DSN=
 NEXT_PUBLIC_SENTRY_DSN=
+
+# Development Features
+DEV_BYPASS_AUTH=true                 # Skip Whop OAuth, use test creator/student IDs
+NEXT_PUBLIC_DEV_BYPASS_AUTH=true
+DEV_SIMPLE_NAV=true                  # Simplified navigation for easier dashboard switching
+NEXT_PUBLIC_DEV_SIMPLE_NAV=true
 ```
+
+## Development Navigation (DEV_SIMPLE_NAV)
+
+For easier testing during development, set `DEV_SIMPLE_NAV=true` in `.env.local` to enable simplified navigation between Creator and Student dashboards.
+
+**Original Navigation:**
+- **Creator:** Dashboard, Courses, Videos, Analytics, Usage, Chat
+- **Student:** My Courses, AI Chat, Settings
+
+**Simplified Navigation (DEV_SIMPLE_NAV=true):**
+- **Creator:** Dashboard, Courses, Videos, Analytics, Usage, **Student** ← Quick switch to student dashboard
+- **Student:** **Creator Dashboard** ← Quick switch back, My Courses, AI Chat
+
+**Benefits:**
+- One-click switching between Creator and Student views
+- No need to use role switcher button or manually type URLs
+- Faster development workflow when testing both dashboards
+- Removes creator chat (students use AI chat, not creators)
+- Removes student settings (not needed for MVP testing)
+
+**How to Enable:**
+```bash
+# Add to .env.local
+DEV_SIMPLE_NAV=true
+NEXT_PUBLIC_DEV_SIMPLE_NAV=true
+```
+
+**How to Revert:**
+Set `DEV_SIMPLE_NAV=false` or remove the variable, then restart the dev server. Original navigation will be restored automatically.
+
+**Note:** Creator chat page (`/dashboard/creator/chat`) has been removed. Student chat (`/dashboard/student/chat`) remains fully functional for AI interactions.
 
 ## Whop Integration Requirements
 
@@ -670,3 +719,4 @@ See **[docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md)** for complete details.
 - Supabase Vector Guide: https://supabase.com/docs/guides/ai/vector-embeddings
 - Frosted UI: https://storybook.whop.dev
 - Next.js App Router: https://nextjs.org/docs/app
+- always use port 3007 to run this app
