@@ -669,6 +669,90 @@ INSERT INTO usage_metrics (
 ON CONFLICT (creator_id, date) DO NOTHING;
 
 -- =====================================================
+-- 11. CREATE STUDENT COURSE ENROLLMENTS (NEW - CRITICAL)
+-- =====================================================
+-- Enroll test student in both courses
+INSERT INTO student_courses (
+  id,
+  student_id,
+  course_id,
+  progress,
+  completed,
+  last_accessed,
+  created_at
+) VALUES
+(
+  '70000000-0000-0000-0000-000000000001'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '10000000-0000-0000-0000-000000000001'::uuid,
+  45,
+  false,
+  NOW() - INTERVAL '2 hours',
+  NOW() - INTERVAL '15 days'
+),
+(
+  '70000000-0000-0000-0000-000000000002'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '10000000-0000-0000-0000-000000000002'::uuid,
+  15,
+  false,
+  NOW() - INTERVAL '3 days',
+  NOW() - INTERVAL '10 days'
+)
+ON CONFLICT (student_id, course_id) DO UPDATE SET
+  progress = EXCLUDED.progress,
+  last_accessed = EXCLUDED.last_accessed;
+
+-- =====================================================
+-- 12. CREATE VIDEO WATCH SESSIONS (NEW - CRITICAL)
+-- =====================================================
+-- Create watch sessions for student progress tracking
+INSERT INTO video_watch_sessions (
+  id,
+  student_id,
+  video_id,
+  started_at,
+  ended_at,
+  total_watch_time,
+  furthest_point_reached,
+  completed
+) VALUES
+-- Video 1: Partially watched
+(
+  '80000000-0000-0000-0000-000000000001'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '20000000-0000-0000-0000-000000000001'::uuid,
+  NOW() - INTERVAL '2 days',
+  NOW() - INTERVAL '2 days' + INTERVAL '15 minutes',
+  900,
+  950,
+  false
+),
+-- Video 2: Completed
+(
+  '80000000-0000-0000-0000-000000000002'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '20000000-0000-0000-0000-000000000002'::uuid,
+  NOW() - INTERVAL '1 day',
+  NOW() - INTERVAL '1 day' + INTERVAL '40 minutes',
+  2400,
+  2400,
+  true
+),
+-- Video 3: Partially watched
+(
+  '80000000-0000-0000-0000-000000000003'::uuid,
+  '00000000-0000-0000-0000-000000000002'::uuid,
+  '20000000-0000-0000-0000-000000000003'::uuid,
+  NOW() - INTERVAL '4 hours',
+  NOW() - INTERVAL '4 hours' + INTERVAL '12 minutes',
+  720,
+  850,
+  false
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- =====================================================
 -- VERIFICATION QUERY
 -- =====================================================
 -- Run this to verify seed data was inserted correctly
@@ -691,4 +775,8 @@ SELECT 'chat_messages', COUNT(*) FROM chat_messages
 UNION ALL
 SELECT 'video_analytics', COUNT(*) FROM video_analytics
 UNION ALL
-SELECT 'usage_metrics', COUNT(*) FROM usage_metrics;
+SELECT 'usage_metrics', COUNT(*) FROM usage_metrics
+UNION ALL
+SELECT 'student_courses', COUNT(*) FROM student_courses
+UNION ALL
+SELECT 'video_watch_sessions', COUNT(*) FROM video_watch_sessions;

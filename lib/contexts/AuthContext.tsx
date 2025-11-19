@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { WhopSession } from '@/lib/whop/types';
 import { detectUserRole, type RoleDetectionResult, type UserRole } from '@/lib/whop/roles';
@@ -50,31 +50,31 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
   const [isDetectingRole, setIsDetectingRole] = useState(false);
   const [currentDashboard, setCurrentDashboard] = useState<'creator' | 'student' | null>(null);
 
-  // Compute base auth values (existing logic preserved)
-  let baseAuthData: { creatorId: string | undefined; userId: string | undefined; isAuthenticated: boolean };
-
-  if (isDevMode && !session) {
-    // Mock auth values for development testing
-    baseAuthData = {
-      creatorId: '00000000-0000-0000-0000-000000000001', // TEST_CREATOR_ID from seed
-      userId: '00000000-0000-0000-0000-000000000002',    // TEST_STUDENT_ID from seed
-      isAuthenticated: true,
-    };
-  } else if (session) {
-    // Production: Use real Whop session
-    baseAuthData = {
-      creatorId: session.user.id,
-      userId: session.user.id,
-      isAuthenticated: true,
-    };
-  } else {
-    // No session - unauthenticated state (for static pages, public routes, etc.)
-    baseAuthData = {
-      creatorId: undefined,
-      userId: undefined,
-      isAuthenticated: false,
-    };
-  }
+  // Compute base auth values (memoized to prevent infinite re-renders)
+  const baseAuthData = useMemo(() => {
+    if (isDevMode && !session) {
+      // Mock auth values for development testing
+      return {
+        creatorId: '00000000-0000-0000-0000-000000000001', // TEST_CREATOR_ID from seed
+        userId: '00000000-0000-0000-0000-000000000002',    // TEST_STUDENT_ID from seed
+        isAuthenticated: true,
+      };
+    } else if (session) {
+      // Production: Use real Whop session
+      return {
+        creatorId: session.user.id,
+        userId: session.user.id,
+        isAuthenticated: true,
+      };
+    } else {
+      // No session - unauthenticated state (for static pages, public routes, etc.)
+      return {
+        creatorId: undefined,
+        userId: undefined,
+        isAuthenticated: false,
+      };
+    }
+  }, [isDevMode, session]);
 
   // Detect role when user loads
   useEffect(() => {
