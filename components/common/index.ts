@@ -8,3 +8,4 @@ export {
   TextLineSkeleton,
   CardSkeleton,
 } from './Skeleton';
+export { SkipLink } from './SkipLink';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from '@/components/motion';
 import { Send, Bot, User, Loader2, PlayCircle } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';

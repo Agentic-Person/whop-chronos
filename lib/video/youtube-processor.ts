@@ -1,4 +1,12 @@
-import { Innertube } from 'youtubei.js';
+// Lazy load youtubei.js only when needed (300KB saved on initial bundle)
+// This import is deferred until processYouTubeVideo is called
+async function getInnertube() {
+  const { Innertube } = await import('youtubei.js');
+  return Innertube;
+}
+
+// Type import (doesn't affect bundle size)
+type Innertube = Awaited<ReturnType<typeof getInnertube>>;
 
 /**
  * Structured data extracted from a YouTube video
@@ -133,9 +141,10 @@ export async function processYouTubeVideo(
   console.log(`[YouTube Processor] Processing video: ${videoId} for creator: ${creatorId}`);
 
   // Step 2: Initialize YouTube client with retry logic
-  let youtube: Innertube;
+  let youtube: InstanceType<Innertube>;
   try {
-    youtube = await Innertube.create();
+    const InnertubeClass = await getInnertube();
+    youtube = await InnertubeClass.create();
   } catch (error) {
     console.error('[YouTube Processor] Failed to initialize Innertube:', error);
     throw new YouTubeProcessorError(

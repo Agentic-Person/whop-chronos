@@ -48,11 +48,11 @@ interface DashboardResponse {
  * - recentActivity: Last 10 activities
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const studentId = params.id;
+    const { id: studentId } = await params;
 
     if (!studentId) {
       return NextResponse.json(

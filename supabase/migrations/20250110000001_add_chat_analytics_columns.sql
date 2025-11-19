@@ -9,8 +9,8 @@ ADD COLUMN IF NOT EXISTS output_tokens INTEGER,
 ADD COLUMN IF NOT EXISTS model VARCHAR(50) DEFAULT 'claude-3-5-haiku-20241022',
 ADD COLUMN IF NOT EXISTS cost_usd DECIMAL(10, 6),
 ADD COLUMN IF NOT EXISTS response_time_ms INTEGER,
-ADD COLUMN IF NOT EXISTS has_video_reference BOOLEAN DEFAULT false,
-ADD COLUMN IF NOT EXISTS video_references TEXT[];
+ADD COLUMN IF NOT EXISTS has_video_reference BOOLEAN DEFAULT false;
+-- Note: video_references already exists as JSONB from migration 20250101000002_create_core_tables.sql
 
 -- Add comments for documentation
 COMMENT ON COLUMN chat_messages.input_tokens IS 'Number of input tokens sent to AI model';
@@ -19,7 +19,7 @@ COMMENT ON COLUMN chat_messages.model IS 'AI model used for this response (e.g.,
 COMMENT ON COLUMN chat_messages.cost_usd IS 'Cost in USD for this AI API call';
 COMMENT ON COLUMN chat_messages.response_time_ms IS 'Time taken to generate response in milliseconds';
 COMMENT ON COLUMN chat_messages.has_video_reference IS 'Whether this message contains video references/citations';
-COMMENT ON COLUMN chat_messages.video_references IS 'Array of video IDs referenced in this message';
+COMMENT ON COLUMN chat_messages.video_references IS 'JSONB array of video reference objects (id, title, timestamp) cited in this message';
 
 -- Create indexes for analytics queries
 -- Note: creator_id and student_id are in chat_sessions, not chat_messages
@@ -79,10 +79,11 @@ DO $$ BEGIN
 END $$;
 
 -- Create function to automatically set has_video_reference
+-- Note: video_references is JSONB type, so we use jsonb_array_length instead of array_length
 CREATE OR REPLACE FUNCTION update_has_video_reference()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.has_video_reference := (NEW.video_references IS NOT NULL AND array_length(NEW.video_references, 1) > 0);
+  NEW.has_video_reference := (NEW.video_references IS NOT NULL AND jsonb_array_length(NEW.video_references) > 0);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

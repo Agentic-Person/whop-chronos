@@ -102,6 +102,7 @@ export default function VideoUrlUploader({
       }
     }, 3000);
 
+    // ✅ Cleanup function - clears interval when component unmounts or dependencies change
     return () => clearInterval(pollInterval);
   }, [currentVideoId, status, onComplete]);
 

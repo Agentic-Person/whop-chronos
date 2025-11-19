@@ -17,7 +17,7 @@ import type { Database } from '@/lib/db/types';
 
 type Course = Database['public']['Tables']['courses']['Row'];
 type Module = Database['public']['Tables']['course_modules']['Row'];
-type Video = Database['public']['Tables']['courses']['Row'];
+type Video = Database['public']['Tables']['videos']['Row'];
 
 type Lesson = {
   id: string;

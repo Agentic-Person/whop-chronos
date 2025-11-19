@@ -568,6 +568,100 @@ Unified 4-tab interface for all video imports:
 
 ---
 
+## Documentation Structure
+
+**IMPORTANT:** Documentation has been reorganized (November 18, 2025) for better navigation and clarity.
+
+### Quick Start for Documentation
+
+**Primary entry points:**
+1. **[docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md)** ⭐ - Current project status, production readiness (62/80 - Beta ready)
+2. **[docs/README.md](./docs/README.md)** - Complete documentation navigation hub
+3. **[docs/MASTER_PLAN.md](./docs/MASTER_PLAN.md)** - Video integration master plan (Phases 1-4 complete)
+
+### Documentation Organization
+
+**Root Directory:**
+- `CLAUDE.md` - This file (AI assistant context)
+- `README.md` - Project README
+- **All other docs moved to `/docs`** (37 files reorganized)
+
+**Documentation Structure:**
+```
+docs/
+├── PROJECT_STATUS.md          ⭐ START HERE - Comprehensive status
+├── README.md                  ⭐ Documentation navigation hub
+├── MASTER_PLAN.md             Video integration plan
+├── agent-reports/
+│   ├── agents/                15 individual agent reports
+│   ├── phases/                4 phase summaries
+│   └── waves/                 Integration waves (Nov 18)
+├── architecture/              System design & database
+├── api/                       API documentation & endpoints
+├── features/                  Feature-specific docs
+│   ├── videos/               Video system documentation
+│   ├── courses/              Course builder docs
+│   ├── analytics/            Analytics dashboard docs
+│   └── chat/                 AI chat system docs
+├── database/                  Database setup & migrations
+├── testing/                   Test reports & QA
+├── guides/
+│   ├── setup/                Setup & configuration
+│   └── development/          Development guides
+├── integrations/              Whop, video services
+├── mcp/                       MCP server configs
+├── deployment/                Deployment guides
+├── security/                  Security documentation
+└── archive/                   Outdated/legacy docs
+```
+
+### Current Project Status (November 18, 2025)
+
+**Production Readiness:** 62/80 (78%) - Beta Ready
+**Critical Blocker:** CHRON-001 (student pages timeout) - In progress
+**Test Coverage:** 32.65% (123 tests passing)
+**Build Status:** ✅ Passing (8.1s)
+**Bundle Size:** 840KB (optimized from 1.2MB)
+
+**Recent Achievements (5-Agent Integration - Nov 18):**
+- ✅ Bundle optimization (30% reduction)
+- ✅ 123 tests passing (100% success rate)
+- ✅ Memory leaks eliminated (70MB/hour → 0)
+- ✅ WCAG compliance: 85% (from 18%)
+- ✅ Production logging infrastructure
+- ✅ Zero integration conflicts
+
+See **[docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md)** for complete details.
+
+### Finding Documentation
+
+**For specific topics, check:**
+
+**Project Status & Planning:**
+- Current status → `docs/PROJECT_STATUS.md`
+- Master plans → `docs/MASTER_PLAN.md`, `docs/architecture/IMPLEMENTATION_PLAN.md`
+- Integration reports → `docs/agent-reports/waves/`
+
+**Development:**
+- API reference → `docs/api/QUICK_REFERENCE.md`
+- Setup guides → `docs/guides/setup/`
+- Feature docs → `docs/features/`
+- Database → `docs/database/`
+
+**Testing & QA:**
+- Test overview → `docs/testing/README.md`
+- Bug tracking → `docs/testing/BUG_TRIAGE_LIST.md`
+- Integration verification → `docs/agent-reports/waves/integration-verification-2025-11-18.md`
+
+**Agent Reports:**
+- Individual agents → `docs/agent-reports/agents/`
+- Phase summaries → `docs/agent-reports/phases/`
+- Integration waves → `docs/agent-reports/waves/`
+
+**Everything else:** See `docs/README.md` for complete navigation.
+
+---
+
 ## References
 
 - Whop Developer Docs: https://docs.whop.com

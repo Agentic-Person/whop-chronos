@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from '@/components/motion';
 import { Clock, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

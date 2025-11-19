@@ -711,43 +711,43 @@ INSERT INTO video_watch_sessions (
   id,
   student_id,
   video_id,
-  started_at,
-  ended_at,
-  total_watch_time,
-  furthest_point_reached,
+  session_start,
+  session_end,
+  watch_time_seconds,
+  percent_complete,
   completed
 ) VALUES
--- Video 1: Partially watched
+-- Session 1: Video 1 - Partially watched (60% complete)
 (
   '80000000-0000-0000-0000-000000000001'::uuid,
   '00000000-0000-0000-0000-000000000002'::uuid,
   '20000000-0000-0000-0000-000000000001'::uuid,
   NOW() - INTERVAL '2 days',
   NOW() - INTERVAL '2 days' + INTERVAL '15 minutes',
-  900,
-  950,
+  900,  -- 15 minutes watched
+  60,   -- 60% complete
   false
 ),
--- Video 2: Completed
+-- Session 2: Video 2 - Completed (95% complete)
 (
   '80000000-0000-0000-0000-000000000002'::uuid,
   '00000000-0000-0000-0000-000000000002'::uuid,
   '20000000-0000-0000-0000-000000000002'::uuid,
   NOW() - INTERVAL '1 day',
   NOW() - INTERVAL '1 day' + INTERVAL '40 minutes',
-  2400,
-  2400,
+  2400, -- 40 minutes watched
+  95,   -- 95% complete (auto-sets completed=true via trigger)
   true
 ),
--- Video 3: Partially watched
+-- Session 3: Video 3 - Partially watched (45% complete)
 (
   '80000000-0000-0000-0000-000000000003'::uuid,
   '00000000-0000-0000-0000-000000000002'::uuid,
   '20000000-0000-0000-0000-000000000003'::uuid,
   NOW() - INTERVAL '4 hours',
   NOW() - INTERVAL '4 hours' + INTERVAL '12 minutes',
-  720,
-  850,
+  720,  -- 12 minutes watched
+  45,   -- 45% complete
   false
 )
 ON CONFLICT (id) DO NOTHING;

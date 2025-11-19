@@ -163,7 +163,10 @@ export function VideoDetailModal({
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+
     window.addEventListener('keydown', handleEsc);
+
+    // ✅ Cleanup function - removes event listener when component unmounts
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 

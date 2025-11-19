@@ -86,6 +86,8 @@ export function CourseFilters({
     };
 
     document.addEventListener('click', handleClickOutside);
+
+    // ✅ Cleanup function - removes event listener when component unmounts
     return () => document.removeEventListener('click', handleClickOutside);
   }, [sortDropdownOpen]);
 

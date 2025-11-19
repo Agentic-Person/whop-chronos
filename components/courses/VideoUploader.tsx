@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { X, Video, ArrowLeft, FileText, ToggleLeft, ToggleRight, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 import { VIDEO_LIMITS } from '@/lib/video/config';
@@ -47,6 +47,16 @@ export default function VideoUploader({
   const [_currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [error, setError] = useState<UploadError | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const pollingCleanupRef = useRef<(() => void) | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingCleanupRef.current) {
+        pollingCleanupRef.current();
+      }
+    };
+  }, []);
 
   // Tier limits based on subscription
   const tierLimits = tier === 'enterprise' ? VIDEO_LIMITS.enterprise : tier === 'pro' ? VIDEO_LIMITS.pro : VIDEO_LIMITS.basic;
@@ -112,7 +122,7 @@ export default function VideoUploader({
     setVideoTitle(file.name.replace(/\.[^/.]+$/, ''));
   };
 
-  const handleFileUpload = async () => {
+  const handleFileUpload = useCallback(async () => {
     if (!selectedFile) {
       setError({ message: 'No file selected', canRetry: false });
       return;
@@ -121,6 +131,8 @@ export default function VideoUploader({
     setError(null);
     setStatus('uploading');
     setUploadProgress(0);
+
+    let xhr: XMLHttpRequest | null = null;
 
     try {
       // Step 1: Request signed upload URL from backend
@@ -146,17 +158,17 @@ export default function VideoUploader({
       setCurrentVideoId(video.id);
 
       // Step 2: Upload file directly to Supabase Storage using signed URL
-      const xhr = new XMLHttpRequest();
+      xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener('progress', (e) => {
+      const progressHandler = (e: ProgressEvent) => {
         if (e.lengthComputable) {
           const progress = Math.round((e.loaded / e.total) * 100);
           setUploadProgress(progress);
         }
-      });
+      };
 
-      xhr.addEventListener('load', async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
+      const loadHandler = async () => {
+        if (xhr && xhr.status >= 200 && xhr.status < 300) {
           setUploadProgress(100);
 
           // Step 3: Confirm upload and trigger processing
@@ -173,26 +185,42 @@ export default function VideoUploader({
             setStatus('pending');
 
             // Step 4: Poll for processing status
-            startStatusPolling(video.id);
+            pollingCleanupRef.current = startStatusPolling(video.id);
           } catch (confirmError) {
             throw new Error(confirmError instanceof Error ? confirmError.message : 'Upload confirmation failed');
           }
         } else {
-          throw new Error(`Upload failed with status ${xhr.status}`);
+          throw new Error(`Upload failed with status ${xhr?.status}`);
         }
-      });
+      };
 
-      xhr.addEventListener('error', () => {
+      const errorHandler = () => {
         throw new Error('Network error during upload');
-      });
+      };
 
-      xhr.addEventListener('abort', () => {
+      const abortHandler = () => {
         throw new Error('Upload was cancelled');
-      });
+      };
+
+      xhr.upload.addEventListener('progress', progressHandler);
+      xhr.addEventListener('load', loadHandler);
+      xhr.addEventListener('error', errorHandler);
+      xhr.addEventListener('abort', abortHandler);
 
       xhr.open(upload.method, upload.url);
       xhr.setRequestHeader('Content-Type', upload.headers['Content-Type']);
       xhr.send(selectedFile);
+
+      // Return cleanup function
+      return () => {
+        if (xhr) {
+          xhr.upload.removeEventListener('progress', progressHandler);
+          xhr.removeEventListener('load', loadHandler);
+          xhr.removeEventListener('error', errorHandler);
+          xhr.removeEventListener('abort', abortHandler);
+          xhr.abort();
+        }
+      };
 
     } catch (err) {
       console.error('Upload error:', err);
@@ -202,7 +230,7 @@ export default function VideoUploader({
         canRetry: true,
       });
     }
-  };
+  }, [selectedFile, videoTitle, creatorId, startStatusPolling]);
 
   const startStatusPolling = useCallback((videoId: string) => {
     const pollInterval = setInterval(async () => {
@@ -259,12 +287,18 @@ export default function VideoUploader({
     }, 2000); // Poll every 2 seconds
 
     // Cleanup after 10 minutes
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       clearInterval(pollInterval);
       if (status !== 'completed' && status !== 'failed') {
         setError({ message: 'Processing timeout - please check video library', canRetry: false });
       }
     }, 600000);
+
+    // Return cleanup function
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeoutId);
+    };
   }, [status, onVideoUploaded]);
 
   const handleRetry = () => {
@@ -312,7 +346,7 @@ export default function VideoUploader({
 
       // URL uploads are processed immediately, so start polling
       setStatus('pending');
-      startStatusPolling(video.id);
+      pollingCleanupRef.current = startStatusPolling(video.id);
     } catch (err) {
       console.error('URL import error:', err);
       setStatus('failed');

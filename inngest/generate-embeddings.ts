@@ -13,6 +13,7 @@ import { inngest } from './client';
 import { getServiceSupabase } from '@/lib/db/client';
 import { chunkTranscript, getChunkingStats, validateChunks } from '@/lib/video/chunking';
 import { generateEmbeddings } from '@/lib/video/embeddings';
+import { logger } from '@/lib/logger';
 
 /**
  * Generate embeddings for a video's transcript
@@ -27,7 +28,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
   async ({ event, step }) => {
     const { video_id, creator_id, transcript, skip_if_exists } = event.data;
 
-    console.log(`[Embeddings] Starting embedding generation for video ${video_id}`);
+    logger.info('Starting embedding generation', { component: 'embeddings', videoId: video_id });
 
     // Step 1: Validate video exists and get current status
     const video: any = await step.run('validate-video', async () => {
@@ -52,7 +53,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
           .not('embedding', 'is', null);
 
         if (count && count > 0) {
-          console.log(`[Embeddings] Embeddings already exist for video ${video_id}, skipping`);
+          logger.info('Embeddings already exist, skipping', { component: 'embeddings', videoId: video_id });
           return { skip: true, video: data };
         }
       }
@@ -79,7 +80,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 3: Chunk the transcript
     const chunks = await step.run('chunk-transcript', async () => {
-      console.log(`[Embeddings] Chunking transcript for video ${video_id}`);
+      logger.info('Chunking transcript', { component: 'embeddings', videoId: video_id });
 
       const transcriptData = transcript || video.video.transcript;
       if (!transcriptData) {
@@ -97,12 +98,12 @@ export const generateEmbeddingsFunction = inngest.createFunction(
       // Validate chunks
       const validation = validateChunks(chunks);
       if (!validation.valid) {
-        console.warn(`[Embeddings] Chunk validation warnings:`, validation.warnings);
+        logger.warn('Chunk validation warnings', { component: 'embeddings', videoId: video_id, warnings: validation.warnings });
       }
 
       // Log chunking statistics
       const stats = getChunkingStats(chunks);
-      console.log(`[Embeddings] Chunking stats:`, stats);
+      logger.info('Chunking complete', { component: 'embeddings', videoId: video_id, stats });
 
       return chunks;
     });
@@ -111,7 +112,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     await step.run('store-chunks', async () => {
       const supabase = getServiceSupabase();
 
-      console.log(`[Embeddings] Storing ${chunks.length} chunks for video ${video_id}`);
+      logger.info('Storing chunks in database', { component: 'embeddings', videoId: video_id, chunkCount: chunks.length });
 
       // Delete existing chunks for this video (in case of reprocessing)
       await supabase
@@ -151,7 +152,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
 
     // Step 6: Generate embeddings in batches
     const embeddingResult = await step.run('generate-embeddings', async () => {
-      console.log(`[Embeddings] Generating embeddings for ${chunks.length} chunks`);
+      logger.info('Generating embeddings', { component: 'embeddings', videoId: video_id, chunkCount: chunks.length });
 
       const result = await generateEmbeddings(chunks, {
         batch_size: 20,
@@ -159,10 +160,14 @@ export const generateEmbeddingsFunction = inngest.createFunction(
         retry_delay_ms: 1000,
       });
 
-      console.log(
-        `[Embeddings] Generated ${result.embeddings.length} embeddings`,
-        `(${result.total_tokens} tokens, $${result.total_cost_usd.toFixed(4)}, ${result.processing_time_ms}ms)`
-      );
+      logger.info('Embeddings generated successfully', {
+        component: 'embeddings',
+        videoId: video_id,
+        embeddingCount: result.embeddings.length,
+        tokens: result.total_tokens,
+        costUsd: result.total_cost_usd.toFixed(4),
+        processingTimeMs: result.processing_time_ms
+      });
 
       return result;
     });
@@ -171,7 +176,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
     await step.run('update-chunks-with-embeddings', async () => {
       const supabase = getServiceSupabase();
 
-      console.log(`[Embeddings] Storing embeddings in database`);
+      logger.info('Storing embeddings in database', { component: 'embeddings', videoId: video_id });
 
       // Update chunks in batches to avoid overwhelming the database
       const batchSize = 50;
@@ -188,12 +193,16 @@ export const generateEmbeddingsFunction = inngest.createFunction(
             .eq('chunk_index', embedding.chunk_index);
 
           if (error) {
-            console.error(`Failed to update chunk ${embedding.chunk_index}:`, error);
+            logger.error('Failed to update chunk with embedding', error, { component: 'embeddings', videoId: video_id, chunkIndex: embedding.chunk_index });
             throw new Error(`Failed to update embeddings: ${error.message}`);
           }
         }
 
-        console.log(`[Embeddings] Updated ${Math.min(i + batchSize, embeddingResult.embeddings.length)}/${embeddingResult.embeddings.length} chunks`);
+        logger.info('Updated chunks with embeddings', {
+          component: 'embeddings',
+          videoId: video_id,
+          progress: `${Math.min(i + batchSize, embeddingResult.embeddings.length)}/${embeddingResult.embeddings.length}`
+        });
       }
     });
 
@@ -247,7 +256,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
           });
       }
 
-      console.log(`[Embeddings] Updated usage metrics: ${aiCreditsUsed} credits`);
+      logger.info('Updated usage metrics', { component: 'embeddings', videoId: video_id, creditsUsed: aiCreditsUsed });
     });
 
     // Step 9: Update video status to completed
@@ -271,7 +280,7 @@ export const generateEmbeddingsFunction = inngest.createFunction(
         })
         .eq('id', video_id);
 
-      console.log(`[Embeddings] Video ${video_id} processing completed`);
+      logger.info('Video processing completed', { component: 'embeddings', videoId: video_id });
     });
 
     return {
@@ -303,7 +312,7 @@ export const handleEmbeddingFailure = inngest.createFunction(
     const videoId = event.data.event.data.video_id;
     const error = event.data.error;
 
-    console.error(`[Embeddings] Failed to generate embeddings for video ${videoId}:`, error);
+    logger.error('Failed to generate embeddings', error, { component: 'embeddings', videoId });
 
     // Update video status to failed
     const supabase = getServiceSupabase();
@@ -317,7 +326,7 @@ export const handleEmbeddingFailure = inngest.createFunction(
       .eq('id', videoId);
 
     // TODO: Send notification to creator
-    console.log(`[Embeddings] Marked video ${videoId} as failed`);
+    logger.info('Marked video as failed', { component: 'embeddings', videoId });
   }
 );
 
@@ -333,7 +342,7 @@ export const batchReprocessEmbeddings = inngest.createFunction(
   async ({ event, step }) => {
     const { video_ids } = event.data;
 
-    console.log(`[Embeddings] Batch reprocessing ${video_ids.length} videos`);
+    logger.info('Starting batch reprocessing', { component: 'embeddings', videoCount: video_ids.length });
 
     const results = await step.run('reprocess-videos', async () => {
       const supabase = getServiceSupabase();
@@ -351,7 +360,7 @@ export const batchReprocessEmbeddings = inngest.createFunction(
             .single();
 
           if (!video || !video.transcript) {
-            console.warn(`[Embeddings] Skipping video ${videoId}: no transcript`);
+            logger.warn('Skipping video: no transcript', { component: 'embeddings', videoId });
             failed.push(videoId);
             continue;
           }
@@ -368,9 +377,9 @@ export const batchReprocessEmbeddings = inngest.createFunction(
           });
 
           processed.push(videoId);
-          console.log(`[Embeddings] Triggered reprocessing for video ${videoId}`);
+          logger.info('Triggered reprocessing', { component: 'embeddings', videoId });
         } catch (error) {
-          console.error(`[Embeddings] Failed to trigger reprocessing for video ${videoId}:`, error);
+          logger.error('Failed to trigger reprocessing', error, { component: 'embeddings', videoId });
           failed.push(videoId);
         }
       }

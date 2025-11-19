@@ -22,3 +22,58 @@ body {
 		background-position: 200% 0;
 	}
 }
+
+/**
+ * Accessibility: Focus indicators
+ * WCAG 2.4.7 Level AA requirement - Focus Visible
+ *
+ * These styles ensure keyboard users can always see which element has focus.
+ * Uses :focus-visible to only show outlines for keyboard navigation, not mouse clicks.
+ */
+
+/* Default focus style for all interactive elements */
+*:focus-visible {
+  outline: 2px solid #3b82f6; /* Blue-500 */
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Button and link focus styles */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Input focus styles - outline directly on border */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 0;
+  border-color: #3b82f6;
+}
+
+/* Remove focus outline for mouse users (but keep for keyboard) */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast mode support for better visibility */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline-width: 3px;
+    outline-color: currentColor;
+  }
+}
+
+/* Focus styles for dark mode (adjust for Chronos dark theme) */
+.dark *:focus-visible {
+  outline-color: #60a5fa; /* Blue-400 - brighter for dark backgrounds */
+}
+
+/* Skip link specific focus styles - make it prominent */
+.skip-link:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}

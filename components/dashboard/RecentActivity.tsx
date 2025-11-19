@@ -73,7 +73,7 @@ export function RecentActivity({ activities, limit = 10 }: RecentActivityProps) 
  * ActivityItem - Individual activity list item
  */
 function ActivityItem({ activity }: { activity: Activity }) {
-  const { icon: Icon, color, bgColor, textColor } = getActivityStyle(activity.type);
+  const { icon: Icon, bgColor, textColor } = getActivityStyle(activity.type);
 
   const content = (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-a2 transition-colors">

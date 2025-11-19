@@ -169,12 +169,11 @@ export default function StudentDashboardHomePage() {
                 id={course.id}
                 title={course.title}
                 description={course.description}
-                thumbnail_url={course.thumbnail_url}
-                total_videos={course.total_videos}
-                total_duration={0} // Not needed for continue watching
+                thumbnail={course.thumbnail_url || undefined}
+                moduleCount={course.total_videos}
+                totalDuration={0}
                 progress={course.progress}
-                last_accessed={course.last_accessed}
-                is_enrolled={true}
+                status={course.progress === 0 ? 'not_started' : course.progress === 100 ? 'completed' : 'in_progress'}
               />
             ))}
           </div>

@@ -6,6 +6,7 @@
  */
 
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 import {
   WhopWebhookPayload,
   WhopWebhookEvent,
@@ -29,7 +30,7 @@ export function verifyWebhookSignature(
   signature: string
 ): boolean {
   if (!WEBHOOK_SECRET) {
-    console.error('WHOP_WEBHOOK_SECRET not configured');
+    logger.error('WHOP_WEBHOOK_SECRET not configured', undefined, { component: 'webhook-verification' });
     return false;
   }
 
@@ -47,7 +48,7 @@ export function verifyWebhookSignature(
     const receivedSignature = parts['v1'];
 
     if (!timestamp || !receivedSignature) {
-      console.error('Invalid signature format');
+      logger.error('Invalid webhook signature format', undefined, { component: 'webhook-verification' });
       return false;
     }
 

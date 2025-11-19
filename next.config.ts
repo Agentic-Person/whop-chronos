@@ -1,6 +1,11 @@
 import { withWhopAppConfig } from "@whop/react/next.config";
 import type { NextConfig } from "next";
 
+// Bundle analyzer for measuring bundle size
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+	enabled: process.env.ANALYZE === "true",
+});
+
 const nextConfig: NextConfig = {
 	// Image Optimization
 	images: {
@@ -39,7 +44,7 @@ const nextConfig: NextConfig = {
 	},
 
 	// Webpack Configuration for Production Builds
-	webpack: (config, { isServer }) => {
+	webpack: (config, { isServer, dev }) => {
 		// SVG handling
 		config.module.rules.push({
 			test: /\.svg$/,
@@ -85,7 +90,30 @@ const nextConfig: NextConfig = {
 						},
 					},
 				},
+				// Remove console statements in production builds
+				minimizer: !dev ? [
+					...((config.optimization.minimizer as any[]) || []),
+				] : undefined,
 			};
+
+			// Configure Terser to remove console statements in production
+			if (!dev) {
+				const TerserPlugin = require('terser-webpack-plugin');
+				config.optimization.minimizer.push(
+					new TerserPlugin({
+						terserOptions: {
+							compress: {
+								drop_console: true,
+								pure_funcs: ['console.log', 'console.info', 'console.debug'],
+							},
+							format: {
+								comments: false,
+							},
+						},
+						extractComments: false,
+					})
+				);
+			}
 		}
 
 		return config;
@@ -131,4 +159,4 @@ const nextConfig: NextConfig = {
 	},
 };
 
-export default withWhopAppConfig(nextConfig);
+export default withBundleAnalyzer(withWhopAppConfig(nextConfig));
