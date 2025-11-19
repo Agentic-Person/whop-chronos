@@ -13,8 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, X, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import { cn } from '@/lib/utils';
 
 interface FilterState {

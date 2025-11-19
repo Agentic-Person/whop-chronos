@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { FileText, Download, Save, Clock, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/utils/toast';
 

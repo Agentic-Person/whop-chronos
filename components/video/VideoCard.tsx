@@ -6,15 +6,16 @@
  * Display individual video with thumbnail, metadata, and actions
  * Features:
  * - Thumbnail with fallback
- * - Status badge
+ * - Status badge with real-time updates
  * - Source type icon
  * - Duration display
  * - Edit/Delete actions
  * - View details button
  * - Checkbox for bulk selection
+ * - Live progress tracking for processing videos
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FileVideo,
   Clock,
@@ -24,15 +25,17 @@ import {
   Youtube,
   Video as VideoIcon,
   Radio,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import { VideoDetailModal } from './VideoDetailModal';
+import { useVideoStatus } from '@/hooks/useVideoStatus';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/lib/db/types';
 
 type Video = Database['public']['Tables']['videos']['Row'];
+type VideoStatus = Video['status'];
 
 interface VideoCardProps {
   video: Video;
@@ -54,6 +57,20 @@ export function VideoCard({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [_isEditing, setIsEditing] = useState(false);
 
+  // Use status polling hook for processing videos
+  const isProcessing = ['pending', 'uploading', 'transcribing', 'processing', 'embedding'].includes(
+    video.status
+  );
+
+  const { status, progress, isTimeout } = useVideoStatus(video.id, video.status);
+
+  // Notify parent when status changes
+  useEffect(() => {
+    if (status !== video.status && onUpdate) {
+      onUpdate(video.id, { status });
+    }
+  }, [status, video.status, video.id, onUpdate]);
+
   // Format duration (seconds to MM:SS)
   const formatDuration = (seconds: number | null): string => {
     if (!seconds) return '--:--';
@@ -64,8 +81,10 @@ export function VideoCard({
 
   // Get status badge variant
   const getStatusVariant = (
-    status: Video['status']
+    status: VideoStatus
   ): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
+    if (isTimeout) return 'danger';
+
     switch (status) {
       case 'completed':
         return 'success';
@@ -81,6 +100,12 @@ export function VideoCard({
       default:
         return 'default';
     }
+  };
+
+  // Get status label
+  const getStatusLabel = (status: VideoStatus): string => {
+    if (isTimeout) return 'Timeout';
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   // Get source type icon
@@ -133,10 +158,21 @@ export function VideoCard({
 
             {/* Status Badge */}
             <div className="absolute top-2 right-2 z-10">
-              <Badge variant={getStatusVariant(video.status)} size="sm">
-                {video.status}
+              <Badge variant={getStatusVariant(status)} size="sm">
+                {isProcessing && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                {getStatusLabel(status)}
               </Badge>
             </div>
+
+            {/* Progress Bar for Processing Videos */}
+            {isProcessing && progress > 0 && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+                <div
+                  className="h-full bg-purple-600 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
 
             {/* Thumbnail Image or Placeholder */}
             {video.thumbnail_url ? (
@@ -275,9 +311,13 @@ export function VideoCard({
                 {getSourceIcon(video.source_type)}
                 <span className="capitalize">{video.source_type}</span>
               </div>
-              <Badge variant={getStatusVariant(video.status)} size="sm">
-                {video.status}
+              <Badge variant={getStatusVariant(status)} size="sm">
+                {isProcessing && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                {getStatusLabel(status)}
               </Badge>
+              {isProcessing && progress > 0 && (
+                <span className="text-xs text-purple-600 font-medium">{progress}%</span>
+              )}
             </div>
           </div>
 

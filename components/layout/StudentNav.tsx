@@ -7,6 +7,7 @@ import {
   BookOpen,
   MessageSquare,
   Settings,
+  ArrowLeft,
   Menu,
   X,
   LogOut,
@@ -16,16 +17,28 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
-const navigation = [
+// Original navigation (full student feature set)
+const originalNavigation = [
   { name: 'My Courses', href: '/dashboard/student/courses', icon: BookOpen },
   { name: 'AI Chat', href: '/dashboard/student/chat', icon: MessageSquare },
   { name: 'Settings', href: '/dashboard/student/settings', icon: Settings },
+];
+
+// Simplified navigation for development (easier dashboard switching)
+const devSimpleNavigation = [
+  { name: 'Creator Dashboard', href: '/dashboard/creator/overview', icon: ArrowLeft },
+  { name: 'My Courses', href: '/dashboard/student/courses', icon: BookOpen },
+  { name: 'AI Chat', href: '/dashboard/student/chat', icon: MessageSquare },
 ];
 
 export function StudentNav() {
   const pathname = usePathname();
   const { userId, canSwitchRole, switchToCreatorDashboard } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Use simplified navigation when DEV_SIMPLE_NAV is enabled
+  const isDevSimpleNav = process.env['NEXT_PUBLIC_DEV_SIMPLE_NAV'] === 'true';
+  const navigation = isDevSimpleNav ? devSimpleNavigation : originalNavigation;
 
   const handleLogout = () => {
     // TODO: Implement logout logic
@@ -38,7 +51,7 @@ export function StudentNav() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <Link href="/dashboard/student/courses" className="flex items-center gap-2">
+            <Link href="/dashboard/student" className="flex items-center gap-2">
               <img
                 src="/images/chronos_icon_128.png"
                 alt="Chronos"

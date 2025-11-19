@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from 'frosted-ui';
 import { cn } from '@/lib/utils';
 
 interface NavigationControlsProps {
@@ -49,7 +49,7 @@ export function NavigationControls({
   };
 
   return (
-    <div className={cn('bg-white border-t border-gray-200 p-4', className)}>
+    <div className={cn('bg-gray-1 border-t border-gray-a4 p-4', className)}>
       <div className="max-w-7xl mx-auto">
         {/* Desktop Layout */}
         <div className="hidden sm:flex items-center justify-between gap-4">
@@ -82,12 +82,12 @@ export function NavigationControls({
             </Button>
 
             {onAutoAdvanceToggle && (
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-sm text-gray-11 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={localAutoAdvance}
                   onChange={handleAutoAdvanceToggle}
-                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="rounded border-gray-a6 text-purple-9 focus:ring-purple-9"
                 />
                 <span>Auto-advance</span>
               </label>
@@ -153,12 +153,12 @@ export function NavigationControls({
 
           {/* Auto-advance (Mobile) */}
           {onAutoAdvanceToggle && (
-            <label className="flex items-center justify-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+            <label className="flex items-center justify-center gap-2 text-sm text-gray-11 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={localAutoAdvance}
                 onChange={handleAutoAdvanceToggle}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                className="rounded border-gray-a6 text-purple-9 focus:ring-purple-9"
               />
               <span>Auto-advance to next lesson</span>
             </label>

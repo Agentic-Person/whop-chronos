@@ -3,7 +3,7 @@
 import { type Message } from "./ChatInterface";
 import { VideoReferenceCard } from "./VideoReferenceCard";
 import { StreamingMessage } from "./StreamingMessage";
-import { Button } from "@/components/ui/Button";
+import { Button, Card } from "frosted-ui";
 import { Copy, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -42,7 +42,7 @@ export function MessageList({
     // Inline code
     formatted = formatted.replace(
       /`([^`]+)`/g,
-      '<code class="bg-gray-100 text-purple-600 px-1.5 py-0.5 rounded text-sm">$1</code>'
+      '<code class="bg-gray-a3 text-purple-600 px-1.5 py-0.5 rounded text-sm">$1</code>'
     );
 
     // Bold
@@ -91,7 +91,7 @@ export function MessageList({
                 "group relative rounded-2xl px-4 py-3 shadow-sm",
                 message.role === "user"
                   ? "bg-gradient-to-br from-purple-600 to-blue-600 text-white"
-                  : "bg-white border border-gray-200 text-gray-900"
+                  : "bg-gray-a2 border border-gray-a4 text-gray-900"
               )}
             >
               {/* Message content */}

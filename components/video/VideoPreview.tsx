@@ -3,7 +3,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { FileVideo, Clock, HardDrive, Edit2, Trash2, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button, Badge } from '@/components/ui';
+import { Button, Badge } from 'frosted-ui';
 
 interface VideoMetadata {
   id: string;

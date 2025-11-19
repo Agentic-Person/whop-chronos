@@ -7,9 +7,8 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { useVideoProcessingSubscription } from '@/lib/video/realtime';
 import type { VideoUpdateEvent, ProcessingStatsEvent } from '@/lib/video/realtime';
 import type { Database } from '@/lib/db/types';

@@ -12,8 +12,7 @@
  */
 
 import { Trash2, RefreshCw, Download, X } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 
 interface BulkActionsProps {
   selectedCount: number;

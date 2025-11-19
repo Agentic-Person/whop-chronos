@@ -6,8 +6,8 @@ import { MessageSquare, Plus } from "lucide-react";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { VideoContextSelector } from "@/components/chat/VideoContextSelector";
 import { ChatExportButton } from "@/components/chat/ChatExportButton";
-import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { Button, Card, Text } from "frosted-ui";
 
 /**
  * StudentChatPage
@@ -87,23 +87,23 @@ export default function StudentChatPage() {
 
   if (!isAuthenticated || !studentId || !creatorId) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-gray-1">
         <div className="text-center">
-          <p className="text-gray-600">Loading...</p>
+          <Text className="text-gray-11">Loading...</Text>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-screen flex-col bg-gray-1">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+      <div className="border-b border-gray-a4 shadow-sm bg-[#1a1a1a] p-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           {/* Left: Title */}
           <div className="flex items-center gap-3">
             <MessageSquare className="h-6 w-6 text-purple-600" />
-            <h1 className="text-lg font-semibold text-gray-900">AI Chat</h1>
+            <h1 className="text-lg font-semibold text-gray-12">AI Chat</h1>
           </div>
 
           {/* Right: Controls */}
@@ -130,12 +130,13 @@ export default function StudentChatPage() {
             {/* New chat button */}
             <Button
               onClick={handleNewChat}
-              variant="primary"
-              size="sm"
-              icon={<Plus className="h-4 w-4" />}
-              iconPosition="left"
+              variant="solid"
+              size="2"
             >
-              New Chat
+              <div className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>New Chat</span>
+              </div>
             </Button>
           </div>
         </div>

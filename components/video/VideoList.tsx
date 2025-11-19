@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Grid, List, Search, Filter, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button } from 'frosted-ui';
 import { VideoPreview } from './VideoPreview';
 import type { Database } from '@/lib/db/types';
 

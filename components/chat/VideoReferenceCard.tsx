@@ -1,7 +1,7 @@
 "use client";
 
 import { type VideoReference } from "./ChatInterface";
-import { Card } from "@/components/ui/Card";
+import { Card, Button } from "frosted-ui";
 import { Play, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ export function VideoReferenceCard({
         type="button"
       >
         {/* Thumbnail */}
-        <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+        <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-a3">
           {reference.thumbnailUrl ? (
             <img
               src={reference.thumbnailUrl}
@@ -62,7 +62,7 @@ export function VideoReferenceCard({
 
           {/* Play overlay */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-            <div className="rounded-full bg-white p-2 shadow-lg">
+            <div className="rounded-full bg-gray-1 p-2 shadow-lg">
               <Play className="h-5 w-5 text-gray-900" />
             </div>
           </div>

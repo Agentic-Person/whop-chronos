@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button, Card } from "frosted-ui";
 import { Download, FileText, FileJson, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -73,17 +74,17 @@ export function ChatExportButton({ sessionId, sessionTitle }: ChatExportButtonPr
         onClick={() => setIsOpen(!isOpen)}
         disabled={isExporting}
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:border-purple-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50",
-          isOpen && "border-purple-500 ring-2 ring-purple-500/20"
+          "flex items-center gap-2 rounded-lg border border-gray-a4 bg-gray-1 px-3 py-2 text-sm transition-colors hover:border-purple-9 hover:bg-gray-a2 disabled:cursor-not-allowed disabled:opacity-50",
+          isOpen && "border-purple-9 ring-2 ring-purple-9/20"
         )}
         aria-label="Export conversation"
       >
         {isExporting ? (
-          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+          <Loader2 className="h-4 w-4 animate-spin text-gray-11" />
         ) : (
-          <Download className="h-4 w-4 text-gray-500" />
+          <Download className="h-4 w-4 text-gray-11" />
         )}
-        <span className="text-gray-900">Export</span>
+        <span className="text-gray-12">Export</span>
         <ChevronDown
           className={cn(
             "h-4 w-4 text-gray-500 transition-transform",
@@ -102,13 +103,13 @@ export function ChatExportButton({ sessionId, sessionTitle }: ChatExportButtonPr
           />
 
           {/* Menu */}
-          <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-gray-a4 bg-gray-1 shadow-lg">
             <div className="p-2">
               {/* Export as JSON */}
               <button
                 onClick={() => handleExport("json")}
                 disabled={isExporting}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-a3 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FileJson className="h-4 w-4 text-gray-500" />
                 <div>
@@ -123,7 +124,7 @@ export function ChatExportButton({ sessionId, sessionTitle }: ChatExportButtonPr
               <button
                 onClick={() => handleExport("markdown")}
                 disabled={isExporting}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-a3 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FileText className="h-4 w-4 text-gray-500" />
                 <div>
@@ -137,7 +138,7 @@ export function ChatExportButton({ sessionId, sessionTitle }: ChatExportButtonPr
 
             {/* Error message */}
             {exportError && (
-              <div className="border-t border-gray-200 p-2">
+              <div className="border-t border-gray-a4 p-2">
                 <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
                   {exportError}
                 </div>

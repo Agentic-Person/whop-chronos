@@ -12,7 +12,7 @@
 
 import { useState } from 'react';
 import { Grid, List } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from 'frosted-ui';
 import { VideoCard } from './VideoCard';
 import type { Database } from '@/lib/db/types';
 

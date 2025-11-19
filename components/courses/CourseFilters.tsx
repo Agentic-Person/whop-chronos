@@ -92,7 +92,7 @@ export function CourseFilters({
   }, [sortDropdownOpen]);
 
   return (
-    <div className="bg-white border border-gray-a4 rounded-lg p-4 space-y-4">
+    <div className="p-4 space-y-4 bg-[#1a1a1a] rounded-lg border border-gray-a4">
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-9" />
@@ -176,9 +176,8 @@ export function CourseFilters({
           {sortDropdownOpen && (
             <div
               className={cn(
-                'absolute right-0 mt-2 w-48 rounded-lg shadow-lg',
-                'bg-white border border-gray-a4',
-                'py-1 z-10'
+                'absolute right-0 mt-2 w-48 shadow-lg rounded-lg border border-gray-a4',
+                'py-1 z-10 bg-[#1a1a1a]'
               )}
               onClick={(e) => e.stopPropagation()}
             >

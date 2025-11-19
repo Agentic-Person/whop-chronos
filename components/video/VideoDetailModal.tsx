@@ -29,9 +29,8 @@ import {
   Video as VideoIcon,
   Radio,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button, Card } from 'frosted-ui';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import type { Database } from '@/lib/db/types';
 
 type Video = Database['public']['Tables']['videos']['Row'];

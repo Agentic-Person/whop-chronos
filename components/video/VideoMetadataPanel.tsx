@@ -15,7 +15,7 @@
  */
 
 import { Clock, PlayCircle, Calendar } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Card } from 'frosted-ui';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 
@@ -93,11 +93,11 @@ export function VideoMetadataPanel({ video, progress }: VideoMetadataPanelProps)
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base lg:text-lg">Video Information</CardTitle>
-      </CardHeader>
+      <div className="mb-4">
+        <h3 className="text-base lg:text-lg font-semibold text-gray-12">Video Information</h3>
+      </div>
 
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         {/* Title */}
         <div>
           <h3 className="text-sm font-medium text-gray-11 mb-1">Title</h3>
@@ -186,7 +186,7 @@ export function VideoMetadataPanel({ video, progress }: VideoMetadataPanelProps)
             </div>
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

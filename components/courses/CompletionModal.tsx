@@ -2,8 +2,7 @@
 
 import { useEffect } from 'react';
 import { X, Download, Share2, ArrowRight, Trophy } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Button, Card } from 'frosted-ui';
 import confetti from 'canvas-confetti';
 
 interface CompletionModalProps {
@@ -94,25 +93,25 @@ export function CompletionModal({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-a3 transition-colors"
           aria-label="Close"
         >
-          <X className="h-5 w-5 text-gray-500" />
+          <X className="h-5 w-5 text-gray-11" />
         </button>
 
         {/* Content */}
         <div className="text-center p-8">
           {/* Trophy icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full mb-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-9 to-purple-10 rounded-full mb-6">
             <Trophy className="h-10 w-10 text-white" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-gray-12 mb-2">
             Congratulations! 🎉
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            You completed <span className="font-semibold text-purple-600">{courseTitle}</span>
+          <p className="text-lg text-gray-11 mb-8">
+            You completed <span className="font-semibold text-purple-11">{courseTitle}</span>
           </p>
 
           {/* Course thumbnail (if available) */}
@@ -128,15 +127,15 @@ export function CompletionModal({
 
           {/* Completion stats */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="text-3xl font-bold text-purple-600">100%</div>
-              <div className="text-sm text-gray-600">Completion</div>
+            <div className="bg-purple-a3 rounded-lg p-4">
+              <div className="text-3xl font-bold text-purple-11">100%</div>
+              <div className="text-sm text-gray-11">Completion</div>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="text-3xl font-bold text-purple-600">
+            <div className="bg-purple-a3 rounded-lg p-4">
+              <div className="text-3xl font-bold text-purple-11">
                 {completionDate.toLocaleDateString()}
               </div>
-              <div className="text-sm text-gray-600">Completed On</div>
+              <div className="text-sm text-gray-11">Completed On</div>
             </div>
           </div>
 

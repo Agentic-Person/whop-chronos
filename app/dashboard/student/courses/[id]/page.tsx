@@ -10,10 +10,10 @@ import { NavigationControls } from '@/components/courses/NavigationControls';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { CompletionModal } from '@/components/courses/CompletionModal';
 import { KeyboardShortcutsHelp } from '@/components/courses/KeyboardShortcutsHelp';
-import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Database } from '@/lib/db/types';
+import { Button, Card, Text } from 'frosted-ui';
 
 type Course = Database['public']['Tables']['courses']['Row'];
 type Module = Database['public']['Tables']['course_modules']['Row'];
@@ -386,10 +386,10 @@ export default function StudentCourseViewerPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-1">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading course...</p>
+          <Text className="text-gray-11">Loading course...</Text>
         </div>
       </div>
     );
@@ -397,9 +397,9 @@ export default function StudentCourseViewerPage() {
 
   if (error || !courseData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-1 p-4">
         <div className="text-center max-w-md">
-          <p className="text-red-600 mb-4">{error || 'Course not found'}</p>
+          <Text className="text-red-11 mb-4">{error || 'Course not found'}</Text>
           <Button onClick={() => router.push('/dashboard/student/courses')}>
             Back to Courses
           </Button>
@@ -410,9 +410,9 @@ export default function StudentCourseViewerPage() {
 
   if (allLessons.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-1 p-4">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 mb-4">This course has no lessons yet.</p>
+          <Text className="text-gray-11 mb-4">This course has no lessons yet.</Text>
           <Button onClick={() => router.push('/dashboard/student/courses')}>
             Back to Courses
           </Button>
@@ -422,7 +422,7 @@ export default function StudentCourseViewerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-1">
       <div className="flex h-screen overflow-hidden">
         {/* Course Sidebar */}
         <CourseSidebar
@@ -439,7 +439,7 @@ export default function StudentCourseViewerPage() {
           {/* Video and Lesson Content */}
           <div className="flex-1 flex flex-col overflow-y-auto">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 p-4">
+            <Card size="3" className="border-b border-gray-a4 p-4 rounded-none">
               <div className="max-w-7xl mx-auto flex items-center gap-4">
                 <Button
                   onClick={() => router.push('/dashboard/student/courses')}
@@ -451,24 +451,24 @@ export default function StudentCourseViewerPage() {
                   Back to Courses
                 </Button>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-500 truncate">
+                  <Text className="text-sm text-gray-11 truncate">
                     {courseData.course.title}
-                  </p>
-                  <p className="text-xs text-gray-400">
+                  </Text>
+                  <Text className="text-xs text-gray-10">
                     Lesson {currentLessonIndex + 1} of {allLessons.length}
-                  </p>
+                  </Text>
                 </div>
 
                 {/* Keyboard shortcuts help button */}
                 <button
                   onClick={() => setShowShortcutsHelp(true)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-11 hover:text-gray-12 hover:bg-gray-a3 rounded-lg transition-colors"
                   title="Keyboard shortcuts (Press ?)"
                 >
                   <HelpCircle className="h-5 w-5" />
                 </button>
               </div>
-            </div>
+            </Card>
 
             {/* Resume Banner (placeholder for future) */}
             {showResumeBanner && resumePosition !== null && (
@@ -546,13 +546,13 @@ export default function StudentCourseViewerPage() {
 
           {/* Chat Panel (Collapsible) */}
           {isChatOpen && (
-            <div className="w-96 border-l border-gray-200 flex flex-col h-full bg-white">
+            <Card size="3" className="w-96 border-l border-gray-a4 flex flex-col h-full rounded-none">
               <ChatInterface
                 sessionId={undefined}
                 currentVideoId={currentLesson?.video_id}
                 className="h-full"
               />
-            </div>
+            </Card>
           )}
 
           {/* Chat Toggle Button */}

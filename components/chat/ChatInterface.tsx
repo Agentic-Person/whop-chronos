@@ -4,9 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { SessionSidebar } from "./SessionSidebar";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Spinner } from "@/components/ui/Spinner";
+import { Card, Button, Spinner } from "frosted-ui";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,9 +47,11 @@ export function ChatInterface({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to latest message
+  // Auto-scroll to latest message (only when messages exist)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const handleSendMessage = async (content: string) => {
@@ -125,7 +125,7 @@ export function ChatInterface({
       {/* Mobile sidebar toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed left-4 top-4 z-50 rounded-lg bg-white p-2 shadow-md lg:hidden"
+        className="fixed left-4 top-4 z-50 rounded-lg bg-gray-1 border border-gray-a4 p-2 shadow-md lg:hidden hover:bg-gray-a2"
         aria-label="Toggle sidebar"
       >
         {isSidebarOpen ? (
@@ -138,7 +138,7 @@ export function ChatInterface({
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 transform bg-white shadow-lg transition-transform lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 transform bg-gray-1 shadow-lg transition-transform lg:relative lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -156,7 +156,7 @@ export function ChatInterface({
       <div className="flex flex-1 flex-col">
         <Card className="flex h-full flex-col" padding="none">
           {/* Chat header */}
-          <div className="border-b border-gray-200 p-4">
+          <div className="border-b border-gray-a4 p-4">
             <h2 className="text-lg font-semibold text-gray-900">
               AI Learning Assistant
             </h2>
@@ -219,7 +219,7 @@ export function ChatInterface({
           </div>
 
           {/* Message input */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-a4 p-4">
             <MessageInput
               onSend={handleSendMessage}
               disabled={isLoading}

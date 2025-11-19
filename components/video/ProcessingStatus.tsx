@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, Loader2, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Loader2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/db/client-browser';
+import { Button } from 'frosted-ui';
+import { useVideoStatus, getErrorMessage, formatTimeRemaining } from '@/hooks/useVideoStatus';
 import type { Database } from '@/lib/db/types';
 
 type VideoStatus = Database['public']['Tables']['videos']['Row']['status'];
@@ -25,12 +26,22 @@ interface ProcessingStatusProps {
 export function ProcessingStatus({
   videoId,
   currentStatus,
-  errorMessage,
+  errorMessage: _errorMessage,
   onStatusChange,
   className,
 }: ProcessingStatusProps) {
-  const [status, setStatus] = useState<VideoStatus>(currentStatus);
-  const [error, setError] = useState<string | null>(errorMessage || null);
+  const {
+    status,
+    progress: statusProgress,
+    statusData,
+    error: statusError,
+    isTimeout,
+    isPolling,
+    retryProcessing,
+    refreshStatus,
+  } = useVideoStatus(videoId, currentStatus);
+
+  const [error, setError] = useState<string | null>(null);
 
   // Define processing pipeline stages
   const getStages = (currentStatus: VideoStatus): ProcessingStage[] => {
@@ -89,44 +100,15 @@ export function ProcessingStatus({
 
   const [stages, setStages] = useState<ProcessingStage[]>(getStages(currentStatus));
 
-  // Subscribe to video status changes via Supabase Realtime
+  // Update stages when status changes
   useEffect(() => {
-    const channel = supabase
-      .channel(`video-${videoId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'videos',
-          filter: `id=eq.${videoId}`,
-        },
-        (payload) => {
-          const newStatus = payload.new['status'] as VideoStatus;
-          const newError = payload.new['error_message'] as string | null;
+    setStages(getStages(status));
+    setError(statusError);
 
-          setStatus(newStatus);
-          setError(newError);
-          setStages(getStages(newStatus));
-
-          if (onStatusChange) {
-            onStatusChange(newStatus);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [videoId, onStatusChange]);
-
-  // Sync stages when props change
-  useEffect(() => {
-    setStatus(currentStatus);
-    setError(errorMessage || null);
-    setStages(getStages(currentStatus));
-  }, [currentStatus, errorMessage]);
+    if (onStatusChange && status !== currentStatus) {
+      onStatusChange(status);
+    }
+  }, [status, statusError, onStatusChange, currentStatus]);
 
   // Get icon for stage status
   const getStageIcon = (stageStatus: ProcessingStage['status']) => {
@@ -144,30 +126,59 @@ export function ProcessingStatus({
   };
 
   const currentStageIndex = stages.findIndex((s) => s.status === 'active');
-  const progressPercentage = status === 'completed'
+  const progressPercentage = statusProgress || (status === 'completed'
     ? 100
     : status === 'failed'
     ? 0
-    : Math.round(((currentStageIndex + 1) / stages.length) * 100);
+    : Math.round(((currentStageIndex + 1) / stages.length) * 100));
+
+  const userFriendlyError = getErrorMessage(error, isTimeout);
+  const estimatedTime = statusData?.duration.estimatedRemainingMinutes;
 
   return (
     <div className={cn('space-y-6', className)}>
       {/* Overall Status Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Processing Pipeline
-          </h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Processing Pipeline
+            </h3>
+            {isPolling && (
+              <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>Live Updates</span>
+              </div>
+            )}
+          </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             {status === 'completed'
               ? 'All stages completed successfully'
               : status === 'failed'
               ? 'Processing failed'
+              : isTimeout
+              ? 'Processing timeout detected'
               : `Stage ${currentStageIndex + 1} of ${stages.length}`}
+            {estimatedTime && status !== 'completed' && status !== 'failed' && (
+              <span className="ml-2 text-purple-600 dark:text-purple-400">
+                • {formatTimeRemaining(estimatedTime)} remaining
+              </span>
+            )}
           </p>
         </div>
-        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-          {progressPercentage}%
+        <div className="flex items-center gap-4">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            {progressPercentage}%
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<RefreshCw className={cn('h-4 w-4', isPolling && 'animate-spin')} />}
+            onClick={refreshStatus}
+            disabled={isPolling}
+          >
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -184,16 +195,86 @@ export function ProcessingStatus({
         />
       </div>
 
+      {/* Timeout Warning */}
+      {isTimeout && status !== 'completed' && status !== 'failed' && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                Processing Timeout
+              </h4>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                {userFriendlyError}
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
+                <strong>Troubleshooting steps:</strong>
+              </p>
+              <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-300 mt-1 space-y-1">
+                <li>Check that Inngest Dev Server is running: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">npx inngest-cli dev</code></li>
+                <li>Verify the video file is not corrupted</li>
+                <li>Check server logs for errors</li>
+                <li>Try retrying the processing below</li>
+              </ul>
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<RefreshCw className="h-4 w-4" />}
+                  onClick={retryProcessing}
+                >
+                  Retry Processing
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('/docs/troubleshooting', '_blank')}
+                >
+                  View Docs
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && status === 'failed' && (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">
                 Processing Failed
               </h4>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-1">{error}</p>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                {userFriendlyError || error}
+              </p>
+              {statusData?.error && statusData.error.retryCount > 0 && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                  Failed {statusData.error.retryCount} time(s)
+                </p>
+              )}
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<RefreshCw className="h-4 w-4" />}
+                  onClick={retryProcessing}
+                >
+                  Retry Processing
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Copy error to clipboard
+                    navigator.clipboard.writeText(error || '');
+                  }}
+                >
+                  Copy Error
+                </Button>
+              </div>
             </div>
           </div>
         </div>

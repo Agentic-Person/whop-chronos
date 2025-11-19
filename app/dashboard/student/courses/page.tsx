@@ -2,11 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { Heading, Text } from 'frosted-ui';
+import { Button, Heading, Text } from 'frosted-ui';
 import { BookOpen } from 'lucide-react';
 import { CourseCard, type CourseCardProps } from '@/components/courses/CourseCard';
 import { CourseFilters } from '@/components/courses/CourseFilters';
-import { Button } from '@/components/ui/Button';
 
 interface CoursesResponse {
   success: boolean;

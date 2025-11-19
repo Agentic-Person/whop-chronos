@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Check, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
+import { Card } from 'frosted-ui';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/lib/db/types';
 
@@ -92,7 +93,7 @@ export function CourseSidebar({
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-gray-200"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-gray-1 rounded-lg shadow-lg border border-gray-a4"
         aria-label="Toggle course menu"
       >
         {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -109,7 +110,7 @@ export function CourseSidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'bg-white border-r border-gray-200 overflow-y-auto',
+          'bg-gray-1 border-r border-gray-a4 overflow-y-auto',
           // Mobile: slide in from left
           'md:relative md:translate-x-0',
           'fixed inset-y-0 left-0 z-40 w-80 transition-transform duration-300',
@@ -117,25 +118,25 @@ export function CourseSidebar({
           className
         )}
       >
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+        <div className="sticky top-0 bg-gray-1 border-b border-gray-a4 p-4 z-10">
           {/* Course Title */}
-          <h2 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2">
+          <h2 className="text-lg font-bold text-gray-12 line-clamp-2 mb-2">
             {course.title}
           </h2>
 
           {/* Progress Bar */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-gray-600">
+            <div className="flex items-center justify-between text-xs text-gray-11">
               <span>Progress</span>
               <span className="font-medium">{progressPercent}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-a3 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-purple-600 to-blue-600 h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-purple-9 to-blue-9 h-full rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-11">
               {completedCount} of {totalLessons} lessons complete
             </div>
           </div>
@@ -154,37 +155,37 @@ export function CourseSidebar({
                 : 0;
 
             return (
-              <div key={module.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={module.id} className="border border-gray-a4 rounded-lg overflow-hidden">
                 {/* Module Header */}
                 <button
                   onClick={() => toggleModule(module.id)}
-                  className="w-full flex items-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                  className="w-full flex items-center gap-2 p-3 bg-gray-a2 hover:bg-gray-a3 transition-colors text-left"
                 >
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                    <ChevronDown className="h-4 w-4 text-gray-11 flex-shrink-0" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-gray-11 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-gray-500">
+                      <span className="text-xs font-medium text-gray-11">
                         Module {moduleIndex + 1}
                       </span>
                       {moduleProgress === 100 && (
-                        <Check className="h-3 w-3 text-green-600" />
+                        <Check className="h-3 w-3 text-green-9" />
                       )}
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                    <h3 className="text-sm font-semibold text-gray-12 line-clamp-2">
                       {module.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 bg-gray-200 rounded-full h-1">
+                      <div className="flex-1 bg-gray-a3 rounded-full h-1">
                         <div
-                          className="bg-purple-600 h-full rounded-full transition-all"
+                          className="bg-purple-9 h-full rounded-full transition-all"
                           style={{ width: `${moduleProgress}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-11">
                         {moduleCompletedCount}/{module.lessons.length}
                       </span>
                     </div>
@@ -193,7 +194,7 @@ export function CourseSidebar({
 
                 {/* Lesson List */}
                 {isExpanded && (
-                  <div className="border-t border-gray-200">
+                  <div className="border-t border-gray-a4">
                     {module.lessons.map((lesson, lessonIndex) => {
                       const isCompleted = isLessonCompleted(lesson.id);
                       const isCurrent = isCurrentLesson(lesson.id);
@@ -203,16 +204,16 @@ export function CourseSidebar({
                           key={lesson.id}
                           onClick={() => handleLessonClick(lesson)}
                           className={cn(
-                            'w-full flex items-center gap-3 p-3 border-b border-gray-100 last:border-b-0 text-left transition-colors',
+                            'w-full flex items-center gap-3 p-3 border-b border-gray-a3 last:border-b-0 text-left transition-colors',
                             isCurrent
-                              ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                              : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                              ? 'bg-blue-a3 border-l-4 border-l-blue-9'
+                              : 'hover:bg-gray-a2 border-l-4 border-l-transparent'
                           )}
                         >
                           {/* Completion Indicator */}
                           <div className="flex-shrink-0">
                             {isCompleted ? (
-                              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-green-9 flex items-center justify-center">
                                 <Check className="h-4 w-4 text-white" />
                               </div>
                             ) : (
@@ -220,8 +221,8 @@ export function CourseSidebar({
                                 className={cn(
                                   'w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium',
                                   isCurrent
-                                    ? 'border-blue-600 text-blue-600 bg-white'
-                                    : 'border-gray-300 text-gray-400'
+                                    ? 'border-blue-9 text-blue-11 bg-gray-1'
+                                    : 'border-gray-a6 text-gray-a9'
                                 )}
                               >
                                 {lessonIndex + 1}
@@ -234,13 +235,13 @@ export function CourseSidebar({
                             <h4
                               className={cn(
                                 'text-sm font-medium line-clamp-2',
-                                isCurrent ? 'text-blue-900' : 'text-gray-900'
+                                isCurrent ? 'text-blue-11' : 'text-gray-12'
                               )}
                             >
                               {lesson.title}
                             </h4>
                             {lesson.estimated_duration_minutes && (
-                              <p className="text-xs text-gray-500 mt-0.5">
+                              <p className="text-xs text-gray-11 mt-0.5">
                                 {lesson.estimated_duration_minutes} min
                               </p>
                             )}

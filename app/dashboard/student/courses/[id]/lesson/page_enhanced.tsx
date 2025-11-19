@@ -22,7 +22,7 @@ import VideoPlayer, { type VideoPlayerHandle } from '@/components/video/VideoPla
 import { VideoMetadataPanel } from '@/components/video/VideoMetadataPanel';
 import { ChatInterface } from '@/components/chat';
 import { LessonNotes } from '@/components/courses/LessonNotes';
-import { Button } from '@/components/ui/Button';
+import { Button } from 'frosted-ui';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { supabase } from '@/lib/db/client-browser';
 import { toast } from '@/lib/utils/toast';

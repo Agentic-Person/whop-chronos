@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Card, Button } from "frosted-ui";
 import { Video, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -153,13 +154,13 @@ export function VideoContextSelector({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:border-purple-500 hover:bg-gray-50",
-          isOpen && "border-purple-500 ring-2 ring-purple-500/20"
+          "flex items-center gap-2 rounded-lg border border-gray-a4 bg-gray-1 px-3 py-2 text-sm transition-colors hover:border-purple-9 hover:bg-gray-a2",
+          isOpen && "border-purple-9 ring-2 ring-purple-9/20"
         )}
         aria-label="Select video context"
       >
-        <Video className="h-4 w-4 text-gray-500" />
-        <span className="text-gray-900">{getSelectedText()}</span>
+        <Video className="h-4 w-4 text-gray-11" />
+        <span className="text-gray-12">{getSelectedText()}</span>
         <ChevronDown
           className={cn(
             "h-4 w-4 text-gray-500 transition-transform",
@@ -178,7 +179,7 @@ export function VideoContextSelector({
           />
 
           {/* Menu */}
-          <div className="absolute left-0 top-full z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute left-0 top-full z-20 mt-2 w-72 rounded-lg border border-gray-a4 bg-gray-1 shadow-lg">
             <div className="max-h-96 overflow-y-auto p-2">
               {isLoading ? (
                 <div className="py-8 text-center text-sm text-gray-500">
@@ -190,7 +191,7 @@ export function VideoContextSelector({
                   <button
                     onClick={() => handleSelect(null, null)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100",
+                      "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-a3",
                       isSelected(null, null) && "bg-purple-50"
                     )}
                   >
@@ -202,7 +203,7 @@ export function VideoContextSelector({
 
                   {/* Divider */}
                   {courses.length > 0 && (
-                    <div className="my-2 border-t border-gray-200" />
+                    <div className="my-2 border-t border-gray-a4" />
                   )}
 
                   {/* Courses and videos */}
@@ -212,7 +213,7 @@ export function VideoContextSelector({
                       <button
                         onClick={() => handleSelect(course.id, null)}
                         className={cn(
-                          "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-gray-100",
+                          "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-gray-a3",
                           isSelected(course.id, null) && "bg-purple-50"
                         )}
                       >
@@ -229,7 +230,7 @@ export function VideoContextSelector({
                             key={lesson.id}
                             onClick={() => handleSelect(course.id, lesson.video_id)}
                             className={cn(
-                              "flex w-full items-center justify-between rounded-lg px-3 py-2 pl-6 text-left text-sm transition-colors hover:bg-gray-100",
+                              "flex w-full items-center justify-between rounded-lg px-3 py-2 pl-6 text-left text-sm transition-colors hover:bg-gray-a3",
                               isSelected(course.id, lesson.video_id) && "bg-purple-50"
                             )}
                           >

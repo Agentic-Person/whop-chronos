@@ -19,7 +19,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import VideoPlayer, { type VideoPlayerHandle } from '@/components/video/VideoPlayer';
 import { VideoMetadataPanel } from '@/components/video/VideoMetadataPanel';
 import { ChatInterface } from '@/components/chat';
-import { Button } from '@/components/ui/Button';
+import { Button } from 'frosted-ui';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { supabase } from '@/lib/db/client-browser';
 import { toast } from '@/lib/utils/toast';
@@ -388,7 +388,7 @@ export default function IntegratedLessonViewerPage() {
   return (
     <div className="h-screen flex flex-col bg-gray-1">
       {/* Header */}
-      <div className="bg-white border-b border-gray-6 px-4 py-3 flex-shrink-0">
+      <div className="bg-gray-1 border-b border-gray-a4 px-4 py-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Button
             onClick={() => router.push(`/dashboard/student/courses/${courseId}`)}
@@ -433,7 +433,7 @@ export default function IntegratedLessonViewerPage() {
 
           {/* Metadata Panel (side panel on desktop) */}
           <div className="hidden lg:block lg:w-80 flex-shrink-0">
-            <div className="bg-white rounded-lg p-4 border border-gray-6 h-full overflow-y-auto">
+            <div className="bg-gray-1 rounded-lg p-4 border border-gray-a4 h-full overflow-y-auto">
               <VideoMetadataPanel
                 video={{
                   id: video.id,
@@ -447,7 +447,7 @@ export default function IntegratedLessonViewerPage() {
         </div>
 
         {/* Bottom Section: Chat Interface (30%) */}
-        <div className="flex-[3] min-h-0 border-t border-gray-6 bg-white">
+        <div className="flex-[3] min-h-0 border-t border-gray-a4 bg-gray-1">
           {chatSessionId ? (
             <ChatInterface
               sessionId={chatSessionId}

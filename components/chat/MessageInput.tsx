@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, Kbd } from "frosted-ui";
 import { Send, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,9 +76,9 @@ export function MessageInput({
             maxLength={maxLength}
             rows={1}
             className={cn(
-              "w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 pr-12 text-sm text-gray-900 placeholder:text-gray-500",
-              "focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20",
-              "disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500",
+              "w-full resize-none rounded-lg border border-gray-a4 bg-gray-1 px-4 py-3 pr-12 text-sm text-gray-12 placeholder:text-gray-11",
+              "focus:border-purple-9 focus:outline-none focus:ring-2 focus:ring-purple-9/20",
+              "disabled:cursor-not-allowed disabled:bg-gray-a2 disabled:text-gray-11",
               "transition-colors"
             )}
             style={{ minHeight: "44px", maxHeight: "200px" }}
@@ -92,7 +92,7 @@ export function MessageInput({
               disabled={disabled}
               className={cn(
                 "absolute bottom-3 right-3 rounded-lg p-1.5 text-gray-500 transition-colors",
-                "hover:bg-gray-100 hover:text-gray-700",
+                "hover:bg-gray-a3 hover:text-gray-700",
                 "disabled:cursor-not-allowed disabled:opacity-50"
               )}
               title="Attach file"
@@ -120,19 +120,13 @@ export function MessageInput({
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex gap-4">
           <span>
-            <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
-              Enter
-            </kbd>{" "}
+            <Kbd>Enter</Kbd>{" "}
             to send
           </span>
           <span>
-            <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
-              Shift
-            </kbd>
+            <Kbd>Shift</Kbd>
             +
-            <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
-              Enter
-            </kbd>{" "}
+            <Kbd>Enter</Kbd>{" "}
             for new line
           </span>
         </div>

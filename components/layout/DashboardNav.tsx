@@ -10,13 +10,15 @@ import {
   BarChart,
   Activity,
   MessageSquare,
+  GraduationCap,
   Menu,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const navigation = [
+// Original navigation (full creator feature set)
+const originalNavigation = [
   { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
   { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
   { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
@@ -25,9 +27,23 @@ const navigation = [
   { name: 'Chat', href: '/dashboard/creator/chat', icon: MessageSquare },
 ];
 
+// Simplified navigation for development (easier dashboard switching)
+const devSimpleNavigation = [
+  { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
+  { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
+  { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
+  { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart },
+  { name: 'Usage', href: '/dashboard/creator/usage', icon: Activity },
+  { name: 'Student', href: '/dashboard/student', icon: GraduationCap },
+];
+
 export function DashboardNav() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Use simplified navigation when DEV_SIMPLE_NAV is enabled
+  const isDevSimpleNav = process.env['NEXT_PUBLIC_DEV_SIMPLE_NAV'] === 'true';
+  const navigation = isDevSimpleNav ? devSimpleNavigation : originalNavigation;
 
   return (
     <nav className="bg-gray-2 border-b border-gray-a4">

@@ -2,7 +2,7 @@
 
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from 'frosted-ui';
 
 interface Props {
   children: ReactNode;
