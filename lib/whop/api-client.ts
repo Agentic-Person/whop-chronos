@@ -228,7 +228,7 @@ export async function exchangeCodeForToken(code: string): Promise<{
     code_length: code?.length,
   });
 
-  const response = await fetch('https://api.whop.com/api/v5/oauth/token', {
+  const response = await fetch('https://data.whop.com/v5/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
-  const response = await fetch('https://api.whop.com/api/v5/oauth/token', {
+  const response = await fetch('https://data.whop.com/v5/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
