@@ -220,27 +220,26 @@ export async function exchangeCodeForToken(code: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
-  // Use Basic Auth for client authentication
-  const auth = Buffer.from(`${WHOP_CLIENT_ID}:${WHOP_CLIENT_SECRET}`).toString('base64');
-
-  console.log('[Whop OAuth] Token exchange request (Basic Auth):', {
+  console.log('[Whop OAuth] Token exchange request (v5 endpoint):', {
+    endpoint: 'https://api.whop.com/api/v5/oauth/token',
     client_id: WHOP_CLIENT_ID,
-    auth_header: `Basic ${auth.substring(0, 20)}...`,
+    client_secret_length: WHOP_CLIENT_SECRET?.length,
     redirect_uri: WHOP_REDIRECT_URI,
     grant_type: 'authorization_code',
     code_length: code?.length,
   });
 
-  const response = await fetch('https://data.whop.com/api/v3/oauth/token', {
+  const response = await fetch('https://api.whop.com/api/v5/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Basic ${auth}`,
     },
     body: JSON.stringify({
-      code,
-      redirect_uri: WHOP_REDIRECT_URI,
       grant_type: 'authorization_code',
+      code,
+      client_id: WHOP_CLIENT_ID,
+      client_secret: WHOP_CLIENT_SECRET,
+      redirect_uri: WHOP_REDIRECT_URI,
     }),
   });
 
@@ -271,18 +270,16 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
-  // Use Basic Auth for client authentication
-  const auth = Buffer.from(`${WHOP_CLIENT_ID}:${WHOP_CLIENT_SECRET}`).toString('base64');
-
-  const response = await fetch('https://data.whop.com/api/v3/oauth/token', {
+  const response = await fetch('https://api.whop.com/api/v5/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Basic ${auth}`,
     },
     body: JSON.stringify({
-      refresh_token: refreshToken,
       grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: WHOP_CLIENT_ID,
+      client_secret: WHOP_CLIENT_SECRET,
     }),
   });
 
