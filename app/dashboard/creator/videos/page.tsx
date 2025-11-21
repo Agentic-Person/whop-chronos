@@ -325,12 +325,14 @@ export default function VideosPage() {
       </div>
 
       {/* Bulk Actions */}
-      {selectedVideos.size > 0 && (
+      {selectedVideos.size > 0 && creatorId && (
         <div className="mb-6">
           <BulkActions
             selectedCount={selectedVideos.size}
-            onDelete={handleBulkDelete}
-            onReprocess={handleBulkReprocess}
+            selectedVideoIds={Array.from(selectedVideos)}
+            creatorId={creatorId}
+            onDelete={fetchVideos}
+            onReprocess={fetchVideos}
             onClearSelection={() => setSelectedVideos(new Set())}
           />
         </div>

@@ -22,6 +22,16 @@ export {
   batchReprocessEmbeddings,
 } from './generate-embeddings';
 
+// Analytics aggregation (cron job)
+export { aggregateAnalyticsFunction } from './aggregate-analytics';
+
+// Agent 2: Bulk operations
+export {
+  bulkDeleteVideosFunction,
+  bulkExportVideosFunction,
+  bulkReprocessVideosFunction,
+} from './bulk-operations';
+
 /**
  * All Inngest functions for registration
  */
@@ -35,6 +45,12 @@ import {
   handleEmbeddingFailure,
   batchReprocessEmbeddings,
 } from './generate-embeddings';
+import { aggregateAnalyticsFunction } from './aggregate-analytics';
+import {
+  bulkDeleteVideosFunction,
+  bulkExportVideosFunction,
+  bulkReprocessVideosFunction,
+} from './bulk-operations';
 
 export const functions = [
   // Legacy Whisper-only transcription (keep for backwards compatibility)
@@ -46,4 +62,10 @@ export const functions = [
   generateEmbeddingsFunction,
   handleEmbeddingFailure,
   batchReprocessEmbeddings,
+  // Analytics aggregation cron (every 6 hours)
+  aggregateAnalyticsFunction,
+  // Bulk operations
+  bulkDeleteVideosFunction,
+  bulkExportVideosFunction,
+  bulkReprocessVideosFunction,
 ];

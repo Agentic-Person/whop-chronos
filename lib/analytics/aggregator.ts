@@ -1,157 +1,161 @@
 /**
- * Video Analytics Dashboard Data API
+ * Analytics Aggregation Logic
  *
- * GET /api/analytics/videos/dashboard - Get comprehensive video analytics for dashboard
- *
- * PERFORMANCE OPTIMIZATION:
- * - Checks analytics_cache table first (updated every 6 hours by Inngest cron)
- * - Falls back to live queries if cache miss or stale
- * - Cache hit: <500ms | Cache miss: 3-5s
+ * This module provides functions to pre-compute analytics summaries
+ * for storage in the analytics_cache table. Used by the Inngest cron job
+ * to refresh analytics every 6 hours.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/db/client';
-import type { DateRangeType } from '@/lib/analytics/aggregator';
 
-export const runtime = 'nodejs';
+export type DateRangeType = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'all_time';
 
-/**
- * GET /api/analytics/videos/dashboard
- *
- * Get comprehensive video analytics dashboard data
- *
- * Query parameters:
- * - creator_id: string (required)
- * - start: ISO date string (required)
- * - end: ISO date string (required)
- *
- * Response: Comprehensive dashboard data including metrics, charts data, and tables
- */
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const creatorId = searchParams.get('creator_id');
-    const startDate = searchParams.get('start');
-    const endDate = searchParams.get('end');
-
-    if (!creatorId || !startDate || !endDate) {
-      return NextResponse.json(
-        { error: 'Missing required parameters: creator_id, start, end' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = getServiceSupabase();
-
-    // Verify creator exists
-    const { data: creator, error: creatorError } = await supabase
-      .from('creators')
-      .select('id')
-      .eq('id', creatorId)
-      .single();
-
-    if (creatorError || !creator) {
-      return NextResponse.json(
-        { error: 'Creator not found', code: 'CREATOR_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    // Parse dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // OPTIMIZATION: Try to get cached analytics first
-    const dateRange = determineDateRange(start, end);
-    if (dateRange) {
-      const cached = await getCachedAnalytics(supabase, creatorId, dateRange);
-      if (cached) {
-        // Cache hit - return immediately (50-200ms response time)
-        console.log(`[Analytics Cache HIT] creator=${creatorId} range=${dateRange}`);
-        return NextResponse.json(
-          {
-            success: true,
-            data: cached.data,
-            cached: true,
-            computed_at: cached.computed_at,
-          },
-          { status: 200 }
-        );
-      }
-      console.log(`[Analytics Cache MISS] creator=${creatorId} range=${dateRange}`);
-    }
-
-    // Calculate previous period for trends
-    const periodDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const prevStart = new Date(start.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const prevEnd = start;
-
-    // Fetch all data in parallel
-    const [
-      metricsResult,
-      prevMetricsResult,
-      viewsOverTimeResult,
-      completionRatesResult,
-      costBreakdownResult,
-      storageUsageResult,
-      studentEngagementResult,
-      topVideosResult,
-    ] = await Promise.all([
-      fetchMetrics(supabase, creatorId, start, end),
-      fetchMetrics(supabase, creatorId, prevStart, prevEnd),
-      fetchViewsOverTime(supabase, creatorId, start, end),
-      fetchCompletionRates(supabase, creatorId, start, end),
-      fetchCostBreakdown(supabase, creatorId, start, end),
-      fetchStorageUsage(supabase, creatorId, start, end),
-      fetchStudentEngagement(supabase, creatorId, start, end),
-      fetchTopVideos(supabase, creatorId, start, end),
-    ]);
-
-    // Calculate trends
-    const trends = {
-      views: calculateTrend(metricsResult.total_views, prevMetricsResult.total_views),
-      watch_time: calculateTrend(
-        metricsResult.total_watch_time_seconds,
-        prevMetricsResult.total_watch_time_seconds
-      ),
-      completion: calculateTrend(
-        metricsResult.avg_completion_rate,
-        prevMetricsResult.avg_completion_rate
-      ),
-      videos: calculateTrend(metricsResult.total_videos, prevMetricsResult.total_videos),
+export interface AggregatedAnalytics {
+  metrics: {
+    total_views: number;
+    total_watch_time_seconds: number;
+    avg_completion_rate: number;
+    total_videos: number;
+    trends: {
+      views: number;
+      watch_time: number;
+      completion: number;
+      videos: number;
     };
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          metrics: {
-            ...metricsResult,
-            trends,
-          },
-          views_over_time: viewsOverTimeResult,
-          completion_rates: completionRatesResult,
-          cost_breakdown: costBreakdownResult,
-          storage_usage: storageUsageResult,
-          student_engagement: studentEngagementResult,
-          top_videos: topVideosResult,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Video analytics dashboard API error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  };
+  views_over_time: Array<{ date: string; views: number }>;
+  completion_rates: Array<{
+    video_id: string;
+    title: string;
+    completion_rate: number;
+    views: number;
+  }>;
+  cost_breakdown: Array<{
+    method: string;
+    total_cost: number;
+    video_count: number;
+  }>;
+  storage_usage: Array<{
+    date: string;
+    storage_gb: number;
+    cumulative_gb: number;
+  }>;
+  student_engagement: {
+    active_learners: number;
+    avg_videos_per_student: number;
+    peak_hours: Array<{
+      hour: number;
+      day_of_week: number;
+      activity_count: number;
+    }>;
+  };
+  top_videos: Array<{
+    id: string;
+    title: string;
+    thumbnail_url: string | null;
+    duration_seconds: number;
+    source_type: string;
+    views: number;
+    avg_watch_time_seconds: number;
+    completion_rate: number;
+  }>;
 }
 
-// Helper functions
+/**
+ * Get date range boundaries based on range type
+ */
+function getDateRange(rangeType: DateRangeType): { start: Date; end: Date } {
+  const end = new Date();
+  const start = new Date();
+
+  switch (rangeType) {
+    case 'last_7_days':
+      start.setDate(end.getDate() - 7);
+      break;
+    case 'last_30_days':
+      start.setDate(end.getDate() - 30);
+      break;
+    case 'last_90_days':
+      start.setDate(end.getDate() - 90);
+      break;
+    case 'all_time':
+      start.setFullYear(2020); // App launch year
+      break;
+  }
+
+  return { start, end };
+}
+
+/**
+ * Aggregate analytics for a creator and date range
+ *
+ * This function computes all 8 analytics queries and returns
+ * the data in a format ready for caching.
+ */
+export async function aggregateAnalytics(
+  creatorId: string,
+  rangeType: DateRangeType
+): Promise<AggregatedAnalytics> {
+  const { start, end } = getDateRange(rangeType);
+  const supabase = getServiceSupabase();
+
+  // Calculate previous period for trends
+  const periodDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const prevStart = new Date(start.getTime() - periodDays * 24 * 60 * 60 * 1000);
+  const prevEnd = start;
+
+  // Fetch all data in parallel
+  const [
+    metricsResult,
+    prevMetricsResult,
+    viewsOverTimeResult,
+    completionRatesResult,
+    costBreakdownResult,
+    storageUsageResult,
+    studentEngagementResult,
+    topVideosResult,
+  ] = await Promise.all([
+    fetchMetrics(supabase, creatorId, start, end),
+    fetchMetrics(supabase, creatorId, prevStart, prevEnd),
+    fetchViewsOverTime(supabase, creatorId, start, end),
+    fetchCompletionRates(supabase, creatorId, start, end),
+    fetchCostBreakdown(supabase, creatorId, start, end),
+    fetchStorageUsage(supabase, creatorId, start, end),
+    fetchStudentEngagement(supabase, creatorId, start, end),
+    fetchTopVideos(supabase, creatorId, start, end),
+  ]);
+
+  // Calculate trends
+  const trends = {
+    views: calculateTrend(metricsResult.total_views, prevMetricsResult.total_views),
+    watch_time: calculateTrend(
+      metricsResult.total_watch_time_seconds,
+      prevMetricsResult.total_watch_time_seconds
+    ),
+    completion: calculateTrend(
+      metricsResult.avg_completion_rate,
+      prevMetricsResult.avg_completion_rate
+    ),
+    videos: calculateTrend(metricsResult.total_videos, prevMetricsResult.total_videos),
+  };
+
+  return {
+    metrics: {
+      ...metricsResult,
+      trends,
+    },
+    views_over_time: viewsOverTimeResult,
+    completion_rates: completionRatesResult,
+    cost_breakdown: costBreakdownResult,
+    storage_usage: storageUsageResult,
+    student_engagement: studentEngagementResult,
+    top_videos: topVideosResult,
+  };
+}
+
+// ========================================
+// Helper Functions (Reused from API route)
+// ========================================
 
 async function fetchMetrics(
   supabase: ReturnType<typeof getServiceSupabase>,
@@ -159,7 +163,7 @@ async function fetchMetrics(
   start: Date,
   end: Date
 ) {
-  // Get total views from video_analytics_events
+  // Get total views
   const { data: viewsData } = await supabase
     .from('video_analytics_events')
     .select('id')
@@ -170,7 +174,7 @@ async function fetchMetrics(
 
   const total_views = viewsData?.length || 0;
 
-  // Get total watch time from video_completed events
+  // Get total watch time
   const { data: watchTimeData } = await supabase
     .from('video_analytics_events')
     .select('metadata')
@@ -442,7 +446,7 @@ async function fetchStudentEngagement(
     Object.values(videosByStudent).reduce((sum, videos) => sum + videos.size, 0) /
     Math.max(Object.keys(videosByStudent).length, 1);
 
-  // Get peak hours (hour of day and day of week)
+  // Get peak hours
   const { data: timeData } = await supabase
     .from('video_analytics_events')
     .select('created_at')
@@ -538,79 +542,4 @@ async function fetchTopVideos(
 function calculateTrend(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100);
-}
-
-/**
- * Determine which pre-computed date range matches the request
- */
-function determineDateRange(start: Date, end: Date): DateRangeType | null {
-  const now = new Date();
-  const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-  // Check if end date is approximately "now" (within 1 day)
-  const isNow = Math.abs(now.getTime() - end.getTime()) < 24 * 60 * 60 * 1000;
-
-  if (!isNow) {
-    // Custom date range - no cache available
-    return null;
-  }
-
-  // Match to standard ranges (with 1-day tolerance)
-  if (daysDiff >= 6 && daysDiff <= 8) return 'last_7_days';
-  if (daysDiff >= 29 && daysDiff <= 31) return 'last_30_days';
-  if (daysDiff >= 89 && daysDiff <= 91) return 'last_90_days';
-
-  // Check for "all time" (very old start date)
-  const yearsDiff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365);
-  if (yearsDiff > 3) return 'all_time';
-
-  return null;
-}
-
-/**
- * Get cached analytics from analytics_cache table
- *
- * Returns cached data only if it's fresh (< 6 hours old)
- */
-async function getCachedAnalytics(
-  supabase: ReturnType<typeof getServiceSupabase>,
-  creatorId: string,
-  dateRange: DateRangeType
-) {
-  const { data, error } = await supabase
-    .from('analytics_cache')
-    .select('data, computed_at')
-    .eq('creator_id', creatorId)
-    .eq('date_range', dateRange)
-    .single();
-
-  if (error || !data) {
-    return null;
-  }
-
-  // Check if cache is fresh (< 6 hours old)
-  const computedAt = new Date(data.computed_at);
-  const ageHours = (Date.now() - computedAt.getTime()) / (1000 * 60 * 60);
-
-  if (ageHours > 6) {
-    // Cache is stale - return null to trigger live query
-    console.log(`[Analytics Cache STALE] age=${ageHours.toFixed(1)}h`);
-    return null;
-  }
-
-  return data;
-}
-
-/**
- * OPTIONS handler for CORS preflight
- */
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }
