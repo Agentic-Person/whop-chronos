@@ -220,9 +220,12 @@ export async function exchangeCodeForToken(code: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
-  console.log('[Whop OAuth] Token exchange request:', {
+  // Use Basic Auth for client authentication
+  const auth = Buffer.from(`${WHOP_CLIENT_ID}:${WHOP_CLIENT_SECRET}`).toString('base64');
+
+  console.log('[Whop OAuth] Token exchange request (Basic Auth):', {
     client_id: WHOP_CLIENT_ID,
-    client_secret: WHOP_CLIENT_SECRET ? `${WHOP_CLIENT_SECRET.substring(0, 10)}...` : 'MISSING',
+    auth_header: `Basic ${auth.substring(0, 20)}...`,
     redirect_uri: WHOP_REDIRECT_URI,
     grant_type: 'authorization_code',
     code_length: code?.length,
@@ -232,10 +235,9 @@ export async function exchangeCodeForToken(code: string): Promise<{
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Basic ${auth}`,
     },
     body: JSON.stringify({
-      client_id: WHOP_CLIENT_ID,
-      client_secret: WHOP_CLIENT_SECRET,
       code,
       redirect_uri: WHOP_REDIRECT_URI,
       grant_type: 'authorization_code',
@@ -269,14 +271,16 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     throw new WhopApiError('OAuth not configured', 500, 'MISSING_OAUTH_CONFIG');
   }
 
+  // Use Basic Auth for client authentication
+  const auth = Buffer.from(`${WHOP_CLIENT_ID}:${WHOP_CLIENT_SECRET}`).toString('base64');
+
   const response = await fetch('https://data.whop.com/api/v3/oauth/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Basic ${auth}`,
     },
     body: JSON.stringify({
-      client_id: WHOP_CLIENT_ID,
-      client_secret: WHOP_CLIENT_SECRET,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
