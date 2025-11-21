@@ -32,6 +32,8 @@ export interface ChatInterfaceProps {
   className?: string;
   currentVideoId?: string;
   onTimestampClick?: (seconds: number, videoId: string) => void;
+  creatorId: string;
+  studentId: string;
 }
 
 export function ChatInterface({
@@ -40,6 +42,8 @@ export function ChatInterface({
   className,
   currentVideoId,
   onTimestampClick,
+  creatorId,
+  studentId,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +79,8 @@ export function ChatInterface({
         body: JSON.stringify({
           sessionId,
           message: content,
+          creatorId,
+          studentId,
         }),
       });
 

@@ -150,6 +150,8 @@ export default function StudentChatPage() {
             onSessionChange={handleSessionChange}
             currentVideoId={selectedVideoId || undefined}
             className="h-full"
+            creatorId={creatorId}
+            studentId={studentId}
           />
         </div>
       </div>
