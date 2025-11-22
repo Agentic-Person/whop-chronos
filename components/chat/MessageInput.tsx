@@ -109,10 +109,11 @@ export function MessageInput({
           variant="primary"
           size="md"
           className="h-11 px-4"
-          icon={<Send className="h-4 w-4" />}
-          iconPosition="right"
         >
-          Send
+          <span className="flex items-center gap-2">
+            Send
+            <Send className="h-4 w-4" />
+          </span>
         </Button>
       </div>
 

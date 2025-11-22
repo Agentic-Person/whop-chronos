@@ -81,6 +81,7 @@ export function ChatInterface({
           message: content,
           creatorId,
           studentId,
+          stream: false, // Use non-streaming mode for simpler JSON response handling
         }),
       });
 

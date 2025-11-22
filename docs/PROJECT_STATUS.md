@@ -1,29 +1,87 @@
 # Chronos Project Status
 
-**Last Updated:** November 21, 2025 (CHRON-002 Resolved + Local Development Complete)
+**Last Updated:** November 21, 2025 (Evening) - E2E Testing Complete
 **Project:** AI-Powered Video Learning Assistant for Whop Creators
-**Production Readiness:** 68/80 (85%) - **BETA READY** ✅
-**Critical Blockers:** 0 - All P0 blockers resolved ✅
+**Production Readiness:** 64/80 (80%) - **BETA READY** ⚠️
+**Critical Blockers:** 1 - CHRON-003 (AI Chat 500 Error) - P0 🔴
 
 ---
 
 ## 📊 Executive Summary
 
-Chronos is a video learning platform rebuild for Whop creators. After resolving **CHRON-001** (November 18) and **CHRON-002** (November 21), the platform is now fully functional for local development. The video processing pipeline works end-to-end (0% → 100%), AI chat is operational, and comprehensive documentation is in place for developers to get started quickly.
+Chronos is a video learning platform rebuild for Whop creators. After resolving **CHRON-001** (November 18) and **CHRON-002** (November 21), the platform underwent comprehensive end-to-end testing which revealed a new critical issue: **CHRON-003** (AI Chat 500 Error). The video processing pipeline works perfectly (0% → 100%), vector embeddings are generated correctly, and 10 Inngest functions execute successfully. However, the chat API returns a 500 error when attempting to query the AI assistant, blocking the primary feature.
 
 ### Current State
-- ✅ **Backend:** 100% complete - All APIs functional, Inngest P0 functions deployed
+- ✅ **Backend:** 95% complete - Most APIs functional, chat API has 500 error
 - ✅ **Frontend:** 95% complete - All core features work
-- ✅ **Testing:** 123 tests passing (32.65% coverage)
+- ✅ **Testing:** 123 tests passing (32.65% coverage) + E2E tests complete
 - ✅ **Build:** Production build succeeds (8.1s)
 - ✅ **Inngest:** 10 functions registered (6 core + 4 P0 functions) - **ALL WORKING** ✨
 - ✅ **Video Pipeline:** Complete - Videos process from 0% → 100% successfully ✨
-- ✅ **AI Chat:** Fully functional - RAG search working with embeddings ✨
-- ✅ **Blockers:** 0 P0 blockers - **ALL RESOLVED** ✅
+- ✅ **Vector Embeddings:** Complete - RAG infrastructure ready, embeddings generated ✨
+- ❌ **AI Chat:** BLOCKED - 500 error when sending messages (CHRON-003) 🔴
+- ❌ **Blockers:** 1 P0 blocker - **CHRON-003: AI Chat 500 Error**
 
 ### Key Achievements
 
-**November 21, 2025:**
+**November 21, 2025 (Evening):**
+**End-to-End Pipeline Testing + CHRON-003 Discovery**
+- ✅ **Comprehensive E2E Testing** - Complete video pipeline verification with Playwright MCP
+  - Tested: Infrastructure, video import, Inngest events, database, embeddings, AI chat
+  - Method: Browser automation via Playwright MCP (ui.mcp.json)
+  - Test video: Rick Astley - Never Gonna Give You Up (YouTube, 3:33)
+  - Result: 4/5 phases passing (80% success rate)
+
+- ✅ **Infrastructure Verified** - Both dev servers operational
+  - Next.js: ✅ Running on port 3007
+  - Inngest: ✅ Running on port 8288, dashboard accessible
+  - Functions: ✅ All 10 registered and visible in dashboard
+
+- ✅ **Video Import Success** - YouTube video processed completely
+  - Status: 0% → 10% → 25% → 50% → 75% → 100% ✅
+  - Timeline: ~60 seconds total processing time
+  - Transcript: FREE extraction via YouTube API
+  - Final state: Status "completed" in database
+
+- ✅ **Inngest Events Verified** - Streamlined event architecture working
+  - Event: `video/transcription.completed` fired successfully
+  - Function: "Generate Video Embeddings" executed (5 seconds)
+  - Payload: Contains creator_id and video_id
+  - Architecture: Simplified 1-event design (not 3-event chain)
+
+- ✅ **Vector Embeddings Generated** - RAG foundation complete
+  - Video ID: e9996475-ee18-4975-b817-6a29ddb53987
+  - Chunks: 1 chunk created with full transcript
+  - Embeddings: 1/1 (100% coverage) ✅
+  - Format: pgvector 1536-dimensional (OpenAI ada-002)
+  - Status: RAG search infrastructure READY
+
+- ❌ **AI Chat 500 Error** - New critical blocker discovered (CHRON-003)
+  - Issue: Chat API returns 500 Internal Server Error
+  - Test: Asked "What is this video about?"
+  - Error: "Failed to send message: Internal Server Error"
+  - Request: Valid (creatorId, studentId, message provided)
+  - Impact: Blocks primary feature - AI chat completely non-functional
+
+**Test Artifacts:**
+- Report: `TEST_RESULTS.md` - Complete test documentation
+- Script: `scripts/check-video-embeddings.ts` - Database verification tool
+- Screenshots: 6 images documenting full test flow
+
+**Impact:**
+- Video pipeline: ✅ Verified working end-to-end
+- Embeddings: ✅ Generated and stored correctly
+- Inngest: ✅ All functions executing properly
+- AI Chat: ❌ BLOCKED by 500 error (NEW CRITICAL ISSUE)
+- Production readiness: 68/80 → 64/80 (-4 points due to blocker)
+
+**Next Steps:**
+1. Debug chat API 500 error (likely ANTHROPIC_API_KEY or RAG function issue)
+2. Add detailed error logging to Edge runtime routes
+3. Test vector search independently
+4. Verify chat_sessions table schema and RLS policies
+
+**November 21, 2025 (Morning):**
 **CHRON-002 Resolution + Local Development Infrastructure**
 - ✅ **CHRON-002 RESOLVED** - Video processing pipeline fully functional
   - Root cause identified: Inngest Dev Server not running
@@ -158,32 +216,32 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 
 ---
 
-## 🎯 Production Readiness Score: 68/80 (85%)
+## 🎯 Production Readiness Score: 64/80 (80%)
 
 **Minimum for Production:** 56/80 (70%) ✅ **EXCEEDED**
-**Status:** **BETA READY** ✅
+**Status:** **BETA READY** ⚠️ (1 P0 blocker)
 
 | Category | Score | Max | Status | Notes |
 |----------|-------|-----|--------|-------|
-| Functionality | 10 | 10 | ✅ | All features working + video pipeline functional + AI chat working |
+| Functionality | 6 | 10 | ⚠️ | Video pipeline works, AI chat blocked by 500 error (CHRON-003) |
 | Performance | 9 | 10 | ✅ | Dashboard <500ms, bundle optimized, fast builds |
 | Security | 7 | 10 | ✅ | Whop OAuth, RLS policies, secure background jobs |
 | Accessibility | 9 | 10 | ✅ | 85% WCAG compliance |
-| Testing | 7 | 10 | ✅ | 123 tests, 32% coverage |
-| Documentation | 10 | 10 | ✅ | Complete guides + API docs + local dev setup |
-| Monitoring | 6 | 10 | ⚠️ | Logging deployed, Inngest dashboard ready |
-| Deployment | 10 | 10 | ✅ | Ready for staging deployment + cleanup scripts |
+| Testing | 7 | 10 | ✅ | 123 tests + E2E pipeline testing complete |
+| Documentation | 10 | 10 | ✅ | Complete guides + API docs + local dev setup + test reports |
+| Monitoring | 6 | 10 | ⚠️ | Logging deployed, needs error tracking for Edge routes |
+| Deployment | 10 | 10 | ✅ | Ready for staging (after CHRON-003 fix) |
 
-**Score Improvements (Nov 21):**
-- Functionality: 9 → 10 (+1) - Video pipeline and AI chat now fully functional
-- Documentation: 9 → 10 (+1) - Added comprehensive local dev guides
-- Deployment: 6 → 10 (+4) - Added cleanup scripts, verified full pipeline works
-- **Total:** 62 → 68 (+6 points, +7.5% improvement)
+**Score Changes (Nov 21 Evening):**
+- Functionality: 10 → 6 (-4) - AI chat blocked by 500 error (primary feature non-functional)
+- Testing: 7 → 7 (±0) - E2E tests added, but revealed critical issue
+- **Total:** 68 → 64 (-4 points, -5% decrease due to CHRON-003)
 
 **Score History:**
 - Nov 18: 52/80 (65%) - CHRON-001 resolved
 - Nov 20: 62/80 (78%) - Inngest P0 functions added
-- Nov 21: 68/80 (85%) - CHRON-002 resolved + documentation complete
+- Nov 21 (Morning): 68/80 (85%) - CHRON-002 resolved + documentation complete
+- Nov 21 (Evening): 64/80 (80%) - CHRON-003 discovered via E2E testing
 
 ### Production Readiness Reassessment (Nov 19)
 - **Previous (False):** 72/80 - Claimed "PRODUCTION READY"
@@ -321,7 +379,70 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 
 ---
 
-## ✅ Critical Bugs & Blockers - ALL P0 RESOLVED
+## 🔴 Critical Bugs & Blockers - 1 ACTIVE P0
+
+### CHRON-003: AI Chat 500 Internal Server Error (P0) 🔴 **ACTIVE**
+**Severity:** CRITICAL
+**Priority:** P0 BLOCKER
+**Discovered:** November 21, 2025 (Evening) - E2E Testing
+**Status:** 🔴 **ACTIVE - BLOCKING AI CHAT**
+
+**What's Broken:**
+- AI chat API returns 500 Internal Server Error when sending messages
+- Primary feature completely non-functional
+- Test question: "What is this video about?" fails instantly
+- Error: "Failed to send message: Internal Server Error"
+
+**What IS Working:**
+- ✅ Video processing pipeline (0% → 100%)
+- ✅ Vector embeddings generated (1/1 chunks, 100% coverage)
+- ✅ Inngest functions (all 10 executing successfully)
+- ✅ Database schema (chat_sessions, chat_messages tables exist)
+- ✅ Frontend (chat UI loads, sends valid requests)
+
+**Request Details:**
+```json
+{
+  "sessionId": undefined,
+  "message": "What is this video about?",
+  "creatorId": "00000000-0000-0000-0000-000000000001",
+  "studentId": "00000000-0000-0000-0000-000000000002"
+}
+```
+
+**Potential Root Causes:**
+1. **Missing ANTHROPIC_API_KEY** - Environment variable not set or invalid
+2. **RAG Library Error** - One of the functions throwing unhandled exception:
+   - `searchCreatorContent()` - Vector similarity search
+   - `buildContext()` - Context assembly from chunks
+   - `getOrCreateSession()` - Session management
+   - `createMessage()` - Message persistence
+3. **Database Query Error** - pgvector similarity search failing
+4. **Edge Runtime Issue** - Error details not surfacing in logs
+
+**Test Evidence:**
+- File: `TEST_RESULTS.md` - Complete E2E test documentation
+- Screenshot: `chat-error-500.png` - Error state in UI
+- Script: `scripts/check-video-embeddings.ts` - Verified embeddings exist
+- Database: Video `e9996475-ee18-4975-b817-6a29ddb53987` has valid embeddings
+
+**Impact:**
+- **Users:** Cannot use AI chat (primary feature)
+- **Functionality:** RAG infrastructure ready but inaccessible
+- **Production:** Blocks release until resolved
+- **Score:** Production readiness 68/80 → 64/80 (-4 points)
+
+**Next Steps:**
+1. Verify ANTHROPIC_API_KEY in `.env.local`
+2. Add detailed error logging to `/api/chat` route
+3. Test RAG functions independently with console.log
+4. Check Edge runtime error handling
+5. Verify Anthropic API quota/limits
+6. Test chat_sessions table RLS policies
+
+**Resolution ETA:** Unknown - requires debugging session
+
+---
 
 ### CHRON-001: Student Pages Infinite Timeout (P0) ✅ **RESOLVED**
 **Severity:** CATASTROPHIC (was)

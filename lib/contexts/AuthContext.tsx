@@ -52,8 +52,11 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 
   // Compute base auth values (memoized to prevent infinite re-renders)
   const baseAuthData = useMemo(() => {
-    if (isDevMode && !session) {
+    // Dev mode takes priority - always use test IDs when DEV_BYPASS_AUTH is true
+    if (isDevMode) {
       // Mock auth values for development testing
+      // creatorId = the creator whose content is being accessed
+      // userId = the student/user accessing the content
       return {
         creatorId: '00000000-0000-0000-0000-000000000001', // TEST_CREATOR_ID from seed
         userId: '00000000-0000-0000-0000-000000000002',    // TEST_STUDENT_ID from seed
@@ -61,8 +64,10 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
       };
     } else if (session) {
       // Production: Use real Whop session
+      // Note: In production, creatorId should come from the course/video context,
+      // not the session. For now, userId represents the logged-in user.
       return {
-        creatorId: session.user.id,
+        creatorId: session.user.id, // TODO: This should be the creator's ID, not user's
         userId: session.user.id,
         isAuthenticated: true,
       };

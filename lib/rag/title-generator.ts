@@ -7,10 +7,20 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 
-// Initialize Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env['ANTHROPIC_API_KEY'],
-});
+// Initialize Anthropic client lazily to ensure env vars are available
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    const apiKey = process.env['ANTHROPIC_API_KEY'];
+    if (!apiKey) {
+      console.warn('[Title Generator] ANTHROPIC_API_KEY not set, title generation will use fallback');
+      throw new Error('ANTHROPIC_API_KEY not configured');
+    }
+    anthropicClient = new Anthropic({ apiKey });
+  }
+  return anthropicClient;
+}
 
 // Cache for generated titles to avoid regeneration
 const titleCache = new Map<string, string>();
@@ -38,7 +48,8 @@ export async function generateSessionTitle(
   }
 
   try {
-    const response = await anthropic.messages.create({
+    const client = getAnthropicClient();
+    const response = await client.messages.create({
       model: 'claude-3-5-haiku-20241022',
       max_tokens: 50,
       temperature: 0.3,

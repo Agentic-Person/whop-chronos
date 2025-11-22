@@ -140,7 +140,9 @@ export function MessageList({
                 message.role === "user" ? "text-right" : "text-left"
               )}
             >
-              {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+              {message.timestamp && !isNaN(new Date(message.timestamp).getTime())
+                ? formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })
+                : "just now"}
             </span>
 
             {/* Video references */}

@@ -43,10 +43,21 @@ export const dynamic = 'force-dynamic';
 const CLAUDE_MODEL = 'claude-3-5-haiku-20241022';
 const MAX_OUTPUT_TOKENS = 4096;
 
-// Initialize Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env['ANTHROPIC_API_KEY'] || '',
-});
+// Lazy-initialize Anthropic client to ensure env vars are available in Edge Runtime
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    const apiKey = process.env['ANTHROPIC_API_KEY'];
+    if (!apiKey) {
+      console.error('[Chat API] ANTHROPIC_API_KEY not set!');
+      throw new Error('ANTHROPIC_API_KEY environment variable is not configured');
+    }
+    console.log('[Chat API] Initializing Anthropic client...');
+    anthropicClient = new Anthropic({ apiKey });
+  }
+  return anthropicClient;
+}
 
 interface ChatRequest {
   message: string;
@@ -84,7 +95,11 @@ interface ChatResponse {
  * Send a chat message and receive AI response with video references
  */
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+
   try {
+    console.log('[Chat API] ========== REQUEST START ==========');
+
     const body = (await req.json()) as ChatRequest;
     const {
       message,
@@ -95,8 +110,11 @@ export async function POST(req: NextRequest) {
       stream = true
     } = body;
 
+    console.log('[Chat API] Request body:', JSON.stringify({ message: message?.substring(0, 50), sessionId, creatorId, studentId, courseId, stream }));
+
     // Validate request
     if (!message || !message.trim()) {
+      console.log('[Chat API] ❌ Validation failed: Message is required');
       return Response.json(
         { error: 'Message is required' },
         { status: 400 }
@@ -104,22 +122,30 @@ export async function POST(req: NextRequest) {
     }
 
     if (!creatorId) {
+      console.log('[Chat API] ❌ Validation failed: Creator ID is required');
       return Response.json(
         { error: 'Creator ID is required' },
         { status: 400 }
       );
     }
 
-    console.log(`[Chat API] Processing message for creator ${creatorId}, session ${sessionId || 'NEW'}`);
+    console.log(`[Chat API] ✅ Validation passed. Processing message for creator ${creatorId}, session ${sessionId || 'NEW'}`);
+
+    // Check API keys
+    console.log('[Chat API] API Keys check:');
+    console.log(`  - ANTHROPIC_API_KEY: ${process.env['ANTHROPIC_API_KEY'] ? 'SET (' + process.env['ANTHROPIC_API_KEY']?.substring(0, 10) + '...)' : '❌ NOT SET'}`);
+    console.log(`  - OPENAI_API_KEY: ${process.env['OPENAI_API_KEY'] ? 'SET (' + process.env['OPENAI_API_KEY']?.substring(0, 10) + '...)' : '❌ NOT SET'}`);
 
     // Get or create session
     let session;
 
     if (sessionId) {
+      console.log('[Chat API] Loading existing session...');
       // Load existing session
       session = await getSession(sessionId, false);
 
       if (!session) {
+        console.log('[Chat API] ❌ Session not found:', sessionId);
         return Response.json(
           { error: 'Session not found' },
           { status: 404 }
@@ -128,45 +154,60 @@ export async function POST(req: NextRequest) {
 
       // Verify session belongs to this creator
       if (session.creator_id !== creatorId) {
+        console.log('[Chat API] ❌ Unauthorized access to session');
         return Response.json(
           { error: 'Unauthorized access to session' },
           { status: 403 }
         );
       }
+      console.log('[Chat API] ✅ Existing session loaded:', session.id);
     } else {
       // Create new session
       if (!studentId) {
+        console.log('[Chat API] ❌ Student ID required for new session');
         return Response.json(
           { error: 'Student ID required for new session' },
           { status: 400 }
         );
       }
 
-      session = await getOrCreateSession(studentId, creatorId);
-      console.log(`[Chat API] Created new session: ${session.id}`);
+      console.log(`[Chat API] Creating new session for student ${studentId}, creator ${creatorId}...`);
+      try {
+        session = await getOrCreateSession(studentId, creatorId);
+        console.log(`[Chat API] ✅ Session created: ${session.id}`);
+      } catch (sessionError) {
+        console.error('[Chat API] ❌ Failed to create session:', sessionError);
+        throw new Error(`Session creation failed: ${sessionError instanceof Error ? sessionError.message : 'Unknown error'}`);
+      }
     }
 
     // Perform vector search
     console.log(`[Chat API] Performing vector search for: "${message.substring(0, 50)}..."`);
 
     let searchResults;
-    if (courseId) {
-      // Search within specific course
-      searchResults = await searchWithinCourse(courseId, message, {
-        match_count: 5,
-        similarity_threshold: 0.7,
-        boost_viewed_by_student: studentId || undefined,
-      });
-    } else {
-      // Search all creator's content
-      searchResults = await searchCreatorContent(creatorId, message, {
-        match_count: 5,
-        similarity_threshold: 0.7,
-        boost_viewed_by_student: studentId || undefined,
-      });
+    try {
+      if (courseId) {
+        // Search within specific course
+        console.log(`[Chat API] Searching within course: ${courseId}`);
+        searchResults = await searchWithinCourse(courseId, message, {
+          match_count: 5,
+          similarity_threshold: 0.7,
+          boost_viewed_by_student: studentId || undefined,
+        });
+      } else {
+        // Search all creator's content
+        console.log(`[Chat API] Searching all creator content for: ${creatorId}`);
+        searchResults = await searchCreatorContent(creatorId, message, {
+          match_count: 5,
+          similarity_threshold: 0.7,
+          boost_viewed_by_student: studentId || undefined,
+        });
+      }
+      console.log(`[Chat API] ✅ Vector search completed. Found ${searchResults.length} relevant chunks`);
+    } catch (searchError) {
+      console.error('[Chat API] ❌ Vector search failed:', searchError);
+      throw new Error(`Vector search failed: ${searchError instanceof Error ? searchError.message : 'Unknown error'}`);
     }
-
-    console.log(`[Chat API] Found ${searchResults.length} relevant chunks`);
 
     if (searchResults.length === 0) {
       // No relevant context found
@@ -279,12 +320,21 @@ Important guidelines:
       );
     }
   } catch (error) {
-    console.error('[Chat API] Error:', error);
+    const elapsed = Date.now() - startTime;
+    console.error('[Chat API] ========== ERROR ==========');
+    console.error('[Chat API] Error after', elapsed, 'ms');
+    console.error('[Chat API] Error type:', error?.constructor?.name);
+    console.error('[Chat API] Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[Chat API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
 
     return Response.json(
       {
         error: 'Failed to process message',
         message: error instanceof Error ? error.message : 'Unknown error',
+        debug: {
+          elapsed_ms: elapsed,
+          error_type: error?.constructor?.name,
+        }
       },
       { status: 500 }
     );
@@ -309,7 +359,7 @@ async function handleStreamingResponse(
   async function* streamGenerator() {
     try {
       // Start Claude streaming
-      const stream = await anthropic.messages.stream({
+      const stream = await getAnthropicClient().messages.stream({
         model: CLAUDE_MODEL,
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.7,
@@ -428,7 +478,7 @@ async function handleNonStreamingResponse(
   creatorId: string
 ): Promise<Response> {
   // Generate response
-  const response = await anthropic.messages.create({
+  const response = await getAnthropicClient().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
     temperature: 0.7,
