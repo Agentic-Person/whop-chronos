@@ -33,6 +33,7 @@ export interface VideoSource {
   video_id: string;
   video_title: string;
   video_url?: string;
+  video_thumbnail?: string;
   chunks_used: number;
   timestamps: { start: number; end: number; chunk_id: string }[];
 }
@@ -180,6 +181,7 @@ export function buildContext(
         video_id: videoId,
         video_title: chunk.video_title || 'Unknown Video',
         video_url: chunk.metadata?.video_url,
+        video_thumbnail: chunk.metadata?.video_thumbnail,
         chunks_used: 0,
         timestamps: [],
       });

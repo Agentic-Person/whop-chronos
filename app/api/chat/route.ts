@@ -74,6 +74,7 @@ interface ChatResponse {
   videoReferences: Array<{
     video_id: string;
     video_title: string;
+    video_thumbnail?: string;
     timestamp: number;
     timestamp_formatted: string;
     chunk_text: string;
@@ -513,6 +514,7 @@ async function handleNonStreamingResponse(
     return {
       video_id: source.video_id,
       video_title: source.video_title,
+      video_thumbnail: source.video_thumbnail,
       timestamp: firstTimestamp.start,
       timestamp_formatted: formatTimestamp(firstTimestamp.start),
       chunk_text: searchResults.find(r => r.video_id === source.video_id)?.chunk_text.substring(0, 150) || '',

@@ -91,12 +91,22 @@ export function ChatInterface({
 
       const data = await response.json();
 
+      // Transform snake_case to camelCase for video references
+      const transformedVideoReferences = data.videoReferences?.map((ref: any) => ({
+        videoId: ref.video_id,
+        videoTitle: ref.video_title,
+        thumbnailUrl: ref.video_thumbnail,
+        timestamp: ref.timestamp,
+        excerpt: ref.chunk_text,
+        relevanceScore: ref.relevance_score,
+      })) || [];
+
       const assistantMessage: Message = {
         id: data.id || `assistant-${Date.now()}`,
         role: "assistant",
         content: data.content,
         timestamp: new Date(data.timestamp),
-        videoReferences: data.videoReferences,
+        videoReferences: transformedVideoReferences,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
