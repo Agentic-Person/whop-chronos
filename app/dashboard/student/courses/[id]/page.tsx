@@ -435,138 +435,45 @@ export default function StudentCourseViewerPage() {
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Video and Lesson Content */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            {/* Header */}
-            <Card size="3" className="border-b border-gray-a4 p-4 rounded-none">
-              <div className="max-w-7xl mx-auto flex items-center gap-4">
-                <Button
-                  onClick={() => router.push('/dashboard/student/courses')}
-                  variant="ghost"
-                  size="sm"
-                  icon={<ArrowLeft className="h-4 w-4" />}
-                  iconPosition="left"
-                >
-                  Back to Courses
-                </Button>
-                <div className="flex-1 min-w-0">
-                  <Text className="text-sm text-gray-11 truncate">
-                    {courseData.course.title}
-                  </Text>
-                  <Text className="text-xs text-gray-10">
-                    Lesson {currentLessonIndex + 1} of {allLessons.length}
-                  </Text>
-                </div>
-
-                {/* Keyboard shortcuts help button */}
-                <button
-                  onClick={() => setShowShortcutsHelp(true)}
-                  className="p-2 text-gray-11 hover:text-gray-12 hover:bg-gray-a3 rounded-lg transition-colors"
-                  title="Keyboard shortcuts (Press ?)"
-                >
-                  <HelpCircle className="h-5 w-5" />
-                </button>
-              </div>
-            </Card>
-
-            {/* Resume Banner (placeholder for future) */}
-            {showResumeBanner && resumePosition !== null && (
-              <div className="bg-blue-50 border-b border-blue-200 p-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                  <span className="text-sm text-blue-900">
-                    Resume from {Math.floor(resumePosition / 60)}:{String(Math.floor(resumePosition % 60)).padStart(2, '0')}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowResumeBanner(false)}
-                    >
-                      Resume
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowResumeBanner(false)}
-                    >
-                      Start Over
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Video Player */}
-            {currentLesson && (
-              <>
-                <div className="bg-black">
-                  <div className="max-w-7xl mx-auto">
-                    <VideoPlayer
-                      video={currentLesson.video}
-                      studentId={studentId}
-                      creatorId={creatorId}
-                      courseId={courseId}
-                      moduleId={currentLesson.module_id}
-                      onProgress={handleVideoProgress}
-                      onComplete={handleVideoComplete}
-                      enableAnalytics={true}
-                    />
-                  </div>
-                </div>
-
-                {/* Lesson Metadata */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <LessonMetadata
-                      title={currentLesson.title}
-                      description={currentLesson.description}
-                      estimatedDuration={currentLesson.estimated_duration_minutes}
-                      metadata={currentLesson.metadata}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Navigation Controls */}
-            <NavigationControls
-              hasPrevious={hasPrevious}
-              hasNext={hasNext}
-              isCompleted={isCurrentLessonCompleted}
-              isLoading={isSavingProgress}
-              autoAdvance={autoAdvance}
-              onPrevious={goToPreviousLesson}
-              onNext={goToNextLesson}
-              onMarkComplete={markLessonComplete}
-              onAutoAdvanceToggle={setAutoAdvance}
-              className="sticky bottom-0"
-            />
-          </div>
-
-          {/* Chat Panel (Collapsible) */}
-          {isChatOpen && (
-            <Card size="3" className="w-96 border-l border-gray-a4 flex flex-col h-full rounded-none">
-              <ChatInterface
-                sessionId={undefined}
-                currentVideoId={currentLesson?.video_id}
-                className="h-full"
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Video Player - Full Width */}
+          {currentLesson && (
+            <div className="bg-black flex-shrink-0">
+              <VideoPlayer
+                video={currentLesson.video}
+                studentId={studentId}
+                creatorId={creatorId}
+                courseId={courseId}
+                moduleId={currentLesson.module_id}
+                onProgress={handleVideoProgress}
+                onComplete={handleVideoComplete}
+                enableAnalytics={true}
               />
-            </Card>
+            </div>
           )}
 
-          {/* Chat Toggle Button */}
-          <button
-            onClick={toggleChat}
-            className="fixed right-4 top-20 z-10 p-3 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors"
-            title={isChatOpen ? 'Hide chat (Press C)' : 'Show chat (Press C)'}
-          >
-            {isChatOpen ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
-              <MessageSquare className="h-5 w-5" />
-            )}
-          </button>
+          {/* Video Title */}
+          {currentLesson && (
+            <div className="flex-shrink-0 p-4 border-b border-gray-a4 bg-gray-2">
+              <h2 className="text-lg font-semibold text-gray-12">
+                {currentLesson.title}
+              </h2>
+              {currentLesson.description && (
+                <p className="text-sm text-gray-11 mt-1">{currentLesson.description}</p>
+              )}
+            </div>
+          )}
+
+          {/* AI Chat Section - Below Video */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <ChatInterface
+              sessionId={undefined}
+              currentVideoId={currentLesson?.video_id}
+              creatorId={creatorId || ''}
+              studentId={studentId || ''}
+              className="flex-1"
+            />
+          </div>
         </div>
       </div>
 

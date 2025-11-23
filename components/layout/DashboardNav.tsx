@@ -71,7 +71,7 @@ export function DashboardNav() {
     if (isDevSimpleNav) {
       items.push({
         name: 'Student',
-        href: '/dashboard/student/chat',
+        href: '/dashboard/student/courses',
         icon: GraduationCap,
       });
     }
