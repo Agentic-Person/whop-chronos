@@ -9,6 +9,10 @@ import { getServiceSupabase } from '@/lib/db/client';
 
 export const runtime = 'nodejs';
 
+// Dev mode test IDs
+const DEV_CREATOR_ID = '00000000-0000-0000-0000-000000000001';
+const isDevMode = process.env.DEV_BYPASS_AUTH === 'true';
+
 /**
  * GET /api/courses/student
  *
@@ -66,6 +70,7 @@ export async function GET(req: NextRequest) {
     const supabase = getServiceSupabase();
 
     // First, get all published courses with modules
+    // In dev mode, filter by test creator so students only see their creator's courses
     let coursesQuery = supabase
       .from('courses')
       .select(`
@@ -86,6 +91,11 @@ export async function GET(req: NextRequest) {
       `)
       .eq('is_published', true)
       .eq('is_deleted', false);
+
+    // In dev mode, filter to only show test creator's courses
+    if (isDevMode) {
+      coursesQuery = coursesQuery.eq('creator_id', DEV_CREATOR_ID);
+    }
 
     // Apply search filter
     if (search) {
