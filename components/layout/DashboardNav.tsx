@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import { Button } from '@whop/react/components';
 import {
   LayoutDashboard,
@@ -14,36 +14,75 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
-// Original navigation (full creator feature set)
-const originalNavigation = [
-  { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
-  { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
-  { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
-  { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart },
-  { name: 'Usage', href: '/dashboard/creator/usage', icon: Activity },
-  { name: 'Chat', href: '/dashboard/creator/chat', icon: MessageSquare },
-];
+// Check if DEV_SIMPLE_NAV is enabled for quick dashboard switching
+const isDevSimpleNav = process.env.NEXT_PUBLIC_DEV_SIMPLE_NAV === 'true';
 
-// Simplified navigation for development (easier dashboard switching)
-const devSimpleNavigation = [
-  { name: 'Dashboard', href: '/dashboard/creator/overview', icon: LayoutDashboard },
-  { name: 'Courses', href: '/dashboard/creator/courses', icon: BookOpen },
-  { name: 'Videos', href: '/dashboard/creator/videos', icon: Video },
-  { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart },
-  { name: 'Usage', href: '/dashboard/creator/usage', icon: Activity },
-  { name: 'Student', href: '/dashboard/student', icon: GraduationCap },
+// Navigation items template - paths will be built dynamically
+const navItems = [
+  { name: 'Dashboard', path: 'overview', icon: LayoutDashboard },
+  { name: 'Courses', path: 'courses', icon: BookOpen },
+  { name: 'Videos', path: 'videos', icon: Video },
+  { name: 'Analytics', path: 'analytics', icon: BarChart },
+  { name: 'Usage', path: 'usage', icon: Activity },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const params = useParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Use simplified navigation when DEV_SIMPLE_NAV is enabled
-  const isDevSimpleNav = process.env['NEXT_PUBLIC_DEV_SIMPLE_NAV'] === 'true';
-  const navigation = isDevSimpleNav ? devSimpleNavigation : originalNavigation;
+  // Extract companyId from params or pathname
+  const companyId = params.companyId as string | undefined;
+
+  // Determine if we're using the new native auth routes or legacy routes
+  const isNativeAuthRoute = pathname.startsWith('/dashboard/') && companyId;
+  const isLegacyRoute = pathname.startsWith('/dashboard/creator/');
+
+  // Build navigation based on route type
+  const navigation = useMemo(() => {
+    let items;
+    if (isNativeAuthRoute && companyId) {
+      // New native auth route structure: /dashboard/[companyId]/*
+      items = navItems.map(item => ({
+        name: item.name,
+        href: `/dashboard/${companyId}/${item.path}`,
+        icon: item.icon,
+      }));
+    } else if (isLegacyRoute) {
+      // Legacy route structure: /dashboard/creator/*
+      items = navItems.map(item => ({
+        name: item.name,
+        href: `/dashboard/creator/${item.path}`,
+        icon: item.icon,
+      }));
+    } else {
+      // Default fallback
+      items = navItems.map(item => ({
+        name: item.name,
+        href: `/dashboard/creator/${item.path}`,
+        icon: item.icon,
+      }));
+    }
+
+    // DEV_SIMPLE_NAV: Add quick switch to student dashboard
+    if (isDevSimpleNav) {
+      items.push({
+        name: 'Student',
+        href: '/dashboard/student/chat',
+        icon: GraduationCap,
+      });
+    }
+
+    return items;
+  }, [companyId, isNativeAuthRoute, isLegacyRoute]);
+
+  // Home link - goes to overview
+  const homeHref = isNativeAuthRoute && companyId
+    ? `/dashboard/${companyId}/overview`
+    : '/dashboard/creator/overview';
 
   return (
     <nav className="bg-gray-2 border-b border-gray-a4">
@@ -51,7 +90,7 @@ export function DashboardNav() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <Link href="/dashboard/creator/overview" className="flex items-center gap-2">
+            <Link href={homeHref} className="flex items-center gap-2">
               <img
                 src="/images/chronos_icon_128.png"
                 alt="Chronos"
