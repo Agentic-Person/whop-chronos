@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Search, Play, Clock, Eye, Upload } from 'lucide-react';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 interface Video {
   id: string;
@@ -44,6 +45,7 @@ export default function VideoLibraryPicker({
   onClose,
   onUploadNewVideo,
 }: VideoLibraryPickerProps) {
+  const { creatorId } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,8 +54,13 @@ export default function VideoLibraryPicker({
   useEffect(() => {
     // Fetch videos from API
     async function fetchVideos() {
+      if (!creatorId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch('/api/video');
+        const response = await fetch(`/api/video/list?creatorId=${creatorId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch videos');
         }
@@ -84,7 +91,7 @@ export default function VideoLibraryPicker({
     }
 
     fetchVideos();
-  }, []);
+  }, [creatorId]);
 
   const filteredVideos = videos.filter((video) =>
     video.title.toLowerCase().includes(searchQuery.toLowerCase())
