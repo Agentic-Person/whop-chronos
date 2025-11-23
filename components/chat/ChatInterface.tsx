@@ -128,7 +128,7 @@ export function ChatInterface({
   };
 
   return (
-    <div className={cn("flex h-full w-full", className)}>
+    <div className={cn("flex h-full w-full min-h-0", className)}>
       {/* Mobile sidebar toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -160,8 +160,8 @@ export function ChatInterface({
       </div>
 
       {/* Main chat area */}
-      <div className="flex flex-1 flex-col">
-        <Card className="flex h-full flex-col" padding="none">
+      <div className="flex flex-1 flex-col min-h-0">
+        <Card className="flex h-full flex-col min-h-0" padding="none">
           {/* Chat header */}
           <div className="border-b border-gray-a4 p-4">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -173,7 +173,7 @@ export function ChatInterface({
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
