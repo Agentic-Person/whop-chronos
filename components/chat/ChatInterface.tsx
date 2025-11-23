@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { SessionSidebar } from "./SessionSidebar";
-import { Card, Button, Spinner } from "frosted-ui";
+import { Button, Spinner } from "frosted-ui";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -160,27 +160,26 @@ export function ChatInterface({
       </div>
 
       {/* Main chat area */}
-      <div className="flex flex-1 flex-col min-h-0">
-        <Card className="flex h-full flex-col min-h-0" padding="none">
-          {/* Chat header */}
-          <div className="border-b border-gray-a4 p-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              AI Learning Assistant
-            </h2>
-            <p className="text-sm text-gray-600">
-              Ask questions about your course videos
-            </p>
-          </div>
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-1 border border-gray-a4 rounded-lg">
+        {/* Chat header */}
+        <div className="flex-shrink-0 border-b border-gray-a4 p-4 bg-gray-2">
+          <h2 className="text-lg font-semibold text-gray-12">
+            AI Learning Assistant
+          </h2>
+          <p className="text-sm text-gray-11">
+            Ask questions about your course videos
+          </p>
+        </div>
 
-          {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 min-h-0">
+        {/* Messages area - scrollable */}
+        <div className="flex-1 overflow-y-scroll p-4" style={{ minHeight: 0 }}>
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <h3 className="mb-2 text-lg font-medium text-gray-900">
+                  <h3 className="mb-2 text-lg font-medium text-gray-12">
                     Start a conversation
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-11">
                     Ask me anything about your course content
                   </p>
                 </div>
@@ -195,7 +194,7 @@ export function ChatInterface({
 
             {/* Loading indicator */}
             {isLoading && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+              <div className="mt-4 flex items-center gap-2 text-sm text-gray-11">
                 <Spinner size="sm" />
                 <span>AI is typing...</span>
               </div>
@@ -225,15 +224,14 @@ export function ChatInterface({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message input */}
-          <div className="border-t border-gray-a4 p-4">
-            <MessageInput
-              onSend={handleSendMessage}
-              disabled={isLoading}
-              placeholder="Ask a question about your course..."
-            />
-          </div>
-        </Card>
+        {/* Message input - fixed at bottom */}
+        <div className="flex-shrink-0 border-t border-gray-a4 p-4 bg-gray-2">
+          <MessageInput
+            onSend={handleSendMessage}
+            disabled={isLoading}
+            placeholder="Ask a question about your course..."
+          />
+        </div>
       </div>
 
       {/* Overlay for mobile */}

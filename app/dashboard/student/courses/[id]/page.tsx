@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, MessageSquare, ChevronRight, HelpCircle } from 'lucide-react';
-import VideoPlayer from '@/components/video/VideoPlayer';
+import VideoPlayer, { type VideoPlayerHandle } from '@/components/video/VideoPlayer';
 import { CourseSidebar } from '@/components/courses/CourseSidebar';
 import { LessonMetadata } from '@/components/courses/LessonMetadata';
 import { NavigationControls } from '@/components/courses/NavigationControls';
@@ -85,6 +85,9 @@ export default function StudentCourseViewerPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(false);
+
+  // Video player ref for seeking
+  const videoPlayerRef = useRef<VideoPlayerHandle>(null);
 
   // Chat and UI state
   const [isChatOpen, setIsChatOpen] = useState(() => {
@@ -320,6 +323,18 @@ export default function StudentCourseViewerPage() {
   };
 
   /**
+   * Handle timestamp click from chat video references
+   */
+  const handleTimestampClick = (seconds: number, videoId: string) => {
+    // If the video reference is for the current video, seek to timestamp
+    if (currentLesson?.video_id === videoId && videoPlayerRef.current) {
+      videoPlayerRef.current.seekTo(seconds);
+      // Scroll to video player
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  /**
    * Initial data fetch
    */
   useEffect(() => {
@@ -440,6 +455,7 @@ export default function StudentCourseViewerPage() {
           {currentLesson && (
             <div className="bg-black flex-shrink-0">
               <VideoPlayer
+                ref={videoPlayerRef}
                 video={currentLesson.video}
                 studentId={studentId}
                 creatorId={creatorId}
@@ -471,6 +487,7 @@ export default function StudentCourseViewerPage() {
               currentVideoId={currentLesson?.video_id}
               creatorId={creatorId || ''}
               studentId={studentId || ''}
+              onTimestampClick={handleTimestampClick}
               className="flex-1"
             />
           </div>
