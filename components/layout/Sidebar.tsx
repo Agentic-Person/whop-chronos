@@ -8,11 +8,16 @@ import {
   BarChart3,
   Settings,
   MessageSquare,
-  ChevronLeft
+  ChevronLeft,
+  GraduationCap,
+  Briefcase
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+
+// Check if DEV_SIMPLE_NAV is enabled for quick dashboard switching
+const isDevSimpleNav = process.env.NEXT_PUBLIC_DEV_SIMPLE_NAV === 'true';
 
 interface SidebarProps {
   userRole?: "creator" | "student";
@@ -58,9 +63,21 @@ const creatorNavItems: NavItem[] = [
     href: "/dashboard/creator/settings",
     icon: Settings,
   },
+  // DEV_SIMPLE_NAV: Quick switch to student dashboard
+  ...(isDevSimpleNav ? [{
+    label: "Student View",
+    href: "/dashboard/student/chat",
+    icon: GraduationCap,
+  }] : []),
 ];
 
 const studentNavItems: NavItem[] = [
+  // DEV_SIMPLE_NAV: Quick switch to creator dashboard
+  ...(isDevSimpleNav ? [{
+    label: "Creator View",
+    href: "/dashboard/creator/overview",
+    icon: Briefcase,
+  }] : []),
   {
     label: "My Courses",
     href: "/dashboard/student/courses",
