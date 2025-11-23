@@ -1,467 +1,812 @@
-# Whop OAuth Deployment Guide - CRITICAL FIX
+# Whop App Integration Guide - Native Authentication
 
-**Date:** November 20, 2025
-**Issue:** OAuth "Client authentication failed" error
-**Status:** ✅ Code fixed | ⚠️ Deployment required
+**Last Updated:** November 22, 2025
+**Version:** 2.0 - Complete Rewrite for Native Auth
+**Status:** ✅ Active - Use this guide for all Whop app integrations
 
 ---
 
-## 🚨 CRITICAL: What Was Fixed
+## 🚨 CRITICAL: OAuth vs Native Authentication
 
-### Code Changes (Already Applied)
+### ❌ DO NOT USE: V5 OAuth Flow (Deprecated)
 
-**File:** `lib/whop/api-client.ts`
-
-**Changed OAuth Token Endpoint URLs:**
-
-```diff
-- https://data.whop.com/api/v3/oauth/token  ❌ WRONG
-+ https://data.whop.com/oauth/token          ✅ CORRECT
+If you're seeing this error:
+```
+Client authentication failed due to unknown client
 ```
 
-**Lines Changed:**
-- Line 231: `exchangeCodeForToken` function
-- Line 272: `refreshAccessToken` function
+**The problem:** You cannot use your App API Key and App ID as OAuth client credentials. They are different things in Whop's system. The V5 OAuth endpoint has been deprecated.
 
-**Why This Fixes It:**
-The `/api/v3/` prefix was incorrect and causing Whop to reject authentication requests with "Client authentication failed" error.
+**What Whop told us (November 22, 2025):**
+> "The issue is you can't use your app api key and id as the client id / secret for the v5 api. You'd need to create those separately, but though we don't recommend it since v5 has been deprecated for some time. Ideally, you'd use whop authentication natively depending on your usecase."
+
+### ✅ USE: Native Authentication (Recommended)
+
+Whop's native authentication is:
+- **Simpler** - No OAuth redirect dance
+- **More secure** - Per-request JWT verification
+- **Better supported** - This is Whop's recommended approach
+- **Built-in** - Authentication handled by Whop automatically
 
 ---
 
-## 📋 DEPLOYMENT CHECKLIST
+## 📚 Table of Contents
 
-Complete these steps in order:
+1. [Understanding Whop Authentication](#understanding-whop-authentication)
+2. [App Types: Embedded vs Standalone](#app-types-embedded-vs-standalone)
+3. [Native Auth Implementation](#native-auth-implementation)
+4. [Route Structure for Whop Apps](#route-structure-for-whop-apps)
+5. [Identifying Creators vs Students](#identifying-creators-vs-students)
+6. [Environment Variables](#environment-variables)
+7. [Local Development](#local-development)
+8. [Migration from OAuth](#migration-from-oauth)
+9. [Troubleshooting](#troubleshooting)
+10. [Reference Implementation](#reference-implementation)
 
-### ✅ Step 1: Verify Whop Developer Dashboard (10 minutes)
+---
 
-**Navigate to:** https://dev.whop.com or https://dash.whop.com
+## 1. Understanding Whop Authentication
 
-#### 1.1 Verify App Configuration
+### How Native Auth Works
 
-| Setting | Expected Value | Where to Find |
-|---------|---------------|---------------|
-| **App ID** | `app_p2sU9MQCeFnT4o` | Dashboard → Your App → Settings |
-| **App Status** | Active / Published | Dashboard → Your App → Status |
-| **App Name** | Chronos AI Learning Assistant | Dashboard → Your App |
-
-#### 1.2 Get Correct Client Secret
-
-**CRITICAL:** The client secret in production may be incorrect or expired.
-
-**Steps to get correct client secret:**
-1. Go to **Settings** → **OAuth** (or **Developer Settings**)
-2. Find **Client Secret** section
-3. If you can see the full secret, copy it
-4. If it's masked, you may need to **regenerate** it:
-   - Click "Regenerate Client Secret" or "Reset Secret"
-   - Copy the new secret immediately (you won't see it again!)
-   - **IMPORTANT:** This will invalidate the old secret
-
-**Expected format:** `apik_[long_string_of_characters]`
-
-#### 1.3 Register OAuth Redirect URI
-
-**CRITICAL:** This exact URI must be registered:
+When your app is embedded within Whop's iframe:
 
 ```
-https://www.chronos-ai.app/api/whop/auth/callback
+┌────────────────────────────────────────────────┐
+│  Whop Platform (whop.com)                      │
+│  ┌──────────────────────────────────────────┐  │
+│  │  Your App (embedded iframe)              │  │
+│  │                                          │  │
+│  │  ←── x-whop-user-token header ───        │  │
+│  │      (automatically injected)            │  │
+│  │                                          │  │
+│  └──────────────────────────────────────────┘  │
+└────────────────────────────────────────────────┘
 ```
 
-**How to add/verify:**
-1. Go to **OAuth Settings** → **Redirect URIs**
-2. Check if `https://www.chronos-ai.app/api/whop/auth/callback` is listed
-3. If not, click **"Add Redirect URI"**
-4. Enter: `https://www.chronos-ai.app/api/whop/auth/callback`
-5. Click **Save** or **Add**
+**Flow:**
+1. User accesses your app through Whop
+2. Whop embeds your app in an iframe
+3. Whop automatically injects `x-whop-user-token` header on all requests
+4. Your app verifies this token using the SDK
+5. No login page needed - users are already authenticated!
 
-**❌ Common Mistakes:**
-- Adding trailing slash: `https://www.chronos-ai.app/api/whop/auth/callback/` ❌
-- Using wrong domain: `https://chronos-ai.app/...` (missing www) ❌
-- Using HTTP instead of HTTPS ❌
+### The Key Functions
 
-#### 1.4 Verify OAuth Grant Types
+```typescript
+import { whopsdk } from "@/lib/whop-sdk";
+import { headers } from "next/headers";
 
-**Ensure these are enabled:**
-- ✅ **Authorization Code** - Must be enabled
-- ✅ **Refresh Token** - Must be enabled
+// 1. Verify the user token (get user ID)
+const { userId } = await whopsdk.verifyUserToken(await headers());
+// Returns: { userId: "user_xxxxxxxxxxxxx" }
 
-#### 1.5 Get API Key (for Whop MCP Server)
+// 2. Check what access level the user has
+const access = await whopsdk.users.checkAccess(resourceId, { id: userId });
+// Returns: { access_level: "admin" | "customer" | "no_access", has_access: boolean }
+```
 
-The Whop MCP server is also failing, suggesting the API key may be incorrect.
+### Access Levels Explained
 
-**Steps:**
-1. Go to **Settings** → **API Keys**
-2. Copy your API key (starts with `apik_`)
-3. If no API key exists, create one
-4. Save this for Vercel environment variables
-
----
-
-### ⚠️ Step 2: Update Vercel Environment Variables (15 minutes)
-
-**Navigate to:** https://vercel.com/dashboard
-
-#### 2.1 Select Your Project
-
-1. Click on your project: **chronos** or **whop-chronos**
-2. Go to **Settings** → **Environment Variables**
-
-#### 2.2 Critical Variables to Update
-
-**For Production Environment ONLY:**
-
-| Variable Name | Value Source | Format | Example |
-|--------------|--------------|--------|---------|
-| `WHOP_CLIENT_ID` | Whop Dashboard | `app_[id]` | `app_p2sU9MQCeFnT4o` |
-| `WHOP_CLIENT_SECRET` | Whop Dashboard (from Step 1.2) | `apik_[long_string]` | `apik_xV1QnlPVqeMYD_A20...` |
-| `WHOP_API_KEY` | Whop Dashboard (from Step 1.5) | `apik_[long_string]` | `apik_xV1QnlPVqeMYD_A20...` |
-| `WHOP_OAUTH_REDIRECT_URI` | Manual entry | Full URL | `https://www.chronos-ai.app/api/whop/auth/callback` |
-| `NEXT_PUBLIC_APP_URL` | Manual entry | Base URL | `https://www.chronos-ai.app` |
-| `WHOP_TOKEN_ENCRYPTION_KEY` | Verify existing | 64 hex chars | `e77993f3f6352372eeda...` |
-| `WHOP_WEBHOOK_SECRET` | Whop Dashboard (optional) | `ws_[string]` | `ws_f06a57521e31e9d0...` |
-| `NEXT_PUBLIC_WHOP_APP_ID` | Same as CLIENT_ID | `app_[id]` | `app_p2sU9MQCeFnT4o` |
-
-#### 2.3 How to Update Each Variable
-
-**For existing variables:**
-1. Find the variable in the list
-2. Click **Edit** (pencil icon)
-3. Update the value
-4. Ensure **Environment** is set to **Production** only
-5. Click **Save**
-
-**For missing variables:**
-1. Click **Add New** button
-2. Enter variable name exactly as shown above
-3. Enter the value
-4. Select **Production** environment only (uncheck Preview/Development)
-5. Click **Save**
-
-#### 2.4 CRITICAL: Variables to NEVER Set in Production
-
-**❌ DO NOT SET THESE IN PRODUCTION:**
-- `DEV_BYPASS_AUTH` - Security risk, only for local development
-- `NEXT_PUBLIC_DEV_BYPASS_AUTH` - Security risk, only for local development
-- `DEV_SIMPLE_NAV` - Development feature only
-
-If these exist in production, **DELETE THEM**.
-
-#### 2.5 Verification Checklist
-
-After updating all variables, verify:
-
-- [ ] `WHOP_CLIENT_ID` matches Whop Dashboard App ID
-- [ ] `WHOP_CLIENT_SECRET` is the current/regenerated secret from Whop
-- [ ] `WHOP_API_KEY` is valid and starts with `apik_`
-- [ ] `WHOP_OAUTH_REDIRECT_URI` exactly matches registered URI in Whop
-- [ ] `NEXT_PUBLIC_APP_URL` is base URL only (no `/api/whop/auth/callback`)
-- [ ] `DEV_BYPASS_AUTH` is NOT set in production
-- [ ] All variables are set for **Production** environment only
+| Level | Meaning | Typical Use |
+|-------|---------|-------------|
+| `admin` | Team member of the company | Creator dashboards, settings, analytics |
+| `customer` | Valid membership holder | Student views, course content, chat |
+| `no_access` | No permissions | Redirect to upgrade/purchase page |
 
 ---
 
-### 🚀 Step 3: Deploy to Production (5 minutes)
+## 2. App Types: Embedded vs Standalone
 
-#### Option A: Automatic Deployment (Recommended)
+### Embedded Apps (Recommended)
 
-**If you have automatic deployments enabled:**
+**Characteristics:**
+- Runs inside Whop's iframe
+- Authentication handled automatically
+- Uses native token verification
+- Seamless user experience
 
-1. Commit the code changes:
+**URL Patterns:**
+- Creators access via: `https://whop.com/dashboard/apps/[appId]`
+- Students access via: `https://whop.com/[company-slug]/app/[experienceId]`
+
+**When to use:**
+- ✅ You want seamless Whop integration
+- ✅ You want automatic authentication
+- ✅ You're building for Whop creators and their customers
+
+### Standalone Apps (Complex)
+
+**Characteristics:**
+- Users visit your domain directly (e.g., `chronos-ai.app`)
+- Requires proper OAuth credentials (NOT app API key)
+- Must create separate OAuth client credentials in Whop
+- More complex setup and maintenance
+
+**When to use:**
+- ⚠️ You need users to access outside of Whop
+- ⚠️ You need deep linking from external sources
+- ⚠️ V5 OAuth is deprecated - not recommended
+
+---
+
+## 3. Native Auth Implementation
+
+### Step 1: Install the Whop SDK
+
 ```bash
-git add lib/whop/api-client.ts
-git commit -m "fix(auth): correct Whop OAuth token endpoint URLs
-
-Changed from https://data.whop.com/api/v3/oauth/token
-to https://data.whop.com/oauth/token
-
-Fixes 'Client authentication failed' error during OAuth flow.
-
-Affected functions:
-- exchangeCodeForToken (line 231)
-- refreshAccessToken (line 272)
-
-Assisted by Jimmy Solutions Developer at Agentic Personnel LLC <Jimmy@AgenticPersonnel.com>"
-git push origin main
+pnpm add @whop/sdk
+# or
+npm install @whop/sdk
 ```
 
-2. Vercel will automatically deploy
-3. Wait for deployment to complete (2-3 minutes)
-4. Check deployment status in Vercel dashboard
+### Step 2: Initialize the SDK
 
-#### Option B: Manual Deployment
+Create `lib/whop-sdk.ts`:
 
-**If automatic deployments are not enabled:**
+```typescript
+import { Whop } from "@whop/sdk";
 
-1. Go to Vercel Dashboard → Your Project
-2. Go to **Deployments** tab
-3. Click **Redeploy** on the latest deployment
-4. Select **Use existing Build Cache** (faster)
-5. Click **Redeploy** to confirm
-6. Wait for deployment to complete
+if (!process.env['NEXT_PUBLIC_WHOP_APP_ID']) {
+  throw new Error('NEXT_PUBLIC_WHOP_APP_ID is required');
+}
 
-#### 3.1 Verify Deployment
+if (!process.env['WHOP_API_KEY']) {
+  throw new Error('WHOP_API_KEY is required');
+}
 
-1. Check **Deployments** tab in Vercel
-2. Wait for status to show **Ready** (green checkmark)
-3. Note the deployment URL (should be `https://www.chronos-ai.app`)
-
----
-
-### ✅ Step 4: Test OAuth Flow (10 minutes)
-
-#### 4.1 Test on Production Site
-
-**Navigate to:** https://www.chronos-ai.app
-
-**Test Steps:**
-1. Click **"Sign in with Whop"** button
-2. **Expected:** Redirect to Whop OAuth page
-   - URL should be: `https://whop.com/oauth?client_id=app_p2sU9MQCeFnT4o&redirect_uri=...`
-3. Click **"Authorize"** or **"Allow"**
-4. **Expected:** Redirect back to Chronos
-   - URL should briefly show: `https://www.chronos-ai.app/api/whop/auth/callback?code=...`
-   - Then redirect to: `https://www.chronos-ai.app/dashboard/creator` or `/dashboard/student`
-5. **Expected:** You are logged in
-   - Should see your Whop username in top-right corner
-   - Dashboard should load without errors
-6. **Expected:** Session persists
-   - Refresh the page - should stay logged in
-   - Navigate between pages - should stay logged in
-
-#### 4.2 What to Check If It Fails
-
-**If you get redirected back to landing page with error:**
-
-Check the URL for error details:
-```
-https://www.chronos-ai.app/?error=oauth_failed&details=[encoded_error]
+export const whopsdk = new Whop({
+  appID: process.env['NEXT_PUBLIC_WHOP_APP_ID'],
+  apiKey: process.env['WHOP_API_KEY'],
+  webhookKey: btoa(process.env['WHOP_WEBHOOK_SECRET'] || ""),
+});
 ```
 
-**Common Errors:**
+### Step 3: Create Auth Helper Functions
 
-| Error Message | Cause | Fix |
-|--------------|-------|-----|
-| `redirect_uri_mismatch` | URI not registered in Whop | Go back to Step 1.3 |
-| `invalid_client` | Wrong client ID/secret | Go back to Step 1.2 and 2.2 |
-| `access_denied` | User declined authorization | Normal - user chose not to login |
-| `Client authentication failed` | Wrong credentials in Vercel | Verify Step 2.2 |
+Create `lib/whop/native-auth.ts`:
 
-#### 4.3 Check Vercel Logs
+```typescript
+import { headers } from "next/headers";
+import { whopsdk } from "@/lib/whop-sdk";
+import { redirect } from "next/navigation";
 
-**If OAuth still fails:**
+/**
+ * Verify user token from Whop iframe
+ * Use in Server Components and API Routes
+ */
+export async function verifyWhopUser() {
+  try {
+    const { userId } = await whopsdk.verifyUserToken(await headers());
+    return { userId, error: null };
+  } catch (error) {
+    console.error("[Whop Auth] Token verification failed:", error);
+    return { userId: null, error: "Authentication failed" };
+  }
+}
 
-1. Go to Vercel Dashboard → Your Project
-2. Click **Logs** or **Functions** → **Logs**
-3. Filter by function: `/api/whop/auth/callback`
-4. Look for error messages after your OAuth attempt
-5. Check for:
-   - `[Whop API] Token exchange failed:` - Shows the exact error from Whop
-   - `Failed to complete OAuth flow:` - Shows the error passed to user
+/**
+ * Require authentication - redirects if not authenticated
+ */
+export async function requireWhopAuth() {
+  const { userId, error } = await verifyWhopUser();
 
-**Example of successful log:**
-```
-[Whop OAuth] Token exchange request: { client_id: 'app_p2sU9MQCeFnT4o', ... }
-[Whop Auth] Session created for user: { id: '...', email: '...' }
-```
+  if (!userId) {
+    redirect("/auth-error?reason=unauthenticated");
+  }
 
-**Example of failed log:**
-```
-[Whop API] Token exchange failed: {
-  status: 401,
-  error: 'invalid_client',
-  description: 'Client authentication failed...'
+  return userId;
+}
+
+/**
+ * Check if user is a creator (admin) for a company
+ */
+export async function requireCreatorAccess(companyId: string) {
+  const userId = await requireWhopAuth();
+
+  const access = await whopsdk.users.checkAccess(companyId, { id: userId });
+
+  if (access.access_level !== "admin") {
+    redirect("/auth-error?reason=not_admin");
+  }
+
+  return { userId, access };
+}
+
+/**
+ * Check if user has customer access to an experience
+ */
+export async function requireStudentAccess(experienceId: string) {
+  const userId = await requireWhopAuth();
+
+  const access = await whopsdk.users.checkAccess(experienceId, { id: userId });
+
+  if (!access.has_access) {
+    redirect("/auth-error?reason=no_access");
+  }
+
+  return { userId, access };
+}
+
+/**
+ * Get full user context with profile data
+ */
+export async function getWhopUserContext(resourceId: string) {
+  const userId = await requireWhopAuth();
+
+  const [user, access] = await Promise.all([
+    whopsdk.users.retrieve(userId),
+    whopsdk.users.checkAccess(resourceId, { id: userId }),
+  ]);
+
+  return {
+    userId,
+    user,
+    access,
+    isCreator: access.access_level === "admin",
+    isStudent: access.access_level === "customer",
+  };
 }
 ```
 
-#### 4.4 Test Whop MCP Server (Optional)
+### Step 4: Use in Server Components
 
-After OAuth works, test the Whop MCP server:
+```typescript
+// app/dashboard/[companyId]/page.tsx
+import { requireCreatorAccess, getWhopUserContext } from "@/lib/whop/native-auth";
+import { whopsdk } from "@/lib/whop-sdk";
 
-**In Claude Code with MCP config:**
+export default async function CreatorDashboard({
+  params,
+}: {
+  params: Promise<{ companyId: string }>;
+}) {
+  const { companyId } = await params;
+
+  // Verify user is a creator for this company
+  const { userId, access } = await requireCreatorAccess(companyId);
+
+  // Fetch company data
+  const company = await whopsdk.companies.retrieve(companyId);
+
+  return (
+    <div>
+      <h1>Welcome, Creator!</h1>
+      <p>Company: {company.title}</p>
+      <p>Access Level: {access.access_level}</p>
+    </div>
+  );
+}
+```
+
+### Step 5: Use in API Routes
+
+```typescript
+// app/api/videos/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { verifyWhopUser } from "@/lib/whop/native-auth";
+
+export async function GET(request: NextRequest) {
+  const { userId, error } = await verifyWhopUser();
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  // User is authenticated, proceed with request
+  const videos = await getVideosForUser(userId);
+
+  return NextResponse.json({ videos });
+}
+```
+
+---
+
+## 4. Route Structure for Whop Apps
+
+### Required Route Patterns
+
+Whop embedded apps use dynamic routes with resource IDs:
+
+```
+app/
+├── dashboard/
+│   └── [companyId]/           # Creator routes (admin access)
+│       ├── page.tsx           # Dashboard overview
+│       ├── layout.tsx         # Auth wrapper + navigation
+│       ├── videos/
+│       │   └── page.tsx       # Video management
+│       ├── courses/
+│       │   └── page.tsx       # Course builder
+│       ├── analytics/
+│       │   └── page.tsx       # Analytics dashboard
+│       └── settings/
+│           └── page.tsx       # App settings
+│
+├── experiences/
+│   └── [experienceId]/        # Student routes (customer access)
+│       ├── page.tsx           # Student home
+│       ├── layout.tsx         # Auth wrapper + navigation
+│       ├── courses/
+│       │   ├── page.tsx       # Course catalog
+│       │   └── [courseId]/
+│       │       └── page.tsx   # Course viewer
+│       └── chat/
+│           └── page.tsx       # AI chat interface
+│
+└── auth-error/
+    └── page.tsx               # Error page for auth failures
+```
+
+### Why Dynamic Routes?
+
+The `[companyId]` and `[experienceId]` are passed by Whop when embedding your app. They identify:
+
+- **companyId**: Which creator's dashboard is being accessed
+- **experienceId**: Which product/experience the student purchased
+
+This allows your app to:
+1. Serve multiple creators with one deployment
+2. Isolate data between different creator companies
+3. Validate access per resource
+
+---
+
+## 5. Identifying Creators vs Students
+
+### Method 1: Check Access Level
+
+```typescript
+const access = await whopsdk.users.checkAccess(resourceId, { id: userId });
+
+if (access.access_level === "admin") {
+  // User is a creator/team member
+  // Show creator dashboard
+}
+
+if (access.access_level === "customer") {
+  // User is a paying customer
+  // Show student view
+}
+
+if (access.access_level === "no_access") {
+  // User doesn't have access
+  // Show upgrade/purchase prompt
+}
+```
+
+### Method 2: Route-Based Detection
+
+Use different route patterns for different user types:
+
+```typescript
+// Creator route: /dashboard/[companyId]/...
+// - Always check for "admin" access
+// - companyId comes from Whop
+
+// Student route: /experiences/[experienceId]/...
+// - Check for "customer" access
+// - experienceId comes from Whop
+```
+
+### Method 3: Combined User Context
+
+```typescript
+async function getUserRole(companyId: string, experienceId?: string) {
+  const userId = await requireWhopAuth();
+
+  // Check company access (creator?)
+  const companyAccess = await whopsdk.users.checkAccess(companyId, { id: userId });
+
+  if (companyAccess.access_level === "admin") {
+    return { role: "creator", userId, companyId };
+  }
+
+  // Check experience access (student?)
+  if (experienceId) {
+    const expAccess = await whopsdk.users.checkAccess(experienceId, { id: userId });
+    if (expAccess.has_access) {
+      return { role: "student", userId, experienceId };
+    }
+  }
+
+  return { role: "none", userId };
+}
+```
+
+---
+
+## 6. Environment Variables
+
+### Required Variables
+
 ```bash
-claude --mcp-config default.mcp.json
+# ===== WHOP NATIVE AUTH (Required) =====
+
+# Your Whop App ID (from dev.whop.com)
+NEXT_PUBLIC_WHOP_APP_ID=app_xxxxxxxxxxxxxx
+
+# App API Key (from Whop Dashboard → Settings → API Keys)
+WHOP_API_KEY=your_api_key_here
+
+# Webhook Secret (from Whop Dashboard → Settings → Webhooks)
+WHOP_WEBHOOK_SECRET=your_webhook_secret_here
+
+
+# ===== OTHER REQUIRED VARIABLES =====
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxx...
+SUPABASE_SERVICE_ROLE_KEY=eyJxx...
+
+# AI APIs
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx
+
+
+# ===== DEPRECATED (Remove these) =====
+# WHOP_CLIENT_ID          # NOT NEEDED - was for OAuth
+# WHOP_CLIENT_SECRET      # NOT NEEDED - was for OAuth
+# WHOP_OAUTH_REDIRECT_URI # NOT NEEDED - was for OAuth
+# WHOP_TOKEN_ENCRYPTION_KEY # NOT NEEDED - no session cookies
 ```
 
-**Try Whop MCP commands:**
-- List products: Should return your Whop products
-- Get company info: Should return your Whop company details
+### Getting Your Credentials
 
-**If MCP server still fails:**
-- Verify `WHOP_API_KEY` in Vercel is correct
-- Check that API key has proper permissions in Whop Dashboard
+1. **App ID**:
+   - Go to https://dev.whop.com
+   - Select your app
+   - Copy the App ID (format: `app_xxxxxxxxxxxxxx`)
 
----
+2. **API Key**:
+   - Go to your app's settings
+   - Navigate to API Keys section
+   - Create or copy an existing key
 
-## 🐛 Troubleshooting Guide
-
-### Problem: "redirect_uri_mismatch"
-
-**Symptoms:**
-- OAuth redirects back with error
-- Error message mentions redirect URI
-
-**Solution:**
-1. Go to Whop Developer Dashboard
-2. Check registered redirect URIs
-3. Ensure exact match: `https://www.chronos-ai.app/api/whop/auth/callback`
-4. No trailing slash, no typos
-5. Save and wait 1-2 minutes for changes to propagate
+3. **Webhook Secret**:
+   - Go to your app's settings
+   - Navigate to Webhooks section
+   - Copy the webhook signing secret
 
 ---
 
-### Problem: "invalid_client" or "Client authentication failed"
+## 7. Local Development
 
-**Symptoms:**
-- OAuth callback fails during token exchange
-- Vercel logs show "Client authentication failed"
+### Option 1: Use Whop's Dev Proxy (Recommended)
 
-**Root Causes:**
-1. **Wrong Client ID** - Doesn't match Whop Dashboard
-2. **Wrong Client Secret** - Expired or incorrect in Vercel
-3. **Missing Credentials** - Not set in Vercel production environment
+Whop provides a development proxy that simulates the iframe environment:
 
-**Solution:**
-1. Go to Whop Dashboard → Get correct Client ID and Secret
-2. Go to Vercel → Update `WHOP_CLIENT_ID` and `WHOP_CLIENT_SECRET`
-3. Verify values are exactly as shown in Whop Dashboard
-4. Redeploy application
-5. Test again
+```bash
+# Install Whop CLI
+npm install -g @whop/cli
 
----
-
-### Problem: Session doesn't persist (logs out on refresh)
-
-**Symptoms:**
-- OAuth succeeds initially
-- User gets logged in
-- Refresh page → logged out again
-
-**Root Causes:**
-1. **Encryption key mismatch** - Different key between deployments
-2. **Cookie issues** - Browser blocking cookies
-3. **Token expiration** - Tokens expiring immediately
-
-**Solution:**
-1. Verify `WHOP_TOKEN_ENCRYPTION_KEY` in Vercel is set and 64 hex characters
-2. Check browser console for cookie errors
-3. Check if browser is blocking third-party cookies
-4. Test in incognito mode to rule out browser extensions
-
----
-
-### Problem: Whop MCP Server not working
-
-**Symptoms:**
-- Whop MCP commands return errors
-- "Cannot read properties of undefined" errors
-
-**Root Cause:**
-- Invalid `WHOP_API_KEY` in environment
-
-**Solution:**
-1. Go to Whop Dashboard → Get valid API key
-2. Update `WHOP_API_KEY` in:
-   - Vercel production environment (for deployed app)
-   - Local `.env.local` (for MCP server)
-3. Restart MCP server / redeploy application
-
----
-
-## 📊 Expected Results After Fix
-
-### ✅ Successful OAuth Flow
-
-1. **Landing Page** → Click "Sign in with Whop"
-2. **Whop OAuth Page** → User authorizes app
-3. **Callback Processing** → Token exchange succeeds
-4. **Session Creation** → Encrypted session cookie set
-5. **Dashboard** → User logged in and redirected
-6. **Persistence** → Session survives page refresh
-
-### ✅ Vercel Logs (Success)
-
-```
-[Whop OAuth] Initiating OAuth flow...
-[Whop OAuth] Token exchange request: { client_id: 'app_p2sU9MQCeFnT4o', ... }
-[Whop Auth] Token exchange successful
-[Whop Auth] Fetching user info...
-[Whop Auth] Session created for user: user_ABC123
-[Whop Auth] Redirecting to dashboard...
+# Start your app with Whop proxy
+whop-proxy --command="npm run dev"
 ```
 
-### ✅ User Experience
+This will:
+- Run your app on the specified port
+- Provide a proxy URL that includes the auth headers
+- Simulate the Whop iframe environment
 
-- Click "Sign in with Whop" → Smooth redirect to Whop
-- Authorize app → Immediate redirect back
-- Dashboard loads → User sees their account info
-- Navigation works → No re-authentication needed
-- Refresh page → Still logged in
+### Option 2: Test Mode Bypass
+
+For rapid development, you can bypass auth locally:
+
+Create `lib/whop/native-auth.ts` with test mode:
+
+```typescript
+const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
+const TEST_USER_ID = 'user_test_123';
+
+export async function verifyWhopUser() {
+  if (TEST_MODE) {
+    console.log('⚠️ [Auth] Test mode enabled - using mock user');
+    return { userId: TEST_USER_ID, error: null };
+  }
+
+  // ... real implementation
+}
+```
+
+**⚠️ WARNING:** Never enable `DEV_BYPASS_AUTH` in production!
+
+### Option 3: Direct Testing in Whop
+
+1. Deploy your app to a preview URL (e.g., Vercel preview)
+2. Update your app's URL in Whop Dashboard to the preview URL
+3. Test directly within Whop's iframe
 
 ---
 
-## 📞 Support Resources
+## 8. Migration from OAuth
+
+If you have an existing OAuth implementation, follow these steps:
+
+### Phase 1: Add Native Auth (Parallel)
+
+1. Install SDK: `pnpm add @whop/sdk`
+2. Create `lib/whop-sdk.ts`
+3. Create `lib/whop/native-auth.ts`
+4. Keep existing OAuth code temporarily
+
+### Phase 2: Create New Routes
+
+1. Create `/dashboard/[companyId]/` routes
+2. Create `/experiences/[experienceId]/` routes
+3. Implement native auth in new routes
+4. Test in Whop iframe environment
+
+### Phase 3: Migrate Pages
+
+For each existing page:
+
+```typescript
+// OLD (OAuth)
+import { requireAuth } from "@/lib/whop/auth";
+
+export default async function Page() {
+  const session = await requireAuth();
+  const userId = session.user.id;
+  // ...
+}
+
+// NEW (Native)
+import { requireCreatorAccess } from "@/lib/whop/native-auth";
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ companyId: string }>;
+}) {
+  const { companyId } = await params;
+  const { userId } = await requireCreatorAccess(companyId);
+  // ...
+}
+```
+
+### Phase 4: Remove OAuth Code
+
+After all pages migrated:
+
+1. Delete `app/api/whop/auth/login/`
+2. Delete `app/api/whop/auth/callback/`
+3. Delete `app/api/whop/auth/logout/`
+4. Remove OAuth functions from `lib/whop/auth.ts`
+5. Remove session encryption code
+6. Remove OAuth environment variables
+
+### Phase 5: Update Documentation
+
+1. Update README with new setup instructions
+2. Update deployment guides
+3. Remove OAuth references
+
+---
+
+## 9. Troubleshooting
+
+### Error: "Token verification failed"
+
+**Symptoms:**
+- `verifyUserToken()` throws an error
+- User appears unauthenticated
+
+**Causes:**
+1. App not running in Whop iframe
+2. Invalid `WHOP_API_KEY`
+3. Token expired or malformed
+
+**Solutions:**
+1. Ensure you're accessing app through Whop, not directly
+2. Verify API key in environment variables
+3. Check that SDK is initialized correctly
+
+### Error: "No access" but user should have access
+
+**Symptoms:**
+- `checkAccess()` returns `no_access`
+- User has a valid membership
+
+**Causes:**
+1. Wrong resource ID (companyId/experienceId)
+2. Membership expired
+3. User hasn't purchased the product
+
+**Solutions:**
+1. Log the resource ID and verify it matches Whop
+2. Check user's membership status in Whop Dashboard
+3. Ensure product is properly configured
+
+### Error: "Headers not available"
+
+**Symptoms:**
+- `headers()` returns undefined
+- Can't access `x-whop-user-token`
+
+**Causes:**
+1. Calling from client component (headers only available server-side)
+2. Not using `await` with `headers()`
+
+**Solutions:**
+1. Move authentication to Server Components or API Routes
+2. Use `const h = await headers()` (Next.js 15+)
+
+### Local Development Not Working
+
+**Symptoms:**
+- Auth works in production but not locally
+- Token header not present
+
+**Solutions:**
+1. Use `whop-proxy` for local development
+2. Enable `DEV_BYPASS_AUTH` for testing
+3. Deploy to preview URL and test in Whop iframe
+
+---
+
+## 10. Reference Implementation
+
+### Complete Layout Example
+
+```typescript
+// app/dashboard/[companyId]/layout.tsx
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { whopsdk } from "@/lib/whop-sdk";
+
+export default async function CreatorLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ companyId: string }>;
+}) {
+  const { companyId } = await params;
+
+  // Verify authentication
+  let userId: string;
+  try {
+    const result = await whopsdk.verifyUserToken(await headers());
+    userId = result.userId;
+  } catch (error) {
+    redirect("/auth-error?reason=unauthenticated");
+  }
+
+  // Check creator access
+  const access = await whopsdk.users.checkAccess(companyId, { id: userId });
+
+  if (access.access_level !== "admin") {
+    redirect("/auth-error?reason=not_admin");
+  }
+
+  // Fetch user and company data
+  const [user, company] = await Promise.all([
+    whopsdk.users.retrieve(userId),
+    whopsdk.companies.retrieve(companyId),
+  ]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <nav className="border-b">
+        <div className="flex items-center justify-between p-4">
+          <span className="font-bold">{company.title}</span>
+          <span>{user.email}</span>
+        </div>
+      </nav>
+      <main className="p-4">
+        {children}
+      </main>
+    </div>
+  );
+}
+```
+
+### Complete API Route Example
+
+```typescript
+// app/api/videos/[videoId]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { whopsdk } from "@/lib/whop-sdk";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ videoId: string }> }
+) {
+  const { videoId } = await params;
+
+  // Verify authentication
+  let userId: string;
+  try {
+    const result = await whopsdk.verifyUserToken(await headers());
+    userId = result.userId;
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  // Get the video and check access
+  const video = await getVideoById(videoId);
+
+  if (!video) {
+    return NextResponse.json(
+      { error: "Video not found" },
+      { status: 404 }
+    );
+  }
+
+  // Check if user has access to the video's company/experience
+  const access = await whopsdk.users.checkAccess(
+    video.companyId,
+    { id: userId }
+  );
+
+  if (!access.has_access) {
+    return NextResponse.json(
+      { error: "Access denied" },
+      { status: 403 }
+    );
+  }
+
+  return NextResponse.json({ video });
+}
+```
+
+---
+
+## 📞 Resources
 
 ### Whop Documentation
-- **OAuth Guide:** https://docs.whop.com/api-reference/oauth/introduction
-- **Token Endpoint:** https://docs.whop.com/api-reference/oauth/token
-- **Troubleshooting:** https://docs.whop.com/api-reference/oauth/troubleshooting
+- **Developer Portal:** https://dev.whop.com
+- **Authentication Guide:** https://docs.whop.com/developer/guides/authentication
+- **SDK Reference:** https://docs.whop.com/sdk
+- **B2B Apps Guide:** https://docs.whop.com/whop-apps/b2b-apps
 
-### Vercel Documentation
-- **Environment Variables:** https://vercel.com/docs/concepts/projects/environment-variables
-- **Deployments:** https://vercel.com/docs/concepts/deployments/overview
-- **Function Logs:** https://vercel.com/docs/concepts/observability/runtime-logs
-
-### Project Documentation
-- **OAuth Implementation:** `lib/whop/auth.ts`, `lib/whop/api-client.ts`
-- **Callback Handler:** `app/api/whop/auth/callback/route.ts`
-- **Auth Context:** `lib/contexts/AuthContext.tsx`
-- **Local Setup Guide:** `docs/guides/setup/WHOP_OAUTH_FIX_GUIDE.md`
+### Support
+- **Whop Discord:** https://discord.gg/whop
+- **Whop Support:** support@whop.com
 
 ---
 
-## ✅ Final Verification Checklist
+## 📋 Quick Checklist
 
-Before marking this as complete, verify ALL of these:
+### Before Development
+- [ ] Created app in Whop Developer Portal
+- [ ] Got App ID (`app_xxxxxx`)
+- [ ] Created API Key
+- [ ] Set up webhook secret (optional)
+- [ ] Configured environment variables
 
-### Whop Dashboard
-- [ ] App ID is `app_p2sU9MQCeFnT4o`
-- [ ] App status is "Active" or "Published"
-- [ ] Redirect URI `https://www.chronos-ai.app/api/whop/auth/callback` is registered
-- [ ] Client Secret is current (not expired)
-- [ ] API Key is valid and has proper permissions
-- [ ] Authorization Code grant type enabled
-- [ ] Refresh Token grant type enabled
+### During Development
+- [ ] Installed `@whop/sdk`
+- [ ] Created SDK initialization file
+- [ ] Created native auth helpers
+- [ ] Used dynamic routes (`[companyId]`, `[experienceId]`)
+- [ ] Implemented `verifyUserToken()` in layouts
+- [ ] Implemented `checkAccess()` for authorization
 
-### Vercel Production Environment
-- [ ] `WHOP_CLIENT_ID=app_p2sU9MQCeFnT4o`
-- [ ] `WHOP_CLIENT_SECRET` is current secret from Whop Dashboard
-- [ ] `WHOP_API_KEY` is valid API key from Whop Dashboard
-- [ ] `WHOP_OAUTH_REDIRECT_URI=https://www.chronos-ai.app/api/whop/auth/callback`
-- [ ] `NEXT_PUBLIC_APP_URL=https://www.chronos-ai.app` (no callback path)
-- [ ] `WHOP_TOKEN_ENCRYPTION_KEY` is set (64 hex characters)
-- [ ] `DEV_BYPASS_AUTH` is NOT set in production
-- [ ] All variables are for Production environment only
+### Before Deployment
+- [ ] Removed any `DEV_BYPASS_AUTH` flags
+- [ ] Tested in Whop iframe environment
+- [ ] Verified all environment variables in production
+- [ ] Removed deprecated OAuth code (if migrating)
 
-### Code Changes
-- [ ] `lib/whop/api-client.ts` line 231: `https://data.whop.com/oauth/token`
-- [ ] `lib/whop/api-client.ts` line 272: `https://data.whop.com/oauth/token`
-- [ ] Changes committed to git
-- [ ] Changes deployed to production
-
-### Testing
-- [ ] Can access https://www.chronos-ai.app
-- [ ] "Sign in with Whop" button works
-- [ ] OAuth redirects to Whop successfully
-- [ ] Authorization redirects back to Chronos
-- [ ] User is logged in to dashboard
-- [ ] Session persists on page refresh
-- [ ] No errors in browser console
-- [ ] No errors in Vercel function logs
+### After Deployment
+- [ ] Verified authentication works in production
+- [ ] Tested both creator and student flows
+- [ ] Checked access control works correctly
+- [ ] Monitored for any auth errors
 
 ---
 
-**Last Updated:** November 20, 2025
-**Status:** ✅ Code fixed | ⚠️ Deployment pending
-**Estimated Time:** 30-40 minutes total
-
-**Once complete, mark this issue as RESOLVED.**
+**Document Version:** 2.0
+**Last Updated:** November 22, 2025
+**Author:** Chronos Development Team
+**Status:** ✅ Active - Recommended approach for all Whop apps

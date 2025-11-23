@@ -1,7 +1,17 @@
 /**
- * Whop Authentication & Authorization
+ * @deprecated This module uses the OAuth flow which has been deprecated by Whop.
+ *
+ * For embedded apps, use native authentication instead:
+ * - Import from '@/lib/whop/native-auth' for native auth helpers
+ * - Use routes under /dashboard/[companyId]/* and /experiences/[experienceId]/*
+ * - Whop automatically provides JWT tokens via x-whop-user-token header
+ *
+ * See docs/deployment/WHOP_OAUTH_DEPLOYMENT_GUIDE.md for migration guide.
+ *
+ * Whop Authentication & Authorization (LEGACY)
  *
  * Handles OAuth flow, token validation, and membership checks
+ * This module is kept for backward compatibility with existing code.
  */
 
 import { cookies } from 'next/headers';

@@ -1,5 +1,14 @@
 /**
- * Whop OAuth Login Endpoint
+ * @deprecated OAuth is deprecated for embedded Whop apps.
+ *
+ * For embedded apps, use native authentication:
+ * - Routes: /dashboard/[companyId]/* and /experiences/[experienceId]/*
+ * - Whop provides JWT via x-whop-user-token header automatically
+ * - Use @/lib/whop/native-auth helpers
+ *
+ * See docs/deployment/WHOP_OAUTH_DEPLOYMENT_GUIDE.md for migration guide.
+ *
+ * Whop OAuth Login Endpoint (LEGACY)
  *
  * Initiates OAuth flow by redirecting to Whop authorization page
  * GET /api/whop/auth/login?redirect=/dashboard

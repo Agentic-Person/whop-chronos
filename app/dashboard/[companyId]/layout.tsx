@@ -1,0 +1,150 @@
+/**
+ * Creator Dashboard Layout with Native Whop Authentication
+ *
+ * This layout wraps all creator dashboard pages and:
+ * 1. Verifies the user is authenticated via Whop native auth
+ * 2. Checks the user has admin access to the company
+ * 3. Provides company and user context to child pages
+ * 4. Renders the dashboard navigation
+ */
+
+import { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { whopsdk } from '@/lib/whop-sdk';
+import { DashboardNav } from '@/components/layout/DashboardNav';
+import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
+
+// Force dynamic rendering for authentication
+export const dynamic = 'force-dynamic';
+
+// Test mode configuration
+const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
+const TEST_USER_ID = 'user_test_00000000000000';
+
+interface CreatorLayoutProps {
+  children: ReactNode;
+  params: Promise<{ companyId: string }>;
+}
+
+export default async function CreatorDashboardLayout({
+  children,
+  params,
+}: CreatorLayoutProps) {
+  const { companyId } = await params;
+
+  let userId: string;
+  let user: Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
+  let company: Awaited<ReturnType<typeof whopsdk.companies.retrieve>>;
+  let accessLevel: string;
+
+  if (TEST_MODE) {
+    // Test mode - use mock data
+    console.log('⚠️ [Creator Layout] Test mode enabled');
+    userId = TEST_USER_ID;
+    user = {
+      id: TEST_USER_ID,
+      email: 'creator@test.chronos.ai',
+      username: 'test_creator',
+      name: 'Test Creator',
+      profile_pic_url: null,
+    } as Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
+    company = {
+      id: companyId,
+      title: 'Test Company',
+      image_url: null,
+    } as Awaited<ReturnType<typeof whopsdk.companies.retrieve>>;
+    accessLevel = 'admin';
+  } else {
+    // Production - verify with Whop SDK
+    try {
+      const result = await whopsdk.verifyUserToken(await headers());
+      userId = result.userId;
+    } catch (error) {
+      console.error('[Creator Layout] Authentication failed:', error);
+      redirect(`/auth-error?reason=unauthenticated&error=${encodeURIComponent(String(error))}`);
+    }
+
+    // Check admin access to company
+    try {
+      const [userData, companyData, access] = await Promise.all([
+        whopsdk.users.retrieve(userId),
+        whopsdk.companies.retrieve(companyId),
+        whopsdk.users.checkAccess(companyId, { id: userId }),
+      ]);
+
+      user = userData;
+      company = companyData;
+      accessLevel = access.access_level;
+
+      if (accessLevel !== 'admin') {
+        console.warn('[Creator Layout] User is not admin:', { userId, companyId, accessLevel });
+        redirect(`/auth-error?reason=not_admin&company=${companyId}`);
+      }
+    } catch (error) {
+      console.error('[Creator Layout] Failed to fetch user/company data:', error);
+      redirect(`/auth-error?reason=access_check_failed&error=${encodeURIComponent(String(error))}`);
+    }
+  }
+
+  // Use the Whop user ID as the creator ID for our database
+  const creatorId = userId;
+  const tier = 'pro'; // TODO: Get from Whop membership validation
+
+  return (
+    <AnalyticsProviderWithSuspense creatorId={creatorId} tier={tier}>
+      <div className="min-h-screen bg-gray-1">
+        {/* Navigation */}
+        <DashboardNav />
+
+        {/* Company Header */}
+        <div className="border-b border-gray-a4 bg-gray-2">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {company.image_url ? (
+                  <img
+                    src={company.image_url}
+                    alt={company.title}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-gray-a4 flex items-center justify-center">
+                    <span className="text-lg font-bold text-gray-11">
+                      {company.title?.charAt(0) || 'C'}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <h2 className="font-semibold text-gray-12">{company.title}</h2>
+                  <p className="text-sm text-gray-11">Creator Dashboard</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-11">{user.email}</span>
+                <div className="w-8 h-8 rounded-full bg-gray-a4 flex items-center justify-center">
+                  {user.profile_pic_url ? (
+                    <img
+                      src={user.profile_pic_url}
+                      alt={user.name || user.username || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-gray-11">
+                      {(user.name || user.username || 'U').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {children}
+        </main>
+      </div>
+    </AnalyticsProviderWithSuspense>
+  );
+}
