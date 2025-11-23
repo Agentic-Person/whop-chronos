@@ -53,65 +53,31 @@ export default function VideoLibraryPicker({
     // Fetch videos from API
     async function fetchVideos() {
       try {
-        // TODO: Replace with actual API endpoint
-        // Mock data for now
-        const mockVideos: Video[] = [
-          {
-            id: '1',
-            title: 'Introduction to Trading Basics',
-            description: 'Learn the fundamentals of trading in this comprehensive introduction.',
-            thumbnail: 'https://placehold.co/320x180/1a1a1a/666666?text=Video+1',
-            duration: 1240,
-            views: 850,
-            watchTime: 15420,
-            uploadDate: '2024-01-15',
-          },
-          {
-            id: '2',
-            title: 'Advanced Chart Analysis',
-            description: 'Deep dive into technical analysis and chart patterns.',
-            thumbnail: 'https://placehold.co/320x180/1a1a1a/666666?text=Video+2',
-            duration: 1820,
-            views: 420,
-            watchTime: 8640,
-            uploadDate: '2024-01-20',
-          },
-          {
-            id: '3',
-            title: 'Risk Management Strategies',
-            description: 'Essential risk management techniques for successful trading.',
-            thumbnail: 'https://placehold.co/320x180/1a1a1a/666666?text=Video+3',
-            duration: 980,
-            views: 1200,
-            watchTime: 21600,
-            uploadDate: '2024-01-25',
-          },
-          {
-            id: '4',
-            title: 'Options Trading 101',
-            description: 'Understanding options and how to trade them effectively.',
-            thumbnail: 'https://placehold.co/320x180/1a1a1a/666666?text=Video+4',
-            duration: 1560,
-            views: 320,
-            watchTime: 5120,
-            uploadDate: '2024-02-01',
-          },
-          {
-            id: '5',
-            title: 'Day Trading Psychology',
-            description: 'Master the mental game of day trading.',
-            thumbnail: 'https://placehold.co/320x180/1a1a1a/666666?text=Video+5',
-            duration: 720,
-            views: 95,
-            watchTime: 1140,
-            uploadDate: '2024-02-05',
-          },
-        ];
+        const response = await fetch('/api/video');
+        if (!response.ok) {
+          throw new Error('Failed to fetch videos');
+        }
+        const data = await response.json();
 
-        setVideos(mockVideos);
-        setMaxViews(Math.max(...mockVideos.map((v) => v.views)));
+        // Transform API response to Video format
+        const apiVideos: Video[] = (data.data || []).map((video: any) => ({
+          id: video.id,
+          title: video.title || 'Untitled Video',
+          description: video.description || '',
+          thumbnail: video.thumbnail_url || 'https://placehold.co/320x180/1a1a1a/666666?text=Video',
+          duration: video.duration_seconds || 0,
+          views: 0, // TODO: Fetch from analytics
+          watchTime: 0, // TODO: Fetch from analytics
+          uploadDate: video.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        }));
+
+        setVideos(apiVideos);
+        const max = Math.max(...apiVideos.map((v: Video) => v.views), 0);
+        setMaxViews(max);
       } catch (error) {
         console.error('Error fetching videos:', error);
+        // Fallback to empty array on error
+        setVideos([]);
       } finally {
         setLoading(false);
       }

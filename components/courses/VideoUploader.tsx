@@ -122,6 +122,76 @@ export default function VideoUploader({
     setVideoTitle(file.name.replace(/\.[^/.]+$/, ''));
   };
 
+  // Define startStatusPolling BEFORE handleFileUpload (which uses it)
+  const startStatusPolling = useCallback((videoId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const statusResponse = await fetch(`/api/video/${videoId}/status`);
+
+        if (!statusResponse.ok) {
+          clearInterval(pollInterval);
+          setStatus('failed');
+          setError({ message: 'Failed to fetch processing status', canRetry: true });
+          return;
+        }
+
+        const statusData = await statusResponse.json();
+        const videoStatus = statusData.status as UploadStatus;
+
+        setStatus(videoStatus);
+        setUploadProgress(statusData.progress);
+
+        // Terminal states
+        if (videoStatus === 'completed') {
+          clearInterval(pollInterval);
+
+          // Fetch full video details
+          const videoResponse = await fetch(`/api/video/${videoId}`);
+          if (videoResponse.ok) {
+            const videoData = await videoResponse.json();
+            onVideoUploaded({
+              id: videoData.data.id,
+              title: videoData.data.title,
+              description: videoData.data.description,
+              thumbnail: videoData.data.thumbnailUrl || 'https://placehold.co/320x180/1a1a1a/666666?text=Video',
+              duration: videoData.data.duration || 0,
+              views: 0,
+              watchTime: 0,
+              uploadDate: videoData.data.createdAt,
+            });
+          }
+
+          setStatus('completed');
+        } else if (videoStatus === 'failed') {
+          clearInterval(pollInterval);
+          setError({
+            message: statusData.error?.message || 'Processing failed',
+            canRetry: true,
+          });
+        }
+      } catch (err) {
+        console.error('Status polling error:', err);
+        clearInterval(pollInterval);
+        setStatus('failed');
+        setError({ message: 'Failed to check processing status', canRetry: true });
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Cleanup after 10 minutes
+    const timeoutId = setTimeout(() => {
+      clearInterval(pollInterval);
+      if (status !== 'completed' && status !== 'failed') {
+        setError({ message: 'Processing timeout - please check video library', canRetry: false });
+      }
+    }, 600000);
+
+    // Return cleanup function
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeoutId);
+    };
+  }, [status, onVideoUploaded]);
+
   const handleFileUpload = useCallback(async () => {
     if (!selectedFile) {
       setError({ message: 'No file selected', canRetry: false });
@@ -231,75 +301,6 @@ export default function VideoUploader({
       });
     }
   }, [selectedFile, videoTitle, creatorId, startStatusPolling]);
-
-  const startStatusPolling = useCallback((videoId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const statusResponse = await fetch(`/api/video/${videoId}/status`);
-
-        if (!statusResponse.ok) {
-          clearInterval(pollInterval);
-          setStatus('failed');
-          setError({ message: 'Failed to fetch processing status', canRetry: true });
-          return;
-        }
-
-        const statusData = await statusResponse.json();
-        const videoStatus = statusData.status as UploadStatus;
-
-        setStatus(videoStatus);
-        setUploadProgress(statusData.progress);
-
-        // Terminal states
-        if (videoStatus === 'completed') {
-          clearInterval(pollInterval);
-
-          // Fetch full video details
-          const videoResponse = await fetch(`/api/video/${videoId}`);
-          if (videoResponse.ok) {
-            const videoData = await videoResponse.json();
-            onVideoUploaded({
-              id: videoData.data.id,
-              title: videoData.data.title,
-              description: videoData.data.description,
-              thumbnail: videoData.data.thumbnailUrl || 'https://placehold.co/320x180/1a1a1a/666666?text=Video',
-              duration: videoData.data.duration || 0,
-              views: 0,
-              watchTime: 0,
-              uploadDate: videoData.data.createdAt,
-            });
-          }
-
-          setStatus('completed');
-        } else if (videoStatus === 'failed') {
-          clearInterval(pollInterval);
-          setError({
-            message: statusData.error?.message || 'Processing failed',
-            canRetry: true,
-          });
-        }
-      } catch (err) {
-        console.error('Status polling error:', err);
-        clearInterval(pollInterval);
-        setStatus('failed');
-        setError({ message: 'Failed to check processing status', canRetry: true });
-      }
-    }, 2000); // Poll every 2 seconds
-
-    // Cleanup after 10 minutes
-    const timeoutId = setTimeout(() => {
-      clearInterval(pollInterval);
-      if (status !== 'completed' && status !== 'failed') {
-        setError({ message: 'Processing timeout - please check video library', canRetry: false });
-      }
-    }, 600000);
-
-    // Return cleanup function
-    return () => {
-      clearInterval(pollInterval);
-      clearTimeout(timeoutId);
-    };
-  }, [status, onVideoUploaded]);
 
   const handleRetry = () => {
     setError(null);

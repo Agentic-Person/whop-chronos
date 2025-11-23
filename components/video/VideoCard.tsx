@@ -137,9 +137,8 @@ export function VideoCard({
       <>
         <Card
           padding="none"
-          hover
           className={cn(
-            'overflow-hidden transition-all',
+            'overflow-hidden transition-all hover:shadow-md',
             isSelected && 'ring-2 ring-purple-500'
           )}
         >
@@ -268,9 +267,8 @@ export function VideoCard({
     <>
       <Card
         padding="none"
-        hover
         className={cn(
-          'overflow-hidden transition-all',
+          'overflow-hidden transition-all hover:shadow-md',
           isSelected && 'ring-2 ring-purple-500'
         )}
       >
