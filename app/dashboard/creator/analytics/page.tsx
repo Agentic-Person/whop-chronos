@@ -200,95 +200,68 @@ interface GrowthApiResponse {
 }
 
 // =============================================================================
-// Mock Data Generator (Fallback)
+// Empty Default Data (No Mock Data)
 // =============================================================================
 
-const generateMockData = () => {
+const getEmptyDefaultData = () => {
   return {
     topStats: {
-      totalViews: 45234,
-      totalWatchTime: '2,341', // hours
-      avgCompletionRate: 68.5,
-      activeStudents: 1847,
+      totalViews: 0,
+      totalWatchTime: '0',
+      avgCompletionRate: 0,
+      activeStudents: 0,
       trends: {
-        views: 12.3,
-        watchTime: 8.7,
-        completion: 4.2,
-        students: 15.8,
+        views: 0,
+        watchTime: 0,
+        completion: 0,
+        students: 0,
       },
     },
-    videoPerformance: Array.from({ length: 12 }, (_, i) => ({
-      id: `video-${i}`,
-      title: `Video ${i + 1}: Introduction to Advanced Concepts`,
-      thumbnail: '',
-      views: Math.floor(Math.random() * 5000) + 1000,
-      watchTime: Math.floor(Math.random() * 300) + 50, // minutes
-      completionRate: Math.floor(Math.random() * 40) + 60,
-      engagementScore: Math.floor(Math.random() * 40) + 60,
-      lastViewed: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    })),
-    viewsOverTime: Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
-      views: Math.floor(Math.random() * 1000) + 500,
-      uniqueViewers: Math.floor(Math.random() * 800) + 400,
-    })),
+    videoPerformance: [] as Array<{
+      id: string;
+      title: string;
+      thumbnail: string;
+      views: number;
+      watchTime: number;
+      completionRate: number;
+      engagementScore: number;
+      lastViewed: string;
+    }>,
+    viewsOverTime: [] as Array<{
+      date: string;
+      views: number;
+      uniqueViewers: number;
+    }>,
     studentEngagement: {
-      activeDaily: 423,
-      activeWeekly: 1247,
-      activeMonthly: 1847,
-      newStudents: 156,
-      retentionRate: 87.3,
-      avgSessionDuration: 24, // minutes
+      activeDaily: 0,
+      activeWeekly: 0,
+      activeMonthly: 0,
+      newStudents: 0,
+      retentionRate: 0,
+      avgSessionDuration: 0,
     },
-    engagementOverTime: Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
-      activeUsers: Math.floor(Math.random() * 500) + 300,
-      sessions: Math.floor(Math.random() * 800) + 500,
-      avgDuration: Math.floor(Math.random() * 15) + 15,
-    })),
+    engagementOverTime: [] as Array<{
+      date: string;
+      activeUsers: number;
+      sessions: number;
+      avgDuration: number;
+    }>,
     growthMetrics: {
-      enrollmentGrowth: Array.from({ length: 12 }, (_, i) => ({
-        month: new Date(Date.now() - (11 - i) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(
-          'en-US',
-          { month: 'short' }
-        ),
-        students: Math.floor(Math.random() * 200) + 100,
-      })),
-      revenueGrowth: Array.from({ length: 12 }, (_, i) => ({
-        month: new Date(Date.now() - (11 - i) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(
-          'en-US',
-          { month: 'short' }
-        ),
-        revenue: Math.floor(Math.random() * 5000) + 2000,
-      })),
+      enrollmentGrowth: [] as Array<{ month: string; students: number }>,
+      revenueGrowth: [] as Array<{ month: string; revenue: number }>,
     },
     chatAnalytics: {
-      totalSessions: 8934,
-      totalMessages: 45678,
-      avgMessagesPerSession: 5.1,
-      avgResponseTime: 2.3, // seconds
-      costPerSession: 0.05,
-      topQuestions: [
-        { question: 'How do I implement authentication?', count: 234 },
-        { question: 'What is the difference between X and Y?', count: 189 },
-        { question: 'Can you explain the video at 12:30?', count: 156 },
-        { question: 'How do I optimize performance?', count: 143 },
-        { question: 'What are best practices for deployment?', count: 127 },
-      ],
-      chatVolumeOverTime: Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
-        sessions: Math.floor(Math.random() * 300) + 200,
-        messages: Math.floor(Math.random() * 1500) + 1000,
-      })),
+      totalSessions: 0,
+      totalMessages: 0,
+      avgMessagesPerSession: 0,
+      avgResponseTime: 0,
+      costPerSession: 0,
+      topQuestions: [] as Array<{ question: string; count: number }>,
+      chatVolumeOverTime: [] as Array<{
+        date: string;
+        sessions: number;
+        messages: number;
+      }>,
     },
   };
 };
@@ -306,22 +279,22 @@ function transformOverviewData(
 ) {
   if (!overview && !videosData) return null;
 
-  const mockData = generateMockData();
+  const emptyDefaults = getEmptyDefaultData();
 
   // Build top stats from overview or videos data
   const topStats = {
-    totalViews: videosData?.data?.metrics?.total_views ?? overview?.quickStats?.totalStudents ?? mockData.topStats.totalViews,
+    totalViews: videosData?.data?.metrics?.total_views ?? overview?.quickStats?.totalStudents ?? 0,
     totalWatchTime: overview?.quickStats?.totalWatchTime ??
       (videosData?.data?.metrics?.total_watch_time_seconds
         ? formatWatchTime(videosData.data.metrics.total_watch_time_seconds)
-        : mockData.topStats.totalWatchTime),
-    avgCompletionRate: videosData?.data?.metrics?.avg_completion_rate ?? mockData.topStats.avgCompletionRate,
-    activeStudents: overview?.quickStats?.totalStudents ?? mockData.topStats.activeStudents,
+        : '0'),
+    avgCompletionRate: videosData?.data?.metrics?.avg_completion_rate ?? 0,
+    activeStudents: overview?.quickStats?.totalStudents ?? 0,
     trends: {
-      views: videosData?.data?.metrics?.trends?.views ?? overview?.quickStats?.trends?.watchTime ?? mockData.topStats.trends.views,
-      watchTime: videosData?.data?.metrics?.trends?.watch_time ?? overview?.quickStats?.trends?.watchTime ?? mockData.topStats.trends.watchTime,
-      completion: videosData?.data?.metrics?.trends?.completion ?? mockData.topStats.trends.completion,
-      students: overview?.quickStats?.trends?.students ?? mockData.topStats.trends.students,
+      views: videosData?.data?.metrics?.trends?.views ?? overview?.quickStats?.trends?.watchTime ?? 0,
+      watchTime: videosData?.data?.metrics?.trends?.watch_time ?? overview?.quickStats?.trends?.watchTime ?? 0,
+      completion: videosData?.data?.metrics?.trends?.completion ?? 0,
+      students: overview?.quickStats?.trends?.students ?? 0,
     },
   };
 
@@ -330,7 +303,7 @@ function transformOverviewData(
     date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     views: item.views,
     uniqueViewers: Math.floor(item.views * 0.8), // Estimate unique viewers
-  })) ?? mockData.viewsOverTime;
+  })) ?? [];
 
   // Transform video performance data
   const videoPerformance = videosData?.data?.top_videos?.map((video, index) => ({
@@ -342,16 +315,17 @@ function transformOverviewData(
     completionRate: Math.round(video.completion_rate),
     engagementScore: Math.min(100, Math.round((video.completion_rate * 0.6) + (video.views / 10 * 0.4))),
     lastViewed: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString(),
-  })) ?? mockData.videoPerformance;
+  })) ?? [];
 
   // Build student engagement from videos data
+  const activeLearners = videosData?.data?.student_engagement?.active_learners ?? 0;
   const studentEngagement = {
-    activeDaily: videosData?.data?.student_engagement?.active_learners ?? mockData.studentEngagement.activeDaily,
-    activeWeekly: Math.round((videosData?.data?.student_engagement?.active_learners ?? mockData.studentEngagement.activeWeekly) * 1.5),
-    activeMonthly: Math.round((videosData?.data?.student_engagement?.active_learners ?? mockData.studentEngagement.activeMonthly) * 2),
-    newStudents: overview?.quickStats?.totalStudents ? Math.round(overview.quickStats.totalStudents * 0.1) : mockData.studentEngagement.newStudents,
-    retentionRate: mockData.studentEngagement.retentionRate,
-    avgSessionDuration: mockData.studentEngagement.avgSessionDuration,
+    activeDaily: activeLearners,
+    activeWeekly: Math.round(activeLearners * 1.5),
+    activeMonthly: Math.round(activeLearners * 2),
+    newStudents: overview?.quickStats?.totalStudents ? Math.round(overview.quickStats.totalStudents * 0.1) : 0,
+    retentionRate: 0, // Will be populated by engagement API
+    avgSessionDuration: 0, // Will be populated by engagement API
   };
 
   return {
@@ -359,9 +333,9 @@ function transformOverviewData(
     videoPerformance,
     viewsOverTime,
     studentEngagement,
-    engagementOverTime: mockData.engagementOverTime, // Will be populated by engagement API
-    growthMetrics: mockData.growthMetrics,
-    chatAnalytics: mockData.chatAnalytics,
+    engagementOverTime: emptyDefaults.engagementOverTime, // Will be populated by engagement API
+    growthMetrics: emptyDefaults.growthMetrics,
+    chatAnalytics: emptyDefaults.chatAnalytics,
   };
 }
 
@@ -572,12 +546,12 @@ export default function AnalyticsPage() {
   const isLoading = overviewLoading || videosLoading;
   const hasError = overviewError || videosError;
 
-  // Transform API data to UI format, with mock data fallback
-  const data = transformOverviewData(overviewData, videosData) ?? generateMockData();
+  // Transform API data to UI format, with empty defaults fallback
+  const data = transformOverviewData(overviewData, videosData) ?? getEmptyDefaultData();
 
   // Merge engagement data if available
   if (engagementData?.activityTimeline) {
-    // Use real avgSessionDuration from engagement API, fallback to mock if not available
+    // Use real avgSessionDuration from engagement API, fallback to zero if not available
     const realAvgDuration = engagementData.avgSessionDuration ?? data.studentEngagement.avgSessionDuration;
 
     data.engagementOverTime = engagementData.activityTimeline.map((item) => ({
@@ -764,47 +738,55 @@ export default function AnalyticsPage() {
           {/* Views Over Time Chart */}
           <Card className="p-6">
             <h3 className="text-5 font-semibold text-gray-12 mb-4">Views Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data.viewsOverTime}>
-                <defs>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--accent-9)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--accent-9)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorViewers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--green-9)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--green-9)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
-                <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--gray-2)',
-                    border: '1px solid var(--gray-a6)',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="views"
-                  stroke="var(--accent-9)"
-                  fillOpacity={1}
-                  fill="url(#colorViews)"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="uniqueViewers"
-                  stroke="var(--green-9)"
-                  fillOpacity={1}
-                  fill="url(#colorViewers)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {data.viewsOverTime.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={data.viewsOverTime}>
+                  <defs>
+                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--accent-9)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--accent-9)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorViewers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--green-9)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--green-9)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
+                  <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--gray-2)',
+                      border: '1px solid var(--gray-a6)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="views"
+                    stroke="var(--accent-9)"
+                    fillOpacity={1}
+                    fill="url(#colorViews)"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="uniqueViewers"
+                    stroke="var(--green-9)"
+                    fillOpacity={1}
+                    fill="url(#colorViewers)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex flex-col items-center justify-center text-center">
+                <Eye className="w-12 h-12 text-gray-a6 mb-3" />
+                <p className="text-3 text-gray-11">No view data yet</p>
+                <p className="text-2 text-gray-10 mt-1">Video views will appear here once students start watching</p>
+              </div>
+            )}
           </Card>
 
           {/* Student Engagement Summary */}
@@ -914,77 +896,89 @@ export default function AnalyticsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-a4">
-                  {paginatedVideos.map((video) => (
-                    <tr key={video.id} className="hover:bg-gray-a2 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-10 bg-gray-a3 rounded flex items-center justify-center">
-                            <Video className="w-5 h-5 text-gray-11" />
+                  {paginatedVideos.length > 0 ? (
+                    paginatedVideos.map((video) => (
+                      <tr key={video.id} className="hover:bg-gray-a2 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-10 bg-gray-a3 rounded flex items-center justify-center">
+                              <Video className="w-5 h-5 text-gray-11" />
+                            </div>
+                            <span className="text-3 text-gray-12 font-medium">{video.title}</span>
                           </div>
-                          <span className="text-3 text-gray-12 font-medium">{video.title}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-3 text-gray-12 text-right">
-                        {video.views.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-3 text-gray-12 text-right hidden sm:table-cell">
-                        {video.watchTime} min
-                      </td>
-                      <td className="px-4 py-3 text-right hidden md:table-cell">
-                        <Badge
-                          color={video.completionRate >= 70 ? 'green' : video.completionRate >= 50 ? 'yellow' : 'red'}
-                        >
-                          {video.completionRate}%
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-right hidden lg:table-cell">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="w-12 bg-gray-a3 rounded-full h-2">
-                            <div
-                              className="h-2 rounded-full bg-accent-9"
-                              style={{ width: `${video.engagementScore}%` }}
-                            />
+                        </td>
+                        <td className="px-4 py-3 text-3 text-gray-12 text-right">
+                          {video.views.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-3 text-gray-12 text-right hidden sm:table-cell">
+                          {video.watchTime} min
+                        </td>
+                        <td className="px-4 py-3 text-right hidden md:table-cell">
+                          <Badge
+                            color={video.completionRate >= 70 ? 'green' : video.completionRate >= 50 ? 'yellow' : 'red'}
+                          >
+                            {video.completionRate}%
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-right hidden lg:table-cell">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-12 bg-gray-a3 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full bg-accent-9"
+                                style={{ width: `${video.engagementScore}%` }}
+                              />
+                            </div>
+                            <span className="text-3 text-gray-11">{video.engagementScore}</span>
                           </div>
-                          <span className="text-3 text-gray-11">{video.engagementScore}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-3 text-gray-11 text-right hidden xl:table-cell">
-                        {new Date(video.lastViewed).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-3 text-gray-11 text-right hidden xl:table-cell">
+                          {new Date(video.lastViewed).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-12 text-center">
+                        <Video className="w-12 h-12 text-gray-a6 mx-auto mb-3" />
+                        <p className="text-3 text-gray-11">No videos yet</p>
+                        <p className="text-2 text-gray-10 mt-1">Import videos to see performance analytics</p>
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-a6">
-              <span className="text-3 text-gray-11">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                {Math.min(currentPage * itemsPerPage, filteredVideos.length)} of {filteredVideos.length} videos
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="2"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-3 text-gray-12">
-                  Page {currentPage} of {totalPages}
+            {/* Pagination - only show when there are videos */}
+            {filteredVideos.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-a6">
+                <span className="text-3 text-gray-11">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+                  {Math.min(currentPage * itemsPerPage, filteredVideos.length)} of {filteredVideos.length} videos
                 </span>
-                <Button
-                  variant="ghost"
-                  size="2"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="2"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-3 text-gray-12">
+                    Page {currentPage} of {totalPages || 1}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="2"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </div>
       )}
@@ -994,42 +988,50 @@ export default function AnalyticsPage() {
         <div className="space-y-6 mt-6">
           <Card className="p-6">
             <h3 className="text-5 font-semibold text-gray-12 mb-4">Student Activity Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.engagementOverTime}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
-                <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--gray-2)',
-                    border: '1px solid var(--gray-a6)',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="activeUsers"
-                  stroke="var(--blue-9)"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sessions"
-                  stroke="var(--purple-9)"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="avgDuration"
-                  stroke="var(--green-9)"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {data.engagementOverTime.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={data.engagementOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
+                  <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--gray-2)',
+                      border: '1px solid var(--gray-a6)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="activeUsers"
+                    stroke="var(--blue-9)"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="sessions"
+                    stroke="var(--purple-9)"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="avgDuration"
+                    stroke="var(--green-9)"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex flex-col items-center justify-center text-center">
+                <Users className="w-12 h-12 text-gray-a6 mb-3" />
+                <p className="text-3 text-gray-11">No engagement data yet</p>
+                <p className="text-2 text-gray-10 mt-1">Student activity will appear here once they start engaging</p>
+              </div>
+            )}
           </Card>
 
           {/* Engagement Metrics */}
@@ -1201,47 +1203,55 @@ export default function AnalyticsPage() {
           {/* Chat Volume Over Time */}
           <Card className="p-6">
             <h3 className="text-5 font-semibold text-gray-12 mb-4">Chat Volume Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data.chatAnalytics.chatVolumeOverTime}>
-                <defs>
-                  <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--blue-9)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--blue-9)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorMessages" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--purple-9)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--purple-9)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
-                <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--gray-2)',
-                    border: '1px solid var(--gray-a6)',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="sessions"
-                  stroke="var(--blue-9)"
-                  fillOpacity={1}
-                  fill="url(#colorSessions)"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="messages"
-                  stroke="var(--purple-9)"
-                  fillOpacity={1}
-                  fill="url(#colorMessages)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {data.chatAnalytics.chatVolumeOverTime.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={data.chatAnalytics.chatVolumeOverTime}>
+                  <defs>
+                    <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--blue-9)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--blue-9)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorMessages" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--purple-9)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--purple-9)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
+                  <XAxis dataKey="date" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--gray-2)',
+                      border: '1px solid var(--gray-a6)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="sessions"
+                    stroke="var(--blue-9)"
+                    fillOpacity={1}
+                    fill="url(#colorSessions)"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="messages"
+                    stroke="var(--purple-9)"
+                    fillOpacity={1}
+                    fill="url(#colorMessages)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex flex-col items-center justify-center text-center">
+                <MessageSquare className="w-12 h-12 text-gray-a6 mb-3" />
+                <p className="text-3 text-gray-11">No chat data yet</p>
+                <p className="text-2 text-gray-10 mt-1">AI chat activity will appear here once students start chatting</p>
+              </div>
+            )}
           </Card>
 
           {/* Top Questions */}

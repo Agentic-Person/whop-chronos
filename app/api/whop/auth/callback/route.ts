@@ -1,5 +1,13 @@
 /**
- * Whop OAuth Callback Endpoint
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║  ⚠️  DEPRECATED ROUTE - DO NOT USE FOR EMBEDDED APPS  ⚠️                  ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║  This OAuth callback endpoint is DEPRECATED for embedded Whop apps.       ║
+ * ║  Embedded apps use native auth - Whop injects JWT via x-whop-user-token. ║
+ * ║  See: docs/integrations/whop/NATIVE_AUTH_MIGRATION_REPORT.md             ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ *
+ * Whop OAuth Callback Endpoint (LEGACY)
  *
  * Handles OAuth callback from Whop, exchanges code for tokens
  * GET /api/whop/auth/callback?code=xxx&state=xxx

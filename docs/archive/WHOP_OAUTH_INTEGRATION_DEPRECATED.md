@@ -1,6 +1,14 @@
+> **DEPRECATED**: This document describes OAuth authentication which is deprecated for embedded Whop apps.
+> For embedded apps, use Native Authentication instead. See `docs/integrations/whop/NATIVE_AUTH_MIGRATION_REPORT.md`
+>
+> This OAuth approach only works for STANDALONE apps where users visit your site directly.
+> Chronos is an EMBEDDED app that runs inside Whop's iframe.
+
+---
+
 # Whop OAuth Authentication Integration
 
-**Status:** ✅ COMPLETE
+**Status:** COMPLETE
 **Date:** November 14, 2025
 **Orchestrated by:** 4 parallel agents (Verification, Dashboard, AuthContext, Environment)
 
@@ -19,8 +27,8 @@ Successfully integrated real Whop OAuth authentication into the Chronos applicat
 **Before:**
 ```typescript
 export default function CreatorDashboardLayout({ children }) {
-  const creatorId = 'test-creator-123'; // ❌ Hardcoded
-  const tier = 'pro'; // ❌ Hardcoded
+  const creatorId = 'test-creator-123'; // Hardcoded
+  const tier = 'pro'; // Hardcoded
 
   return <AuthProvider>{children}</AuthProvider>;
 }
@@ -31,8 +39,8 @@ export default function CreatorDashboardLayout({ children }) {
 import { requireAuth } from '@/lib/whop/auth';
 
 export default async function CreatorDashboardLayout({ children }) {
-  const session = await requireAuth(); // ✅ Real Whop session
-  const creatorId = session.user.id; // ✅ Real user ID
+  const session = await requireAuth(); // Real Whop session
+  const creatorId = session.user.id; // Real user ID
   const tier = 'pro'; // TODO: Get from Whop membership
 
   return <AuthProvider session={session}>{children}</AuthProvider>;
@@ -51,8 +59,8 @@ export default async function CreatorDashboardLayout({ children }) {
 ```typescript
 export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
-    creatorId: '00000000-0000-0000-0000-000000000001', // ❌ Hardcoded
-    userId: 'dev-user-001', // ❌ Hardcoded
+    creatorId: '00000000-0000-0000-0000-000000000001', // Hardcoded
+    userId: 'dev-user-001', // Hardcoded
     isAuthenticated: true,
   };
 
@@ -66,13 +74,13 @@ import type { WhopSession } from '@/lib/whop/types';
 
 interface AuthProviderProps {
   children: React.ReactNode;
-  session: WhopSession; // ✅ Added session parameter
+  session: WhopSession; // Added session parameter
 }
 
 export function AuthProvider({ children, session }: AuthProviderProps) {
   const value: AuthContextType = {
-    creatorId: session.user.id, // ✅ Real user ID
-    userId: session.user.id, // ✅ Real user ID
+    creatorId: session.user.id, // Real user ID
+    userId: session.user.id, // Real user ID
     isAuthenticated: true,
   };
 
@@ -126,13 +134,13 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 
 ## Security Features
 
-### ✅ OAuth Security
+### OAuth Security
 - CSRF protection via state parameter
 - Authorization code flow (not implicit)
 - Secure redirect URI validation
 - Token exchange server-side only
 
-### ✅ Session Security
+### Session Security
 - AES-256-CBC encryption
 - HttpOnly cookies (prevents XSS)
 - Secure flag in production (HTTPS only)
@@ -140,7 +148,7 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 - 30-day expiration
 - Automatic token refresh
 
-### ✅ Route Protection
+### Route Protection
 - `requireAuth()` throws error if unauthenticated
 - Next.js redirects to login automatically
 - Protected API routes return 401
@@ -159,16 +167,16 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 | `WHOP_OAUTH_REDIRECT_URI` | OAuth callback URL | `${APP_URL}/api/whop/auth/callback` |
 
 ### Verified in Production
-✅ All Whop environment variables are set in Vercel
-✅ No `DEV_BYPASS_AUTH` in production environment
-✅ Encryption key properly configured (64 hex characters)
+- All Whop environment variables are set in Vercel
+- No `DEV_BYPASS_AUTH` in production environment
+- Encryption key properly configured (64 hex characters)
 
 ---
 
 ## Agent Reports
 
 ### Agent 1: Whop Integration Verification
-**Status:** ✅ COMPLIANT
+**Status:** COMPLIANT
 
 - Whop SDK properly configured
 - OAuth flow matches Whop standards
@@ -177,11 +185,11 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 - All security best practices implemented
 
 **Issues Found:**
-- ❌ Dashboard bypassed authentication (FIXED)
-- ⚠️ Tier mapping not implemented (TODO)
+- Dashboard bypassed authentication (FIXED)
+- Tier mapping not implemented (TODO)
 
 ### Agent 2: Dashboard Authentication
-**Status:** ✅ COMPLETE
+**Status:** COMPLETE
 
 - Removed hardcoded `creatorId = 'test-creator-123'`
 - Added `requireAuth()` call
@@ -192,7 +200,7 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 - TODO: Get tier from Whop membership API
 
 ### Agent 3: AuthContext Refactor
-**Status:** ✅ COMPLETE
+**Status:** COMPLETE
 
 - Updated AuthProvider to accept session prop
 - Removed all hardcoded test values
@@ -200,7 +208,7 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 - Simplified to production-only flow
 
 ### Agent 4: Environment & Configuration
-**Status:** ✅ VERIFIED
+**Status:** VERIFIED
 
 - Production environment is clean (no test bypasses)
 - All Whop credentials properly set
@@ -240,7 +248,7 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 ### 1. Tier Mapping Not Implemented
 **Current:** All users get `tier = 'pro'` hardcoded
 **Impact:** Usage limits not properly enforced
-**TODO:** Implement Whop plan → tier mapping
+**TODO:** Implement Whop plan to tier mapping
 
 **Future Implementation:**
 ```typescript
@@ -316,6 +324,6 @@ const tier = mapWhopPlanToTier(membership.plan_id);
 
 ---
 
-**🎉 Whop OAuth Integration Complete!**
+**Whop OAuth Integration Complete!**
 
 The application now uses real Whop authentication instead of hardcoded test credentials. Users must authenticate via Whop OAuth to access the creator dashboard, and all analytics queries use the real creator ID from the Whop session.

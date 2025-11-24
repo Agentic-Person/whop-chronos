@@ -1,4 +1,12 @@
 /**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║  ⚠️  DEPRECATED ROUTE - DO NOT USE FOR EMBEDDED APPS  ⚠️                  ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║  This OAuth login endpoint is DEPRECATED for embedded Whop apps.          ║
+ * ║  Embedded apps use native auth - Whop injects JWT via x-whop-user-token. ║
+ * ║  See: docs/integrations/whop/NATIVE_AUTH_MIGRATION_REPORT.md             ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ *
  * @deprecated OAuth is deprecated for embedded Whop apps.
  *
  * For embedded apps, use native authentication:

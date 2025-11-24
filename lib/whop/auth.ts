@@ -1,4 +1,20 @@
 /**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║  ⚠️  DEPRECATED - DO NOT USE FOR EMBEDDED WHOP APPS  ⚠️                    ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║  This module implements OAuth authentication which is DEPRECATED by Whop  ║
+ * ║  for embedded applications (apps that run inside Whop's iframe).          ║
+ * ║                                                                           ║
+ * ║  For embedded apps, use NATIVE AUTHENTICATION instead:                    ║
+ * ║  - Import: import { whopsdk } from '@/lib/whop-sdk'                       ║
+ * ║  - Use: await whopsdk.verifyUserToken(await headers())                    ║
+ * ║  - See: lib/whop/native-auth.ts                                          ║
+ * ║  - Docs: docs/integrations/whop/NATIVE_AUTH_MIGRATION_REPORT.md          ║
+ * ║                                                                           ║
+ * ║  OAuth is ONLY for standalone apps where users visit your site directly.  ║
+ * ║  Chronos is an embedded app - OAuth causes 500 errors in Whop iframe.    ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ *
  * @deprecated This module uses the OAuth flow which has been deprecated by Whop.
  *
  * For embedded apps, use native authentication instead:
