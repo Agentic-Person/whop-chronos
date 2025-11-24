@@ -5,8 +5,6 @@
  * Users are redirected here with reason codes.
  */
 
-import Link from "next/link";
-
 interface AuthErrorPageProps {
   searchParams: Promise<{
     reason?: string;
@@ -88,7 +86,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
         {errorDetail && (
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-left">
             <p className="text-sm text-gray-500 mb-1">Error details:</p>
-            <code className="text-xs text-gray-400 break-all">{errorDetail}</code>
+            <code className="text-xs text-gray-400 break-all">{decodeURIComponent(errorDetail)}</code>
           </div>
         )}
 
@@ -100,7 +98,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions - Using anchor tags instead of buttons with onClick (Server Component compatible) */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
             href="https://whop.com/dashboard"
@@ -109,12 +107,13 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
             Go to Whop Dashboard
           </a>
 
-          <button
-            onClick={() => window.location.reload()}
+          {/* Use javascript: protocol for refresh in Server Component */}
+          <a
+            href="javascript:window.location.reload()"
             className="inline-flex items-center justify-center px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
           >
             Try Again
-          </button>
+          </a>
         </div>
 
         {/* Help Link */}
