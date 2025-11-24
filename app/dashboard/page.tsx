@@ -15,7 +15,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { detectUserRole, getDefaultDashboardRoute } from '@/lib/whop/roles';
+import { getDefaultDashboardRoute, type RoleDetectionResult } from '@/lib/whop/role-helpers';
 
 export default function DashboardRouter() {
   const router = useRouter();
@@ -38,8 +38,18 @@ export default function DashboardRouter() {
       try {
         setError(null);
 
-        // Detect user role based on Whop data
-        const roleResult = await detectUserRole(userId);
+        // Detect user role via API (keeps server-only code on server)
+        const response = await fetch('/api/auth/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to detect user role');
+        }
+
+        const roleResult: RoleDetectionResult = await response.json();
 
         // Get the default route for this role
         const defaultRoute = getDefaultDashboardRoute(roleResult.role);

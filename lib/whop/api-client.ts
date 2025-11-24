@@ -3,8 +3,12 @@
  *
  * Wrapper for Whop MCP server tools and direct API calls
  * Provides type-safe interfaces for all Whop operations
+ *
+ * IMPORTANT: This file is SERVER-ONLY. Do not import in client components.
+ * Use the /api/auth/role endpoint instead for role detection.
  */
 
+import 'server-only';
 import { Whop } from '@whop/sdk';
 import {
   WhopUser,

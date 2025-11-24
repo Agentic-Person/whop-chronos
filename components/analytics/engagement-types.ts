@@ -91,6 +91,10 @@ export interface EngagementMetricsResponse {
   sessionDurations?: SessionDurationData[];
   activityTimeline?: ActivityTimelineData[];
   engagementScore?: EngagementScore;
+  /** Average session duration in minutes, calculated from video_watch_sessions */
+  avgSessionDuration?: number;
+  /** Retention rate: percentage of students who returned in last 7 days */
+  retentionRate?: number;
 }
 
 export type TimeRange = '7d' | '30d' | '90d' | '1y' | 'all';

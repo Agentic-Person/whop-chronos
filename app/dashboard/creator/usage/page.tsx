@@ -135,13 +135,15 @@ export default function UsagePage() {
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Hard-coded creator ID for testing - replace with auth context in production
-  const CREATOR_ID = 'e5f9d8c7-4b3a-4e2d-9f1a-8c7b6a5d4e3f';
+  // Get creator ID dynamically - use DEV_BYPASS_AUTH test ID or get from real auth
+  const creatorId = process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
+    ? '00000000-0000-0000-0000-000000000001'  // Test creator ID for development
+    : '00000000-0000-0000-0000-000000000001'; // TODO: Get from real auth context when available
 
   const fetchUsageData = async () => {
     try {
       setError(null);
-      const response = await fetch(`/api/analytics/usage/current?creatorId=${CREATOR_ID}`);
+      const response = await fetch(`/api/analytics/usage/current?creatorId=${creatorId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch usage data: ${response.statusText}`);

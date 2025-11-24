@@ -3,8 +3,13 @@
  *
  * Determines if a Whop user is a creator, student, both, or neither
  * based on company ownership and membership status
+ *
+ * IMPORTANT: This file is SERVER-ONLY. For client components, use:
+ * - Import from '@/lib/whop/role-helpers' for routing helpers
+ * - Call POST /api/auth/role for role detection
  */
 
+import 'server-only';
 import { whopApi } from './api-client';
 import { WhopApiError } from './types';
 

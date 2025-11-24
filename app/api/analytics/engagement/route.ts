@@ -111,6 +111,19 @@ export async function GET(request: NextRequest) {
       response.engagementScore = calculateEngagementScore(metrics);
     }
 
+    // Always fetch avgSessionDuration and retentionRate for the 'all' metric
+    if (metric === 'all') {
+      // Calculate average session duration from video_watch_sessions
+      response.avgSessionDuration = await fetchAvgSessionDuration(
+        supabase,
+        creatorId,
+        startDate
+      );
+
+      // Calculate retention rate (returning students in last 7 days)
+      response.retentionRate = await fetchRetentionRate(supabase, creatorId);
+    }
+
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Error fetching engagement metrics:', error);
@@ -413,6 +426,119 @@ async function fetchStudentMetrics(
     loginFrequency,
     courseProgressRate,
   };
+}
+
+/**
+ * Fetch average session duration in minutes from video_watch_sessions
+ * Joins with videos table to filter by creator
+ */
+async function fetchAvgSessionDuration(
+  supabase: any,
+  creatorId: string,
+  startDate: Date
+): Promise<number> {
+  // Get all videos for this creator first
+  const { data: creatorVideos } = await supabase
+    .from('videos')
+    .select('id')
+    .eq('creator_id', creatorId);
+
+  if (!creatorVideos || creatorVideos.length === 0) {
+    return 0;
+  }
+
+  const videoIds = creatorVideos.map((v: { id: string }) => v.id);
+
+  // Get average watch time from video_watch_sessions for these videos
+  const { data: sessions } = await supabase
+    .from('video_watch_sessions')
+    .select('watch_time_seconds')
+    .in('video_id', videoIds)
+    .gte('session_start', startDate.toISOString());
+
+  if (!sessions || sessions.length === 0) {
+    return 0;
+  }
+
+  // Calculate average and convert to minutes
+  const totalSeconds = sessions.reduce(
+    (sum: number, s: { watch_time_seconds: number }) => sum + (s.watch_time_seconds || 0),
+    0
+  );
+  const avgSeconds = totalSeconds / sessions.length;
+  const avgMinutes = Math.round(avgSeconds / 60);
+
+  return avgMinutes;
+}
+
+/**
+ * Fetch retention rate: percentage of students who returned in last 7 days
+ * A "returning student" is one who has activity in multiple weeks
+ */
+async function fetchRetentionRate(
+  supabase: any,
+  creatorId: string
+): Promise<number> {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+  // Get all videos for this creator
+  const { data: creatorVideos } = await supabase
+    .from('videos')
+    .select('id')
+    .eq('creator_id', creatorId);
+
+  if (!creatorVideos || creatorVideos.length === 0) {
+    return 0;
+  }
+
+  const videoIds = creatorVideos.map((v: { id: string }) => v.id);
+
+  // Get students active in the previous week (7-14 days ago) - these are our "baseline"
+  const { data: previousWeekStudents } = await supabase
+    .from('video_watch_sessions')
+    .select('student_id')
+    .in('video_id', videoIds)
+    .gte('session_start', fourteenDaysAgo.toISOString())
+    .lt('session_start', sevenDaysAgo.toISOString());
+
+  if (!previousWeekStudents || previousWeekStudents.length === 0) {
+    return 0;
+  }
+
+  // Get unique students from previous week
+  const previousStudentIds = [
+    ...new Set(previousWeekStudents.map((s: { student_id: string }) => s.student_id)),
+  ];
+
+  // Get students active in the last 7 days
+  const { data: recentStudents } = await supabase
+    .from('video_watch_sessions')
+    .select('student_id')
+    .in('video_id', videoIds)
+    .gte('session_start', sevenDaysAgo.toISOString());
+
+  if (!recentStudents || recentStudents.length === 0) {
+    return 0;
+  }
+
+  // Get unique students from recent week
+  const recentStudentIds = new Set(
+    recentStudents.map((s: { student_id: string }) => s.student_id)
+  );
+
+  // Count how many previous week students returned this week
+  const returningStudents = previousStudentIds.filter((id) =>
+    recentStudentIds.has(id)
+  );
+
+  // Calculate retention rate as percentage
+  const retentionRate = (returningStudents.length / previousStudentIds.length) * 100;
+
+  return Math.round(retentionRate * 10) / 10; // Round to 1 decimal place
 }
 
 /**
