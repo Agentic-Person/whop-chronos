@@ -121,37 +121,84 @@ const nextConfig: NextConfig = {
 
 	// Headers for Security & Performance
 	async headers() {
-		return [
+		// Common security headers (without X-Frame-Options for Whop embedding)
+		const securityHeaders = [
 			{
-				source: "/:path*",
+				key: "X-DNS-Prefetch-Control",
+				value: "on",
+			},
+			{
+				key: "Strict-Transport-Security",
+				value: "max-age=63072000; includeSubDomains; preload",
+			},
+			{
+				key: "X-Content-Type-Options",
+				value: "nosniff",
+			},
+			{
+				key: "X-XSS-Protection",
+				value: "1; mode=block",
+			},
+			{
+				key: "Referrer-Policy",
+				value: "strict-origin-when-cross-origin",
+			},
+			{
+				key: "Permissions-Policy",
+				value: "camera=(), microphone=(), geolocation=()",
+			},
+		];
+
+		return [
+			// Whop embedded routes - allow embedding from Whop domains
+			{
+				source: "/experiences/:path*",
 				headers: [
+					...securityHeaders,
 					{
-						key: "X-DNS-Prefetch-Control",
-						value: "on",
+						key: "Content-Security-Policy",
+						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
 					},
+				],
+			},
+			{
+				source: "/dashboard/:path*",
+				headers: [
+					...securityHeaders,
 					{
-						key: "Strict-Transport-Security",
-						value: "max-age=63072000; includeSubDomains; preload",
+						key: "Content-Security-Policy",
+						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
 					},
+				],
+			},
+			{
+				source: "/seller-product/:path*",
+				headers: [
+					...securityHeaders,
+					{
+						key: "Content-Security-Policy",
+						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
+					},
+				],
+			},
+			{
+				source: "/customer/:path*",
+				headers: [
+					...securityHeaders,
+					{
+						key: "Content-Security-Policy",
+						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
+					},
+				],
+			},
+			// All other routes - block iframe embedding for security
+			{
+				source: "/((?!experiences|dashboard|seller-product|customer).*)",
+				headers: [
+					...securityHeaders,
 					{
 						key: "X-Frame-Options",
 						value: "SAMEORIGIN",
-					},
-					{
-						key: "X-Content-Type-Options",
-						value: "nosniff",
-					},
-					{
-						key: "X-XSS-Protection",
-						value: "1; mode=block",
-					},
-					{
-						key: "Referrer-Policy",
-						value: "strict-origin-when-cross-origin",
-					},
-					{
-						key: "Permissions-Policy",
-						value: "camera=(), microphone=(), geolocation=()",
 					},
 				],
 			},
