@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { WhopSession } from '@/lib/whop/types';
-import { detectUserRole, type RoleDetectionResult, type UserRole } from '@/lib/whop/roles';
+import { type RoleDetectionResult, type UserRole } from '@/lib/whop/role-helpers';
 
 export interface AuthContextType {
   // Existing auth fields
@@ -93,7 +93,18 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 
       setIsDetectingRole(true);
       try {
-        const result = await detectUserRole(baseAuthData.userId);
+        // Detect role via API (keeps server-only code on server)
+        const response = await fetch('/api/auth/role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: baseAuthData.userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to detect user role');
+        }
+
+        const result: RoleDetectionResult = await response.json();
         setRoleData(result);
 
         // Set default dashboard based on role

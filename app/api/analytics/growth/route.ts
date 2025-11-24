@@ -127,10 +127,11 @@ function aggregateByMonth(
   let cumulative = 0;
   const result: Array<{ month: string; students: number; cumulative: number }> = [];
 
-  for (const [month, count] of monthMap.entries()) {
+  // Use forEach instead of for...of for better compatibility
+  monthMap.forEach((count, month) => {
     cumulative += count;
     result.push({ month, students: count, cumulative });
-  }
+  });
 
   return result;
 }

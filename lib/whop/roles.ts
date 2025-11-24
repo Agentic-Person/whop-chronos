@@ -9,7 +9,6 @@
  * - Call POST /api/auth/role for role detection
  */
 
-import 'server-only';
 import { whopApi } from './api-client';
 import { WhopApiError } from './types';
 

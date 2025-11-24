@@ -1050,49 +1050,106 @@ export default function AnalyticsPage() {
       {/* Growth & Revenue Tab */}
       {activeTab === 'growth' && (
         <div className="space-y-6 mt-6">
+          {/* Growth Summary Cards */}
+          {growthData?.data?.summary && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3 text-gray-11">Total Students</span>
+                  <Users className="w-4 h-4 text-accent-9" />
+                </div>
+                <p className="text-6 font-bold text-gray-12">
+                  {growthData.data.summary.totalStudents.toLocaleString()}
+                </p>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3 text-gray-11">New This Month</span>
+                  <TrendingUp className="w-4 h-4 text-green-9" />
+                </div>
+                <p className="text-6 font-bold text-gray-12">
+                  {growthData.data.summary.newThisMonth.toLocaleString()}
+                </p>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3 text-gray-11">Growth Rate</span>
+                  {growthData.data.summary.growthRate >= 0 ? (
+                    <TrendingUp className="w-4 h-4 text-green-9" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-red-9" />
+                  )}
+                </div>
+                <p className={`text-6 font-bold ${growthData.data.summary.growthRate >= 0 ? 'text-green-11' : 'text-red-11'}`}>
+                  {growthData.data.summary.growthRate >= 0 ? '+' : ''}{growthData.data.summary.growthRate}%
+                </p>
+              </Card>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Student Enrollment Growth - Real Data */}
             <Card className="p-6">
               <h3 className="text-5 font-semibold text-gray-12 mb-4">Student Enrollment Growth</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsBarChart data={data.growthMetrics.enrollmentGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
-                  <XAxis dataKey="month" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--gray-2)',
-                      border: '1px solid var(--gray-a6)',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Bar dataKey="students" fill="var(--accent-9)" radius={[8, 8, 0, 0]} />
-                </RechartsBarChart>
-              </ResponsiveContainer>
+              {growthLoading ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="animate-pulse text-gray-11">Loading enrollment data...</div>
+                </div>
+              ) : growthData?.data?.enrollment && growthData.data.enrollment.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsBarChart data={growthData.data.enrollment}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
+                    <XAxis dataKey="month" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                    <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--gray-2)',
+                        border: '1px solid var(--gray-a6)',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString(),
+                        name === 'students' ? 'New Students' : 'Cumulative Total'
+                      ]}
+                    />
+                    <Legend />
+                    <Bar dataKey="students" name="New Students" fill="var(--accent-9)" radius={[8, 8, 0, 0]} />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex flex-col items-center justify-center text-center">
+                  <Users className="w-12 h-12 text-gray-a6 mb-3" />
+                  <p className="text-3 text-gray-11">No enrollment data yet</p>
+                  <p className="text-2 text-gray-10 mt-1">Student signups will appear here</p>
+                </div>
+              )}
             </Card>
 
+            {/* Revenue - Whop Dashboard Message */}
             <Card className="p-6">
-              <h3 className="text-5 font-semibold text-gray-12 mb-4">Revenue Growth</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.growthMetrics.revenueGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a6)" />
-                  <XAxis dataKey="month" stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="var(--gray-11)" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--gray-2)',
-                      border: '1px solid var(--gray-a6)',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--green-9)"
-                    strokeWidth={3}
-                    dot={{ r: 4, fill: 'var(--green-9)' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <h3 className="text-5 font-semibold text-gray-12 mb-4">Revenue</h3>
+              <div className="h-[300px] flex flex-col items-center justify-center text-center">
+                <div className="p-4 rounded-full bg-green-a3 mb-4">
+                  <BarChart className="w-8 h-8 text-green-9" />
+                </div>
+                <p className="text-4 font-medium text-gray-12 mb-2">
+                  Revenue data is managed by Whop
+                </p>
+                <p className="text-3 text-gray-11 max-w-sm mb-4">
+                  All payment processing and revenue tracking is handled through your Whop dashboard for security and accuracy.
+                </p>
+                <a
+                  href="https://dash.whop.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent-9 text-white rounded-lg hover:bg-accent-10 transition-colors text-3 font-medium"
+                >
+                  View Revenue in Whop Dashboard
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </Card>
           </div>
         </div>

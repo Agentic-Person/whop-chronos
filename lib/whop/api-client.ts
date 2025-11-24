@@ -8,7 +8,6 @@
  * Use the /api/auth/role endpoint instead for role detection.
  */
 
-import 'server-only';
 import { Whop } from '@whop/sdk';
 import {
   WhopUser,
