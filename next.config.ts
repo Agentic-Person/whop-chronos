@@ -121,7 +121,8 @@ const nextConfig: NextConfig = {
 
 	// Headers for Security & Performance
 	async headers() {
-		// Common security headers (without X-Frame-Options for Whop embedding)
+		// Security headers for Whop embedded app
+		// Allow embedding from Whop domains on ALL routes (this is a Whop-only app)
 		const securityHeaders = [
 			{
 				key: "X-DNS-Prefetch-Control",
@@ -147,60 +148,18 @@ const nextConfig: NextConfig = {
 				key: "Permissions-Policy",
 				value: "camera=(), microphone=(), geolocation=()",
 			},
+			{
+				// Allow Whop domains to embed this app in iframes
+				key: "Content-Security-Policy",
+				value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
+			},
 		];
 
 		return [
-			// Whop embedded routes - allow embedding from Whop domains
+			// Apply security headers to all routes
 			{
-				source: "/experiences/:path*",
-				headers: [
-					...securityHeaders,
-					{
-						key: "Content-Security-Policy",
-						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
-					},
-				],
-			},
-			{
-				source: "/dashboard/:path*",
-				headers: [
-					...securityHeaders,
-					{
-						key: "Content-Security-Policy",
-						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
-					},
-				],
-			},
-			{
-				source: "/seller-product/:path*",
-				headers: [
-					...securityHeaders,
-					{
-						key: "Content-Security-Policy",
-						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
-					},
-				],
-			},
-			{
-				source: "/customer/:path*",
-				headers: [
-					...securityHeaders,
-					{
-						key: "Content-Security-Policy",
-						value: "frame-ancestors 'self' https://*.whop.com https://whop.com;",
-					},
-				],
-			},
-			// All other routes - block iframe embedding for security
-			{
-				source: "/((?!experiences|dashboard|seller-product|customer).*)",
-				headers: [
-					...securityHeaders,
-					{
-						key: "X-Frame-Options",
-						value: "SAMEORIGIN",
-					},
-				],
+				source: "/:path*",
+				headers: securityHeaders,
 			},
 		];
 	},
