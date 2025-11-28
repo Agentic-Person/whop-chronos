@@ -148,6 +148,25 @@ export async function upsertStudent(
 }
 
 /**
+ * Activate student (membership became valid)
+ */
+export async function activateStudent(membershipId: string) {
+  const supabase = getServiceSupabase();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = (await supabase
+    .from('students')
+    // @ts-expect-error Supabase type mismatch
+    .update({
+      is_active: true,
+      last_active_at: new Date().toISOString(),
+    })
+    .eq('whop_membership_id', membershipId)) as any;
+
+  if (error) throw error;
+}
+
+/**
  * Deactivate student (membership expired/cancelled)
  */
 export async function deactivateStudent(membershipId: string) {

@@ -283,27 +283,99 @@ export async function validateUserMembership(
 }
 
 /**
- * Maps Whop membership/product to our app's subscription tiers
- * Customize this based on your Whop product configuration
+ * Product-to-Tier Mapping Configuration
+ *
+ * This map defines which Whop product IDs correspond to which subscription tiers.
+ * Update these product IDs to match your Whop product configuration.
+ *
+ * To find your product IDs:
+ * 1. Go to https://dash.whop.com/products
+ * 2. Click on each product
+ * 3. Copy the product ID from the URL (starts with "prod_")
+ *
+ * You can override this mapping via environment variable:
+ * WHOP_TIER_MAPPING='{"prod_xxx":"basic","prod_yyy":"pro","prod_zzz":"enterprise"}'
  */
-function mapMembershipToTier(_membership: WhopMembership): SubscriptionTier {
-  // TODO: Implement actual mapping based on your Whop product IDs
-  // For now, returning a default tier
+const DEFAULT_PRODUCT_TIER_MAP: Record<string, SubscriptionTier> = {
+  // Basic tier products
+  'prod_basic': 'basic',
+  'prod_starter': 'basic',
 
-  // Example implementation:
-  // const productId = membership.product_id;
-  // switch (productId) {
-  //   case 'prod_basic_id':
-  //     return 'basic';
-  //   case 'prod_pro_id':
-  //     return 'pro';
-  //   case 'prod_enterprise_id':
-  //     return 'enterprise';
-  //   default:
-  //     return 'free';
-  // }
+  // Pro tier products
+  'prod_pro': 'pro',
+  'prod_professional': 'pro',
 
-  return 'free';
+  // Enterprise tier products
+  'prod_enterprise': 'enterprise',
+  'prod_business': 'enterprise',
+
+  // Test mode products (for DEV_BYPASS_AUTH)
+  'prod_test_basic': 'basic',
+  'prod_test_pro': 'pro',
+  'prod_test_enterprise': 'enterprise',
+};
+
+/**
+ * Get the product-to-tier mapping
+ * Checks environment variable first, falls back to default mapping
+ */
+function getProductTierMap(): Record<string, SubscriptionTier> {
+  const envMapping = process.env['WHOP_TIER_MAPPING'];
+
+  if (envMapping) {
+    try {
+      const parsed = JSON.parse(envMapping) as Record<string, string>;
+
+      // Validate that all values are valid tiers
+      const validTiers: SubscriptionTier[] = ['free', 'basic', 'pro', 'enterprise'];
+      const isValid = Object.values(parsed).every(tier =>
+        validTiers.includes(tier as SubscriptionTier)
+      );
+
+      if (!isValid) {
+        console.error('[Tier Mapping] Invalid tier in WHOP_TIER_MAPPING env var, using defaults');
+        return DEFAULT_PRODUCT_TIER_MAP;
+      }
+
+      console.log('[Tier Mapping] Using environment variable mapping');
+      return parsed as Record<string, SubscriptionTier>;
+    } catch (error) {
+      console.error('[Tier Mapping] Failed to parse WHOP_TIER_MAPPING env var:', error);
+      return DEFAULT_PRODUCT_TIER_MAP;
+    }
+  }
+
+  return DEFAULT_PRODUCT_TIER_MAP;
+}
+
+/**
+ * Maps Whop membership/product to our app's subscription tiers
+ *
+ * Looks up the product_id in the tier mapping configuration.
+ * Falls back to 'basic' tier if product is not found (safer than 'free').
+ *
+ * @param membership - The Whop membership object
+ * @returns The corresponding subscription tier
+ */
+function mapMembershipToTier(membership: WhopMembership): SubscriptionTier {
+  const productId = membership.product_id;
+  const tierMap = getProductTierMap();
+  const tier = tierMap[productId];
+
+  if (tier) {
+    console.log(`[Tier Mapping] Product ${productId} → ${tier} tier`);
+    return tier;
+  }
+
+  // Log unknown products for debugging
+  console.warn(
+    `[Tier Mapping] Unknown product ID: ${productId}. ` +
+    `Falling back to 'basic' tier. ` +
+    `Update PRODUCT_TIER_MAP in lib/whop/auth.ts or set WHOP_TIER_MAPPING env var.`
+  );
+
+  // Return 'basic' as fallback (safer than 'free')
+  return 'basic';
 }
 
 // ============================================================================

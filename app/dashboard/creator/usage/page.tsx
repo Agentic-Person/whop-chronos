@@ -267,8 +267,6 @@ export default function UsagePage() {
                   data={usageData.costDistribution}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -277,7 +275,9 @@ export default function UsagePage() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `$${value.toFixed(4)}`} />
+                <Tooltip
+                  formatter={(value: number, name: string) => [`$${value.toFixed(4)}`, name]}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>

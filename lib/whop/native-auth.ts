@@ -16,6 +16,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { whopsdk } from "@/lib/whop-sdk";
+import type { SubscriptionTier } from "./types";
 
 // ============================================================================
 // Types
@@ -40,6 +41,7 @@ export interface WhopUserContext {
   access: Awaited<ReturnType<typeof whopsdk.users.checkAccess>>;
   isCreator: boolean;
   isStudent: boolean;
+  tier?: SubscriptionTier;
 }
 
 // ============================================================================
@@ -368,6 +370,170 @@ export async function getExperience(experienceId: string) {
   }
 
   return await whopsdk.experiences.retrieve(experienceId);
+}
+
+// ============================================================================
+// Tier Mapping (Product ID → Subscription Tier)
+// ============================================================================
+
+/**
+ * Product-to-Tier Mapping Configuration
+ *
+ * This map defines which Whop product IDs correspond to which subscription tiers.
+ * Update these product IDs to match your Whop product configuration.
+ *
+ * To find your product IDs:
+ * 1. Go to https://dash.whop.com/products
+ * 2. Click on each product
+ * 3. Copy the product ID from the URL (starts with "prod_")
+ *
+ * You can override this mapping via environment variable:
+ * WHOP_TIER_MAPPING='{"prod_xxx":"basic","prod_yyy":"pro","prod_zzz":"enterprise"}'
+ */
+const DEFAULT_PRODUCT_TIER_MAP: Record<string, SubscriptionTier> = {
+  // Basic tier products
+  'prod_basic': 'basic',
+  'prod_starter': 'basic',
+
+  // Pro tier products
+  'prod_pro': 'pro',
+  'prod_professional': 'pro',
+
+  // Enterprise tier products
+  'prod_enterprise': 'enterprise',
+  'prod_business': 'enterprise',
+
+  // Test mode products (for DEV_BYPASS_AUTH)
+  'prod_test_basic': 'basic',
+  'prod_test_pro': 'pro',
+  'prod_test_enterprise': 'enterprise',
+};
+
+/**
+ * Get the product-to-tier mapping
+ * Checks environment variable first, falls back to default mapping
+ */
+function getProductTierMap(): Record<string, SubscriptionTier> {
+  const envMapping = process.env['WHOP_TIER_MAPPING'];
+
+  if (envMapping) {
+    try {
+      const parsed = JSON.parse(envMapping) as Record<string, string>;
+
+      // Validate that all values are valid tiers
+      const validTiers: SubscriptionTier[] = ['free', 'basic', 'pro', 'enterprise'];
+      const isValid = Object.values(parsed).every(tier =>
+        validTiers.includes(tier as SubscriptionTier)
+      );
+
+      if (!isValid) {
+        console.error('[Tier Mapping] Invalid tier in WHOP_TIER_MAPPING env var, using defaults');
+        return DEFAULT_PRODUCT_TIER_MAP;
+      }
+
+      console.log('[Tier Mapping] Using environment variable mapping');
+      return parsed as Record<string, SubscriptionTier>;
+    } catch (error) {
+      console.error('[Tier Mapping] Failed to parse WHOP_TIER_MAPPING env var:', error);
+      return DEFAULT_PRODUCT_TIER_MAP;
+    }
+  }
+
+  return DEFAULT_PRODUCT_TIER_MAP;
+}
+
+/**
+ * Map a Whop product ID to a subscription tier
+ *
+ * @param productId - The Whop product ID (from membership or product object)
+ * @returns The corresponding subscription tier
+ *
+ * @example
+ * ```typescript
+ * const tier = mapProductToTier('prod_pro_123');
+ * console.log(tier); // 'pro'
+ * ```
+ */
+export function mapProductToTier(productId: string): SubscriptionTier {
+  const tierMap = getProductTierMap();
+  const tier = tierMap[productId];
+
+  if (tier) {
+    console.log(`[Tier Mapping] Product ${productId} → ${tier} tier`);
+    return tier;
+  }
+
+  // Log unknown products for debugging
+  console.warn(
+    `[Tier Mapping] Unknown product ID: ${productId}. ` +
+    `Falling back to 'basic' tier. ` +
+    `Update DEFAULT_PRODUCT_TIER_MAP in lib/whop/native-auth.ts or set WHOP_TIER_MAPPING env var.`
+  );
+
+  // Return 'basic' as fallback (safer than 'free')
+  return 'basic';
+}
+
+/**
+ * Get user's subscription tier based on their membership
+ *
+ * This function fetches the user's active memberships and returns the highest tier.
+ * If user has multiple memberships, returns the tier with the most privileges.
+ *
+ * @param userId - The Whop user ID
+ * @returns The user's subscription tier
+ *
+ * @example
+ * ```typescript
+ * const tier = await getUserTier('user_123');
+ * console.log(tier); // 'pro'
+ * ```
+ */
+export async function getUserTier(userId: string): Promise<SubscriptionTier> {
+  // Test mode bypass
+  if (TEST_MODE) {
+    return 'pro'; // Default to pro for testing
+  }
+
+  try {
+    // Fetch user's memberships
+    const memberships = await whopsdk.memberships.list({ user_id: userId, valid: true });
+
+    if (!memberships || memberships.data.length === 0) {
+      console.log(`[Tier Mapping] No valid memberships found for user ${userId}, defaulting to basic`);
+      return 'basic';
+    }
+
+    // Get tier for each membership and return the highest
+    const tierHierarchy: SubscriptionTier[] = ['free', 'basic', 'pro', 'enterprise'];
+
+    const tiers = memberships.data.map(membership => {
+      // Check if membership has a product property
+      const productId = 'product' in membership && typeof membership.product === 'object' && membership.product && 'id' in membership.product
+        ? (membership.product as { id: string }).id
+        : null;
+
+      if (!productId) {
+        console.warn('[Tier Mapping] Membership missing product ID:', membership.id);
+        return 'basic';
+      }
+
+      return mapProductToTier(productId);
+    });
+
+    // Return the highest tier
+    const highestTier = tiers.reduce((highest, current) => {
+      const highestIndex = tierHierarchy.indexOf(highest);
+      const currentIndex = tierHierarchy.indexOf(current);
+      return currentIndex > highestIndex ? current : highest;
+    }, 'free' as SubscriptionTier);
+
+    console.log(`[Tier Mapping] User ${userId} has tier: ${highestTier}`);
+    return highestTier;
+  } catch (error) {
+    console.error('[Tier Mapping] Failed to get user tier:', error);
+    return 'basic'; // Safe fallback
+  }
 }
 
 // ============================================================================

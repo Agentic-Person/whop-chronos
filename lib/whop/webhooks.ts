@@ -57,7 +57,7 @@ export function verifyWebhookSignature(
     const eventTime = parseInt(timestamp, 10);
 
     if (Math.abs(currentTime - eventTime) > 300) {
-      console.error('Webhook timestamp too old');
+      logger.error('Webhook timestamp too old', undefined, { component: 'webhook-verification', timestamp, currentTime });
       return false;
     }
 
@@ -74,7 +74,7 @@ export function verifyWebhookSignature(
       Buffer.from(expectedSignature)
     );
   } catch (error) {
-    console.error('Signature verification failed:', error);
+    logger.error('Signature verification failed', error, { component: 'webhook-verification' });
     return false;
   }
 }
@@ -118,7 +118,8 @@ export async function processWebhook(
 ): Promise<void> {
   const { action, data } = payload;
 
-  console.log(`Processing webhook: ${action}`, {
+  logger.info(`Processing webhook: ${action}`, {
+    component: 'webhook-processor',
     timestamp: payload.timestamp,
     hasHandler: !!handlers[action],
   });
@@ -126,15 +127,15 @@ export async function processWebhook(
   const handler = handlers[action];
 
   if (!handler) {
-    console.warn(`No handler registered for event: ${action}`);
+    logger.warn(`No handler registered for event: ${action}`, { component: 'webhook-processor' });
     return;
   }
 
   try {
     await handler(data, action);
-    console.log(`Successfully processed webhook: ${action}`);
+    logger.info(`Successfully processed webhook: ${action}`, { component: 'webhook-processor' });
   } catch (error) {
-    console.error(`Error processing webhook ${action}:`, error);
+    logger.error(`Error processing webhook ${action}`, error, { component: 'webhook-processor' });
     throw new WhopApiError(
       `Failed to process webhook: ${action}`,
       500,
@@ -149,84 +150,206 @@ export async function processWebhook(
 
 /**
  * Default handler for membership.created
- * Override this with onWebhook('membership.created', yourHandler)
+ * Creates a new student record when a membership is purchased
  */
 onWebhook('membership.created', async (data: MembershipWebhookData) => {
-  console.log('New membership created:', {
-    userId: data.user.id,
-    membershipId: data.membership.id,
-    productId: data.product.id,
-  });
+  try {
+    logger.info('Processing membership.created webhook', {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      membershipId: data.membership.id,
+      productId: data.product.id,
+    });
 
-  // TODO: Create student record in database
-  // TODO: Send welcome email
-  // TODO: Grant access to courses
+    // Get the company_id from the product
+    // In Whop, products belong to companies
+    const { getCompanyInfo } = await import('./api-client');
+    const { getCreatorByWhopCompanyId, upsertStudent } = await import('@/lib/db/queries');
+
+    // Get company info to find the creator
+    const companyInfo = await getCompanyInfo();
+
+    // Find creator by company_id
+    const creator = await getCreatorByWhopCompanyId(companyInfo.id);
+
+    if (!creator) {
+      logger.warn('No creator found for company_id', {
+        component: 'webhook-handler',
+        companyId: companyInfo.id,
+        productId: data.product.id,
+      });
+      return;
+    }
+
+    // Extract creator ID (we've verified creator exists above)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const creatorId: string = (creator as any).id;
+
+    // Create or update student record
+    await upsertStudent({
+      whop_user_id: data.user.id,
+      whop_membership_id: data.membership.id,
+      creator_id: creatorId,
+      email: data.user.email,
+      name: data.user.username || null,
+      is_active: data.membership.valid,
+      last_active_at: new Date().toISOString(),
+    });
+
+    logger.info('Successfully created/updated student record', {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      creatorId: creatorId,
+    });
+  } catch (error) {
+    logger.error('Failed to process membership.created webhook', error, {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      membershipId: data.membership.id,
+    });
+    throw error;
+  }
 });
 
 /**
  * Default handler for membership.went_valid
+ * Activates student access when membership becomes valid
  */
 onWebhook('membership.went_valid', async (data: MembershipWebhookData) => {
-  console.log('Membership became valid:', {
-    userId: data.user.id,
-    membershipId: data.membership.id,
-  });
+  try {
+    logger.info('Processing membership.went_valid webhook', {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      membershipId: data.membership.id,
+    });
 
-  // TODO: Enable student access
-  // TODO: Send activation email
+    const { activateStudent } = await import('@/lib/db/queries');
+
+    // Activate student access
+    await activateStudent(data.membership.id);
+
+    logger.info('Successfully activated student membership', {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+  } catch (error) {
+    logger.error('Failed to process membership.went_valid webhook', error, {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+    throw error;
+  }
 });
 
 /**
  * Default handler for membership.went_invalid
+ * Deactivates student access when membership expires or becomes invalid
  */
 onWebhook('membership.went_invalid', async (data: MembershipWebhookData) => {
-  console.log('Membership became invalid:', {
-    userId: data.user.id,
-    membershipId: data.membership.id,
-  });
+  try {
+    logger.info('Processing membership.went_invalid webhook', {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      membershipId: data.membership.id,
+    });
 
-  // TODO: Revoke student access
-  // TODO: Send expiration notice
+    const { deactivateStudent } = await import('@/lib/db/queries');
+
+    // Deactivate student access
+    await deactivateStudent(data.membership.id);
+
+    logger.info('Successfully deactivated student membership', {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+  } catch (error) {
+    logger.error('Failed to process membership.went_invalid webhook', error, {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+    throw error;
+  }
 });
 
 /**
  * Default handler for membership.deleted
+ * Soft deletes student access when membership is permanently deleted
  */
 onWebhook('membership.deleted', async (data: MembershipWebhookData) => {
-  console.log('Membership deleted:', {
-    userId: data.user.id,
-    membershipId: data.membership.id,
-  });
+  try {
+    logger.info('Processing membership.deleted webhook', {
+      component: 'webhook-handler',
+      userId: data.user.id,
+      membershipId: data.membership.id,
+    });
 
-  // TODO: Remove student access
-  // TODO: Archive student data
+    const { deactivateStudent } = await import('@/lib/db/queries');
+
+    // Soft delete: deactivate student (keep record for analytics)
+    await deactivateStudent(data.membership.id);
+
+    logger.info('Successfully deactivated student for deleted membership', {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+  } catch (error) {
+    logger.error('Failed to process membership.deleted webhook', error, {
+      component: 'webhook-handler',
+      membershipId: data.membership.id,
+    });
+    throw error;
+  }
 });
 
 /**
  * Default handler for payment.succeeded
+ * Logs successful payment for analytics tracking
  */
 onWebhook('payment.succeeded', async (data: PaymentWebhookData) => {
-  console.log('Payment succeeded:', {
-    membershipId: data.membership_id,
-    amount: data.amount,
-  });
+  try {
+    logger.info('Payment succeeded', {
+      component: 'webhook-handler',
+      membershipId: data.membership_id,
+      amount: data.amount,
+      currency: data.currency,
+    });
 
-  // TODO: Log payment for analytics
-  // TODO: Update billing records
-  // TODO: Send receipt
+    // Future: Store payment records for analytics and revenue tracking
+    // For now, just log the event
+
+  } catch (error) {
+    logger.error('Failed to process payment.succeeded webhook', error, {
+      component: 'webhook-handler',
+      membershipId: data.membership_id,
+    });
+    // Don't throw - payment already succeeded, this is just logging
+  }
 });
 
 /**
  * Default handler for payment.failed
+ * Logs failed payment for monitoring
  */
 onWebhook('payment.failed', async (data: PaymentWebhookData) => {
-  console.log('Payment failed:', {
-    membershipId: data.membership_id,
-    amount: data.amount,
-  });
+  try {
+    logger.warn('Payment failed', {
+      component: 'webhook-handler',
+      membershipId: data.membership_id,
+      amount: data.amount,
+      currency: data.currency,
+    });
 
-  // TODO: Send payment failure notice
-  // TODO: Update billing status
+    // Future: Notify creator about failed payment
+    // Future: Update billing status
+    // For now, just log the event
+
+  } catch (error) {
+    logger.error('Failed to process payment.failed webhook', error, {
+      component: 'webhook-handler',
+      membershipId: data.membership_id,
+    });
+    // Don't throw - this is just logging
+  }
 });
 
 // ============================================================================
