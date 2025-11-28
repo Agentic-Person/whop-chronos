@@ -56,11 +56,10 @@ export function LandingNav() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <button
-              onClick={() => {
-                window.location.href = '/api/whop/auth/login';
-              }}
-              type="button"
+            <a
+              href="https://whop.com/agentic-personnel-llc/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="relative overflow-hidden px-6 bg-gray-2 rounded-lg text-sm font-semibold text-gray-12 transition-all hover:bg-gray-3 border-2 flex items-center justify-center"
               style={{ borderColor: '#F03C09', height: '40px' }}
             >
@@ -70,7 +69,7 @@ export function LandingNav() {
                 animation: 'shimmer 3s linear infinite'
               }}></div>
               <span className="relative flex items-center gap-2">
-                <span>Sign in with</span>
+                <span>Start Free Trial on</span>
                 <Image
                   src="/images/whop-logo-transp.png"
                   alt="Whop"
@@ -79,7 +78,7 @@ export function LandingNav() {
                   className="object-contain brightness-110"
                 />
               </span>
-            </button>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -110,17 +109,15 @@ export function LandingNav() {
             className="md:hidden bg-gray-2/95 backdrop-blur-xl border-t border-gray-a4"
           >
             <div className="container mx-auto px-4 py-6">
-              <Button
-                variant="solid"
-                size="3"
-                className="w-full bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10"
-                onClick={() => {
-                  window.location.href = '/api/whop/auth/login';
-                  setMobileMenuOpen(false);
-                }}
+              <a
+                href="https://whop.com/agentic-personnel-llc/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center py-3 px-4 rounded-lg bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10 text-white font-semibold transition-all"
+                onClick={() => setMobileMenuOpen(false)}
               >
-                Sign in with Whop
-              </Button>
+                Start Free Trial on Whop
+              </a>
             </div>
           </motion.div>
         )}

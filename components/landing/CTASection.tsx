@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from '@/components/motion';
-import { Button } from '@whop/react/components';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 export function CTASection() {
@@ -76,17 +75,15 @@ export function CTASection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Button
-              variant="solid"
-              size="4"
-              className="bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10 px-12 py-6 text-xl font-bold shadow-2xl hover:shadow-purple-9/50 transition-all hover:scale-105"
-              onClick={() => {
-                window.location.href = '/api/whop/auth/login';
-              }}
+            <a
+              href="https://whop.com/agentic-personnel-llc/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-9 to-blue-9 hover:from-purple-10 hover:to-blue-10 px-12 py-4 text-xl font-bold shadow-2xl hover:shadow-purple-9/50 transition-all hover:scale-105 rounded-lg text-white"
             >
-              Sign in with Whop
+              Start Free Trial on Whop
               <ArrowRight className="w-6 h-6" />
-            </Button>
+            </a>
           </motion.div>
 
           {/* Trust Badge */}

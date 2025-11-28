@@ -57,12 +57,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/api/whop/auth/login"
+                <a
+                  href="https://whop.com/agentic-personnel-llc/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-gray-11 hover:text-purple-11 transition-colors"
                 >
                   Get Started
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

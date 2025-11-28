@@ -133,11 +133,10 @@ export function HeroSection() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              onClick={() => {
-                window.location.href = '/api/whop/auth/login';
-              }}
-              type="button"
+            <a
+              href="https://whop.com/agentic-personnel-llc/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="relative overflow-hidden px-6 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
               style={{
                 height: '40px',
@@ -148,7 +147,7 @@ export function HeroSection() {
               }}
             >
               <span className="relative flex items-center gap-2">
-                <span>Sign in with</span>
+                <span>Start Free Trial on</span>
                 <Image
                   src="/images/whop-logo-transp.png"
                   alt="Whop"
@@ -157,7 +156,7 @@ export function HeroSection() {
                   className="object-contain brightness-110"
                 />
               </span>
-            </button>
+            </a>
             <button
               onClick={() => {
                 document.getElementById('why-chronos')?.scrollIntoView({
@@ -343,11 +342,10 @@ export function HeroSection() {
                 {/* Show CTA after 2 questions */}
                 {questionsAsked >= 2 && (
                   <div className="flex justify-center pt-4">
-                    <button
-                      onClick={() => {
-                        window.location.href = '/api/whop/auth/login';
-                      }}
-                      type="button"
+                    <a
+                      href="https://whop.com/agentic-personnel-llc/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="relative overflow-hidden px-6 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
                       style={{
                         height: '40px',
@@ -358,7 +356,7 @@ export function HeroSection() {
                       }}
                     >
                       <span className="relative flex items-center gap-2">
-                        <span>Sign in with</span>
+                        <span>Start Free Trial on</span>
                         <Image
                           src="/images/whop-logo-transp.png"
                           alt="Whop"
@@ -367,7 +365,7 @@ export function HeroSection() {
                           className="object-contain brightness-110"
                         />
                       </span>
-                    </button>
+                    </a>
                   </div>
                 )}
               </div>
