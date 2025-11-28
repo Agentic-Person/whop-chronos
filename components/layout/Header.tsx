@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, Bell, Settings, LogOut, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 interface HeaderProps {
@@ -16,6 +16,28 @@ export function Header({
   userRole = "creator"
 }: HeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showUserMenu]);
+
+  // Handle keyboard navigation for dropdown
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setShowUserMenu(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-sm">
@@ -53,19 +75,22 @@ export function Header({
         <div className="flex items-center gap-2">
           {/* Notifications */}
           <button
-            className="relative rounded-lg p-2 hover:bg-gray-100"
-            aria-label="Notifications"
+            className="relative rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            aria-label="View notifications (1 unread)"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
           </button>
 
           {/* User menu */}
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100"
+              onKeyDown={handleKeyDown}
+              className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               aria-label="User menu"
+              aria-haspopup="menu"
+              aria-expanded={showUserMenu}
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-blue-600">
                 <User className="h-4 w-4 text-white" />
@@ -77,17 +102,26 @@ export function Header({
 
             {/* Dropdown menu */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg">
+              <div
+                className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg"
+                role="menu"
+                aria-orientation="vertical"
+                onKeyDown={handleKeyDown}
+              >
                 <div className="p-2">
                   <Link
                     href="/dashboard/settings"
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-gray-100"
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    role="menuitem"
+                    onClick={() => setShowUserMenu(false)}
                   >
                     <Settings className="h-4 w-4" />
                     Settings
                   </Link>
                   <button
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    role="menuitem"
+                    onClick={() => setShowUserMenu(false)}
                   >
                     <LogOut className="h-4 w-4" />
                     Sign out

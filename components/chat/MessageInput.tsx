@@ -93,8 +93,10 @@ export function MessageInput({
               className={cn(
                 "absolute bottom-3 right-3 rounded-lg p-1.5 text-gray-500 transition-colors",
                 "hover:bg-gray-a3 hover:text-gray-700",
+                "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500",
                 "disabled:cursor-not-allowed disabled:opacity-50"
               )}
+              aria-label="Attach file"
               title="Attach file"
             >
               <Paperclip className="h-4 w-4" />
@@ -109,6 +111,7 @@ export function MessageInput({
           variant="primary"
           size="md"
           className="h-11 px-4"
+          aria-label="Send message"
         >
           <span className="flex items-center gap-2">
             Send
@@ -143,6 +146,8 @@ export function MessageInput({
                   ? "text-orange-600"
                   : "text-gray-600"
             )}
+            aria-live="polite"
+            aria-atomic="true"
           >
             {remainingChars} characters remaining
           </span>

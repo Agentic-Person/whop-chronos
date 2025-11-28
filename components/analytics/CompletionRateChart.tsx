@@ -177,7 +177,11 @@ export const CompletionRateChart: React.FC<CompletionRateChartProps> = React.mem
   }
 
   return (
-    <div className={`w-full relative ${className}`}>
+    <div
+      className={`w-full relative ${className}`}
+      role="img"
+      aria-label={`Video completion rate chart showing ${overallRate.toFixed(1)}% overall completion rate`}
+    >
       <CenterLabel value={overallRate} />
       <ResponsiveContainer width="100%" height={height} aspect={2}>
         <PieChart>

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/db/client';
 
+// Cache this route for 5 minutes
+export const revalidate = 300;
+
 /**
  * GET /api/analytics/growth
  *

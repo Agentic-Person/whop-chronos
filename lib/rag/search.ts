@@ -12,6 +12,7 @@ import { kv } from '@vercel/kv';
 import { searchVideoChunks, type VectorSearchResult } from '@/lib/video/vector-search';
 import { rankSearchResults, type RankingOptions } from './ranking';
 import { getServiceSupabase } from '@/lib/db/client';
+import { logger } from '@/lib/logger';
 
 export interface EnhancedSearchOptions {
   // Base search options
@@ -26,7 +27,7 @@ export interface EnhancedSearchOptions {
 
   // Advanced options
   enable_cache?: boolean; // Default: true
-  cache_ttl_seconds?: number; // Default: 300 (5 minutes)
+  cache_ttl_seconds?: number; // Default: 600 (10 minutes)
   deduplicate?: boolean; // Default: true
   deduplicate_similarity_threshold?: number; // Default: 0.95
 }
@@ -47,7 +48,7 @@ const DEFAULT_OPTIONS: Required<Omit<EnhancedSearchOptions, 'filter_video_ids' |
   boost_recent_videos: true,
   boost_popular_videos: true,
   enable_cache: true,
-  cache_ttl_seconds: 300,
+  cache_ttl_seconds: 600, // 10 minutes
   deduplicate: true,
   deduplicate_similarity_threshold: 0.95,
 };
@@ -59,6 +60,19 @@ function getCacheKey(query: string, options: EnhancedSearchOptions): string {
   const videoIds = options.filter_video_ids?.sort().join(',') || 'all';
   const studentId = options.boost_viewed_by_student || 'none';
   return `rag:search:${query}:${videoIds}:${studentId}:${options.match_count}:${options.similarity_threshold}`;
+}
+
+/**
+ * Increment cache metrics (hits/misses)
+ */
+async function incrementCacheMetric(metric: 'cache_hits' | 'cache_misses'): Promise<void> {
+  try {
+    const key = `rag:metrics:${metric}`;
+    await kv.incr(key);
+  } catch (error) {
+    // Fail silently - metrics are not critical
+    logger.debug('Failed to increment cache metric', { metric, error });
+  }
 }
 
 /**
@@ -81,17 +95,25 @@ export async function enhancedSearch(
       const cached = await kv.get<EnhancedSearchResult[]>(cacheKey);
 
       if (cached) {
-        console.log(`Cache hit for query: "${query.substring(0, 50)}..."`);
+        logger.debug('Vector search cache hit', { query: query.substring(0, 50), cacheKey });
+        // Increment cache hit counter
+        await incrementCacheMetric('cache_hits');
         return cached;
       }
+
+      // Increment cache miss counter
+      await incrementCacheMetric('cache_misses');
     } catch (error) {
-      console.warn('Cache read failed, continuing with search:', error);
+      logger.warn('Cache read failed, continuing with search', { error });
     }
   }
 
   // Perform base vector search (fetch more than needed for ranking)
   const expandedMatchCount = Math.min(opts.match_count * 3, 20);
-  console.log(`Searching for "${query.substring(0, 50)}..." (fetching ${expandedMatchCount} candidates)`);
+  logger.debug('Performing vector search', {
+    query: query.substring(0, 50),
+    expandedMatchCount
+  });
 
   const searchResults = await searchVideoChunks(query, {
     match_count: expandedMatchCount,
@@ -101,11 +123,13 @@ export async function enhancedSearch(
   });
 
   if (searchResults.length === 0) {
-    console.log('No results found for query');
+    logger.debug('No results found for query', { query: query.substring(0, 50) });
     return [];
   }
 
-  console.log(`Found ${searchResults.length} candidate results, applying ranking...`);
+  logger.debug('Found candidate results, applying ranking', {
+    candidateCount: searchResults.length
+  });
 
   // Apply multi-factor ranking
   const rankingOptions: RankingOptions = {
@@ -121,15 +145,16 @@ export async function enhancedSearch(
   // Take top N results after ranking
   const topResults = rankedResults.slice(0, opts.match_count);
 
-  console.log(`Returning top ${topResults.length} ranked results`);
+  logger.debug('Returning ranked results', { resultCount: topResults.length });
 
   // Cache results
   if (opts.enable_cache) {
     try {
       const cacheKey = getCacheKey(query, options);
       await kv.set(cacheKey, topResults, { ex: opts.cache_ttl_seconds });
+      logger.debug('Cached search results', { cacheKey, ttl: opts.cache_ttl_seconds });
     } catch (error) {
-      console.warn('Cache write failed:', error);
+      logger.warn('Cache write failed', { error });
     }
   }
 
@@ -160,11 +185,11 @@ export async function searchWithinCourse(
   const videoIds = modules?.flatMap((m: any) => m.video_ids || []) || [];
 
   if (videoIds.length === 0) {
-    console.warn(`No videos found for course ${courseId}`);
+    logger.warn('No videos found for course', { courseId });
     return [];
   }
 
-  console.log(`Searching within course ${courseId} (${videoIds.length} videos)`);
+  logger.debug('Searching within course', { courseId, videoCount: videoIds.length });
 
   return enhancedSearch(query, {
     ...options,
@@ -197,11 +222,11 @@ export async function searchCreatorContent(
   const videoIds = videos?.map((v: any) => v.id) || [];
 
   if (videoIds.length === 0) {
-    console.warn(`No videos found for creator ${creatorId}`);
+    logger.warn('No videos found for creator', { creatorId });
     return [];
   }
 
-  console.log(`Searching creator ${creatorId} content (${videoIds.length} videos)`);
+  logger.debug('Searching creator content', { creatorId, videoCount: videoIds.length });
 
   return enhancedSearch(query, {
     ...options,
@@ -220,10 +245,10 @@ export async function invalidateCacheForVideo(videoId: string): Promise<void> {
 
     if (keys.length > 0) {
       await Promise.all(keys.map(key => kv.del(key)));
-      console.log(`Invalidated ${keys.length} cache entries for video ${videoId}`);
+      logger.info('Invalidated cache entries for video', { videoId, count: keys.length });
     }
   } catch (error) {
-    console.warn('Cache invalidation failed:', error);
+    logger.warn('Cache invalidation failed', { error, videoId });
   }
 }
 
@@ -237,10 +262,56 @@ export async function invalidateAllSearchCache(): Promise<void> {
 
     if (keys.length > 0) {
       await Promise.all(keys.map(key => kv.del(key)));
-      console.log(`Invalidated ${keys.length} search cache entries`);
+      logger.info('Invalidated all search cache entries', { count: keys.length });
     }
   } catch (error) {
-    console.warn('Cache invalidation failed:', error);
+    logger.warn('Cache invalidation failed', { error });
+  }
+}
+
+/**
+ * Invalidate cache for all videos owned by a creator
+ * Call when a creator's videos are updated/deleted
+ */
+export async function invalidateCacheForCreator(creatorId: string): Promise<void> {
+  try {
+    // Get all video IDs for this creator
+    const supabase = getServiceSupabase();
+    const { data: videos, error } = await supabase
+      .from('videos')
+      .select('id')
+      .eq('creator_id', creatorId);
+
+    if (error) {
+      logger.warn('Failed to fetch creator videos for cache invalidation', { error, creatorId });
+      return;
+    }
+
+    const videoIds = videos?.map((v: any) => v.id) || [];
+
+    if (videoIds.length === 0) {
+      logger.debug('No videos found for creator cache invalidation', { creatorId });
+      return;
+    }
+
+    // Invalidate cache for each video
+    let totalInvalidated = 0;
+    for (const videoId of videoIds) {
+      const pattern = `rag:search:*:*${videoId}*:*`;
+      const keys = await kv.keys(pattern);
+      if (keys.length > 0) {
+        await Promise.all(keys.map(key => kv.del(key)));
+        totalInvalidated += keys.length;
+      }
+    }
+
+    logger.info('Invalidated cache entries for creator', {
+      creatorId,
+      videoCount: videoIds.length,
+      cacheEntriesInvalidated: totalInvalidated
+    });
+  } catch (error) {
+    logger.warn('Creator cache invalidation failed', { error, creatorId });
   }
 }
 
@@ -265,7 +336,7 @@ export async function getSearchMetrics(): Promise<{
       total_searches: total,
     };
   } catch (error) {
-    console.warn('Failed to get search metrics:', error);
+    logger.warn('Failed to get search metrics', { error });
     return {
       cache_hits: 0,
       cache_misses: 0,

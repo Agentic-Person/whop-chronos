@@ -11,6 +11,7 @@ import { kv } from '@vercel/kv';
 import { createHash } from 'crypto';
 import type { VectorSearchResult } from '@/lib/video/vector-search';
 import type { ChatCompletionResult } from './claude';
+import { logger } from '@/lib/logger';
 
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_PREFIX = 'chronos:chat:';
@@ -75,7 +76,7 @@ export async function getCachedResponse(
     const cached = await kv.get<CachedResponse>(cacheKey);
 
     if (cached) {
-      console.log(`Cache hit for query: "${query.slice(0, 50)}..."`);
+      logger.info('Cache hit for query', { component: 'ai-cache', query: query.slice(0, 50), action: 'cache-hit' });
 
       // Increment hit count
       await kv.set(cacheKey, {
@@ -89,12 +90,12 @@ export async function getCachedResponse(
       return cached;
     }
 
-    console.log(`Cache miss for query: "${query.slice(0, 50)}..."`);
+    logger.info('Cache miss for query', { component: 'ai-cache', query: query.slice(0, 50), action: 'cache-miss' });
     await updateCacheStats('miss');
 
     return null;
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error', error as Error, { component: 'ai-cache' });
     return null;
   }
 }
@@ -120,9 +121,9 @@ export async function cacheResponse(
 
     await kv.set(cacheKey, cachedData, { ex: CACHE_TTL_SECONDS });
 
-    console.log(`Cached response for query: "${query.slice(0, 50)}..."`);
+    logger.info('Cached response for query', { component: 'ai-cache', query: query.slice(0, 50), action: 'cache-set' });
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error', error as Error, { component: 'ai-cache' });
   }
 }
 
@@ -149,10 +150,10 @@ export async function invalidateVideoCache(videoId: string): Promise<number> {
       }
     } while (cursor !== '0');
 
-    console.log(`Invalidated ${deletedCount} cached responses for video ${videoId}`);
+    logger.info('Invalidated cached responses for video', { component: 'ai-cache', videoId, deletedCount, action: 'invalidate' });
     return deletedCount;
   } catch (error) {
-    console.error('Cache invalidation error:', error);
+    logger.error('Cache invalidation error', error as Error, { component: 'ai-cache', videoId });
     return 0;
   }
 }
@@ -177,10 +178,10 @@ export async function invalidateAllCache(): Promise<number> {
       }
     } while (cursor !== '0');
 
-    console.log(`Invalidated all ${deletedCount} cached responses`);
+    logger.info('Invalidated all cached responses', { component: 'ai-cache', deletedCount, action: 'invalidate-all' });
     return deletedCount;
   } catch (error) {
-    console.error('Cache invalidation error:', error);
+    logger.error('Cache invalidation error', error as Error, { component: 'ai-cache' });
     return 0;
   }
 }
@@ -212,7 +213,7 @@ async function updateCacheStats(type: 'hit' | 'miss'): Promise<void> {
 
     await kv.set(STATS_KEY, stats);
   } catch (error) {
-    console.error('Cache stats update error:', error);
+    logger.error('Cache stats update error', error as Error, { component: 'ai-cache' });
   }
 }
 
@@ -231,7 +232,7 @@ export async function getCacheStats(): Promise<CacheStats> {
       totalSaved: 0,
     };
   } catch (error) {
-    console.error('Cache stats get error:', error);
+    logger.error('Cache stats get error', error as Error, { component: 'ai-cache' });
     return {
       totalRequests: 0,
       cacheHits: 0,
@@ -248,9 +249,9 @@ export async function getCacheStats(): Promise<CacheStats> {
 export async function resetCacheStats(): Promise<void> {
   try {
     await kv.del(STATS_KEY);
-    console.log('Cache statistics reset');
+    logger.info('Cache statistics reset', { component: 'ai-cache', action: 'stats-reset' });
   } catch (error) {
-    console.error('Cache stats reset error:', error);
+    logger.error('Cache stats reset error', error as Error, { component: 'ai-cache' });
   }
 }
 
@@ -280,7 +281,7 @@ export async function getCacheInfo(): Promise<{
       stats,
     };
   } catch (error) {
-    console.error('Cache info error:', error);
+    logger.error('Cache info error', error as Error, { component: 'ai-cache' });
     return {
       cachedResponses: 0,
       stats: {
@@ -311,10 +312,10 @@ export async function warmCache(
       await cacheResponse(query, searchResults, response);
       cached++;
     } catch (error) {
-      console.error(`Failed to cache question: "${query}"`, error);
+      logger.error('Failed to cache question', error as Error, { component: 'ai-cache', query });
     }
   }
 
-  console.log(`Warmed cache with ${cached} common questions`);
+  logger.info('Warmed cache with common questions', { component: 'ai-cache', cached, action: 'warm-cache' });
   return cached;
 }

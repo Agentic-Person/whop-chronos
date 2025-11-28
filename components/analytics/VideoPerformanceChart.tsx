@@ -133,7 +133,11 @@ export const VideoPerformanceChart: React.FC<VideoPerformanceChartProps> = React
   }
 
   return (
-    <div className={`w-full ${className}`}>
+    <div
+      className={`w-full ${className}`}
+      role="img"
+      aria-label="Video performance chart showing views, watch time, and unique viewers over time"
+    >
       <ResponsiveContainer width="100%" height={height} aspect={2}>
         <AreaChart
           data={chartData}

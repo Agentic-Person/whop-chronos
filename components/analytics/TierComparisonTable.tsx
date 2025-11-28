@@ -63,15 +63,25 @@ export function TierComparisonTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table
+          className="w-full border-collapse"
+          role="table"
+          aria-label="Subscription tier comparison showing features and pricing"
+        >
           <thead>
-            <tr className="border-t border-gray-200 bg-gray-50">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+            <tr className="border-t border-gray-200 bg-gray-50" role="row">
+              <th
+                className="px-4 py-3 text-left text-sm font-semibold text-gray-900"
+                role="columnheader"
+                scope="col"
+              >
                 Feature
               </th>
               {displayTiers.map((tier) => (
                 <th
                   key={tier}
+                  role="columnheader"
+                  scope="col"
                   className={cn(
                     'px-4 py-3 text-center text-sm font-semibold',
                     tier === currentTier
@@ -97,9 +107,13 @@ export function TierComparisonTable({
             {features.map((feature, idx) => (
               <tr
                 key={feature.key}
+                role="row"
                 className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
               >
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                <td
+                  className="px-4 py-3 text-sm font-medium text-gray-900"
+                  role="cell"
+                >
                   {feature.label}
                 </td>
                 {displayTiers.map((tier) => {
@@ -107,6 +121,7 @@ export function TierComparisonTable({
                   return (
                     <td
                       key={tier}
+                      role="cell"
                       className={cn(
                         'px-4 py-3 text-center text-sm',
                         tier === currentTier ? 'bg-blue-50' : '',
@@ -130,64 +145,67 @@ export function TierComparisonTable({
             ))}
 
             {/* Additional features */}
-            <tr className="bg-white">
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">
+            <tr className="bg-white" role="row">
+              <td className="px-4 py-3 text-sm font-medium text-gray-900" role="cell">
                 Priority Support
               </td>
               {displayTiers.map((tier) => (
                 <td
                   key={tier}
+                  role="cell"
                   className={cn(
                     'px-4 py-3 text-center',
                     tier === currentTier ? 'bg-blue-50' : '',
                   )}
                 >
                   {tier === 'pro' || tier === 'enterprise' ? (
-                    <Check className="mx-auto h-5 w-5 text-green-600" />
+                    <Check className="mx-auto h-5 w-5 text-green-600" aria-label="Included" />
                   ) : (
-                    <X className="mx-auto h-5 w-5 text-gray-300" />
+                    <X className="mx-auto h-5 w-5 text-gray-300" aria-label="Not included" />
                   )}
                 </td>
               ))}
             </tr>
 
-            <tr className="bg-gray-50">
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">
+            <tr className="bg-gray-50" role="row">
+              <td className="px-4 py-3 text-sm font-medium text-gray-900" role="cell">
                 Advanced Analytics
               </td>
               {displayTiers.map((tier) => (
                 <td
                   key={tier}
+                  role="cell"
                   className={cn(
                     'px-4 py-3 text-center',
                     tier === currentTier ? 'bg-blue-50' : '',
                   )}
                 >
                   {tier === 'pro' || tier === 'enterprise' ? (
-                    <Check className="mx-auto h-5 w-5 text-green-600" />
+                    <Check className="mx-auto h-5 w-5 text-green-600" aria-label="Included" />
                   ) : (
-                    <X className="mx-auto h-5 w-5 text-gray-300" />
+                    <X className="mx-auto h-5 w-5 text-gray-300" aria-label="Not included" />
                   )}
                 </td>
               ))}
             </tr>
 
-            <tr className="bg-white">
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">
+            <tr className="bg-white" role="row">
+              <td className="px-4 py-3 text-sm font-medium text-gray-900" role="cell">
                 Custom Branding
               </td>
               {displayTiers.map((tier) => (
                 <td
                   key={tier}
+                  role="cell"
                   className={cn(
                     'px-4 py-3 text-center',
                     tier === currentTier ? 'bg-blue-50' : '',
                   )}
                 >
                   {tier === 'enterprise' ? (
-                    <Check className="mx-auto h-5 w-5 text-green-600" />
+                    <Check className="mx-auto h-5 w-5 text-green-600" aria-label="Included" />
                   ) : (
-                    <X className="mx-auto h-5 w-5 text-gray-300" />
+                    <X className="mx-auto h-5 w-5 text-gray-300" aria-label="Not included" />
                   )}
                 </td>
               ))}
@@ -196,11 +214,12 @@ export function TierComparisonTable({
 
           {/* Upgrade buttons */}
           <tfoot>
-            <tr className="border-t border-gray-200 bg-gray-50">
-              <td className="px-4 py-3" />
+            <tr className="border-t border-gray-200 bg-gray-50" role="row">
+              <td className="px-4 py-3" role="cell" />
               {displayTiers.map((tier) => (
                 <td
                   key={tier}
+                  role="cell"
                   className={cn(
                     'px-4 py-3 text-center',
                     tier === currentTier ? 'bg-blue-50' : '',
@@ -211,6 +230,7 @@ export function TierComparisonTable({
                       onClick={() => onUpgrade(tier)}
                       className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                       type="button"
+                      aria-label={`Upgrade to ${TIER_NAMES[tier]} plan for ${TIER_PRICES[tier]} per month`}
                     >
                       Upgrade to {TIER_NAMES[tier]}
                     </button>

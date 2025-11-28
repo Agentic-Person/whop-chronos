@@ -24,6 +24,7 @@ import {
   type TranscriptionResult,
   type TranscriptionOptions,
 } from './transcription';
+import { logger } from '@/lib/logger';
 
 /**
  * Structured data extracted from Whisper transcription
@@ -98,8 +99,13 @@ export async function processWithWhisper(
   filename: string,
   options: TranscriptionOptions = {}
 ): Promise<WhisperVideoData> {
-  console.log(`[Whisper Processor] Processing file: ${filename}`);
-  console.log(`[Whisper Processor] File size: ${(videoBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+  const fileSizeMB = (videoBuffer.length / 1024 / 1024).toFixed(2);
+  logger.info('Processing file with Whisper', {
+    component: 'whisper-processor',
+    filename,
+    fileSizeMB,
+    action: 'transcription'
+  });
 
   // Step 1: Validate API key
   if (!process.env['OPENAI_API_KEY']) {
@@ -119,7 +125,7 @@ export async function processWithWhisper(
       temperature: options.temperature ?? 0, // Deterministic output
     });
   } catch (error: any) {
-    console.error('[Whisper Processor] Transcription failed:', error);
+    logger.error('Whisper transcription failed', error, { component: 'whisper-processor', filename });
 
     // Map transcription errors to WhisperProcessorError
     if (error.code === 'AUDIO_EXTRACTION_FAILED') {
@@ -171,11 +177,16 @@ export async function processWithWhisper(
     method: 'whisper',
   };
 
-  console.log(`[Whisper Processor] Successfully transcribed: ${filename}`);
-  console.log(`[Whisper Processor] Duration: ${result.duration.toFixed(2)} seconds (${(result.duration / 60).toFixed(2)} minutes)`);
-  console.log(`[Whisper Processor] Cost: $${result.cost.toFixed(4)}`);
-  console.log(`[Whisper Processor] Transcript length: ${result.transcript.length} characters`);
-  console.log(`[Whisper Processor] Segments: ${transcriptWithTimestamps.length}`);
+  logger.info('Successfully transcribed with Whisper', {
+    component: 'whisper-processor',
+    filename,
+    durationSeconds: result.duration.toFixed(2),
+    durationMinutes: (result.duration / 60).toFixed(2),
+    cost: result.cost.toFixed(4),
+    transcriptLength: result.transcript.length,
+    segments: transcriptWithTimestamps.length,
+    action: 'completed'
+  });
 
   return videoData;
 }
@@ -202,7 +213,7 @@ export async function processVideoFromUrl(
   filename: string,
   options: TranscriptionOptions = {}
 ): Promise<WhisperVideoData> {
-  console.log(`[Whisper Processor] Downloading video from: ${videoUrl}`);
+  logger.info('Downloading video from URL', { component: 'whisper-processor', videoUrl, filename });
 
   try {
     // Download video to buffer
@@ -215,7 +226,8 @@ export async function processVideoFromUrl(
     const arrayBuffer = await response.arrayBuffer();
     const videoBuffer = Buffer.from(arrayBuffer);
 
-    console.log(`[Whisper Processor] Downloaded ${(videoBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    const downloadedMB = (videoBuffer.length / 1024 / 1024).toFixed(2);
+    logger.info('Video downloaded', { component: 'whisper-processor', videoUrl, downloadedMB });
 
     // Process with Whisper
     return await processWithWhisper(videoBuffer, filename, options);
@@ -224,7 +236,7 @@ export async function processVideoFromUrl(
       throw error;
     }
 
-    console.error('[Whisper Processor] Failed to download/process video:', error);
+    logger.error('Failed to download and process video', error, { component: 'whisper-processor', videoUrl, filename });
     throw new WhisperProcessorError(
       'Failed to download and transcribe video from URL.',
       WhisperErrorCode.NETWORK_ERROR,

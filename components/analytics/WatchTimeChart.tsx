@@ -151,7 +151,11 @@ export const WatchTimeChart: React.FC<WatchTimeChartProps> = React.memo(({
   }
 
   return (
-    <div className={`w-full ${className}`}>
+    <div
+      className={`w-full ${className}`}
+      role="img"
+      aria-label="Watch time chart showing total hours watched for top videos"
+    >
       <ResponsiveContainer width="100%" height={height} aspect={2}>
         <BarChart
           data={chartData}

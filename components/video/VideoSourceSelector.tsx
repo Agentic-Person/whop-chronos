@@ -107,63 +107,76 @@ export default function VideoSourceSelector({
             <button
               onClick={onClose}
               className="text-gray-11 hover:text-gray-12 transition-colors"
+              aria-label="Close video import dialog"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           )}
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 p-4 bg-gray-3 border-b border-gray-6">
+        <div className="flex gap-2 p-4 bg-gray-3 border-b border-gray-6" role="tablist">
           <button
             onClick={() => handleTabChange('youtube')}
             disabled={importing}
+            role="tab"
+            aria-selected={activeTab === 'youtube'}
+            aria-controls="youtube-panel"
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
               activeTab === 'youtube'
                 ? 'bg-gray-12 text-gray-1'
                 : 'text-gray-11 hover:text-gray-12 hover:bg-gray-4'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <Youtube className="w-4 h-4" />
+            <Youtube className="w-4 h-4" aria-hidden="true" />
             <span>YouTube</span>
           </button>
 
           <button
             onClick={() => handleTabChange('loom')}
             disabled={importing}
+            role="tab"
+            aria-selected={activeTab === 'loom'}
+            aria-controls="loom-panel"
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
               activeTab === 'loom'
                 ? 'bg-gray-12 text-gray-1'
                 : 'text-gray-11 hover:text-gray-12 hover:bg-gray-4'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <LinkIcon className="w-4 h-4" />
+            <LinkIcon className="w-4 h-4" aria-hidden="true" />
             <span>Loom</span>
           </button>
 
           <button
             onClick={() => handleTabChange('whop')}
             disabled={importing}
+            role="tab"
+            aria-selected={activeTab === 'whop'}
+            aria-controls="whop-panel"
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
               activeTab === 'whop'
                 ? 'bg-gray-12 text-gray-1'
                 : 'text-gray-11 hover:text-gray-12 hover:bg-gray-4'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <Zap className="w-4 h-4" />
+            <Zap className="w-4 h-4" aria-hidden="true" />
             <span>Whop</span>
           </button>
 
           <button
             onClick={() => handleTabChange('upload')}
             disabled={importing}
+            role="tab"
+            aria-selected={activeTab === 'upload'}
+            aria-controls="upload-panel"
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
               activeTab === 'upload'
                 ? 'bg-gray-12 text-gray-1'
                 : 'text-gray-11 hover:text-gray-12 hover:bg-gray-4'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <Upload className="w-4 h-4" />
+            <Upload className="w-4 h-4" aria-hidden="true" />
             <span>Upload</span>
           </button>
         </div>
@@ -199,34 +212,42 @@ export default function VideoSourceSelector({
           {!importing && (
             <>
               {activeTab === 'youtube' && (
-                <YouTubeTab
-                  creatorId={creatorId}
-                  onImport={(data) => handleImport('youtube', data)}
-                  showPreview={showPreview}
-                />
+                <div role="tabpanel" id="youtube-panel" aria-labelledby="youtube-tab">
+                  <YouTubeTab
+                    creatorId={creatorId}
+                    onImport={(data) => handleImport('youtube', data)}
+                    showPreview={showPreview}
+                  />
+                </div>
               )}
 
               {activeTab === 'loom' && (
-                <LoomTab
-                  creatorId={creatorId}
-                  onImport={(data) => handleImport('loom', data)}
-                  showPreview={showPreview}
-                />
+                <div role="tabpanel" id="loom-panel" aria-labelledby="loom-tab">
+                  <LoomTab
+                    creatorId={creatorId}
+                    onImport={(data) => handleImport('loom', data)}
+                    showPreview={showPreview}
+                  />
+                </div>
               )}
 
               {activeTab === 'whop' && (
-                <WhopTab
-                  creatorId={creatorId}
-                  onImport={(data) => handleImport('whop', data)}
-                  showPreview={showPreview}
-                />
+                <div role="tabpanel" id="whop-panel" aria-labelledby="whop-tab">
+                  <WhopTab
+                    creatorId={creatorId}
+                    onImport={(data) => handleImport('whop', data)}
+                    showPreview={showPreview}
+                  />
+                </div>
               )}
 
               {activeTab === 'upload' && (
-                <UploadTab
-                  creatorId={creatorId}
-                  onImport={(data) => handleImport('upload', data)}
-                />
+                <div role="tabpanel" id="upload-panel" aria-labelledby="upload-tab">
+                  <UploadTab
+                    creatorId={creatorId}
+                    onImport={(data) => handleImport('upload', data)}
+                  />
+                </div>
               )}
             </>
           )}

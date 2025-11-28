@@ -15,6 +15,9 @@ import type { DateRangeType } from '@/lib/analytics/aggregator';
 
 export const runtime = 'nodejs';
 
+// Cache this route for 5 minutes
+export const revalidate = 300;
+
 /**
  * GET /api/analytics/videos/dashboard
  *

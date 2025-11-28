@@ -15,6 +15,8 @@
  * API Reference: https://docs.mux.com/api-reference
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Structured data extracted from a Mux video
  */
@@ -171,7 +173,7 @@ async function fetchMuxAsset(assetId: string): Promise<MuxAssetResponse> {
       throw error;
     }
 
-    console.error('[Mux Processor] Failed to fetch asset:', error);
+    logger.error('Failed to fetch asset from Mux API', error, { component: 'mux-processor', assetId });
     throw new MuxProcessorError(
       'Failed to fetch asset from Mux API.',
       MuxErrorCode.NETWORK_ERROR,
@@ -195,11 +197,11 @@ async function findTextTrack(assetId: string): Promise<string | null> {
   );
 
   if (!textTrack) {
-    console.log('[Mux Processor] No text track found for asset');
+    logger.info('No text track found for asset', { component: 'mux-processor', assetId });
     return null;
   }
 
-  console.log(`[Mux Processor] Found text track: ${textTrack.id}`);
+  logger.info('Found text track', { component: 'mux-processor', assetId, trackId: textTrack.id });
   return textTrack.id;
 }
 
@@ -229,7 +231,7 @@ async function downloadMuxCaptions(assetId: string, trackId: string): Promise<st
     const vttContent = await response.text();
     return vttContent;
   } catch (error: any) {
-    console.error('[Mux Processor] Failed to download captions:', error);
+    logger.error('Failed to download captions from Mux', error, { component: 'mux-processor', assetId, trackId });
     throw new MuxProcessorError(
       'Failed to download captions from Mux.',
       MuxErrorCode.NO_TRANSCRIPT,
@@ -300,7 +302,7 @@ function parseWebVTT(vttContent: string): VTTCue[] {
 
     return cues;
   } catch (error: any) {
-    console.error('[Mux Processor] Failed to parse WebVTT:', error);
+    logger.error('Failed to parse WebVTT', error, { component: 'mux-processor' });
     throw new MuxProcessorError(
       'Failed to parse caption file.',
       MuxErrorCode.PARSING_ERROR,
@@ -374,12 +376,12 @@ export async function processMuxVideo(
   assetId: string,
   creatorId: string
 ): Promise<MuxVideoData | null> {
-  console.log(`[Mux Processor] Processing asset: ${assetId} for creator: ${creatorId}`);
+  logger.info('Processing Mux asset', { component: 'mux-processor', assetId, creatorId, action: 'processing' });
 
   // Step 1: Fetch asset metadata
   const asset = await fetchMuxAsset(assetId);
 
-  console.log(`[Mux Processor] Asset status: ${asset.data.status}`);
+  logger.info('Asset status fetched', { component: 'mux-processor', assetId, status: asset.data.status });
 
   // Check if asset is ready
   if (asset.data.status !== 'ready') {
@@ -393,19 +395,19 @@ export async function processMuxVideo(
   const trackId = await findTextTrack(assetId);
 
   if (!trackId) {
-    console.log('[Mux Processor] No auto-captions available for this asset');
+    logger.info('No auto-captions available for asset', { component: 'mux-processor', assetId });
     return null; // Signal to use Whisper fallback
   }
 
   // Step 3: Download captions
   const vttContent = await downloadMuxCaptions(assetId, trackId);
 
-  console.log(`[Mux Processor] Downloaded captions (${vttContent.length} bytes)`);
+  logger.info('Downloaded captions', { component: 'mux-processor', assetId, bytes: vttContent.length });
 
   // Step 4: Parse WebVTT
   const cues = parseWebVTT(vttContent);
 
-  console.log(`[Mux Processor] Parsed ${cues.length} caption cues`);
+  logger.info('Parsed caption cues', { component: 'mux-processor', assetId, cueCount: cues.length });
 
   // Step 5: Format transcript
   const fullTranscript = cues.map(cue => cue.text).join(' ');
@@ -435,9 +437,13 @@ export async function processMuxVideo(
     maxStoredFrameRate: asset.data.max_stored_frame_rate,
   };
 
-  console.log(`[Mux Processor] Successfully processed asset: ${assetId}`);
-  console.log(`[Mux Processor] Transcript length: ${fullTranscript.length} characters`);
-  console.log(`[Mux Processor] Caption cues: ${cues.length}`);
+  logger.info('Successfully processed Mux asset', {
+    component: 'mux-processor',
+    assetId,
+    transcriptLength: fullTranscript.length,
+    cueCount: cues.length,
+    action: 'completed'
+  });
 
   return result;
 }

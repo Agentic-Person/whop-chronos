@@ -141,7 +141,12 @@ export const EngagementHeatmap: React.FC<EngagementHeatmapProps> = React.memo(({
   const gap = 2; // Gap between cells
 
   return (
-    <div className={`w-full ${className}`} style={{ height }}>
+    <div
+      className={`w-full ${className}`}
+      style={{ height }}
+      role="img"
+      aria-label="Engagement heatmap showing student activity patterns by day of week and hour"
+    >
       <div className="flex flex-col h-full">
         {/* Legend */}
         <div className="flex items-center justify-between mb-4">

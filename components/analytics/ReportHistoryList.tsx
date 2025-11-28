@@ -110,11 +110,13 @@ export function ReportHistoryList() {
       {/* Filters */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Status:</label>
+          <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">Status:</label>
           <select
+            id="status-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'all' | 'sent' | 'failed')}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Filter reports by status"
           >
             <option value="all">All Reports</option>
             <option value="sent">Sent</option>
@@ -123,11 +125,13 @@ export function ReportHistoryList() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Period:</label>
+          <label htmlFor="period-filter" className="text-sm font-medium text-gray-700">Period:</label>
           <select
+            id="period-filter"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Filter reports by time period"
           >
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
@@ -163,33 +167,61 @@ export function ReportHistoryList() {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table
+            className="min-w-full divide-y divide-gray-200"
+            role="table"
+            aria-label="Report history showing previously generated analytics reports"
+          >
             <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <tr role="row">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Report Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Generated
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Size
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  role="columnheader"
+                  scope="col"
+                >
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {reports.map((report) => (
-                <tr key={report.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={report.id} className="hover:bg-gray-50 transition-colors" role="row">
+                  <td className="px-6 py-4 whitespace-nowrap" role="cell">
                     <div className="flex items-center">
                       <svg
                         className="w-5 h-5 text-gray-400 mr-3"
@@ -209,20 +241,20 @@ export function ReportHistoryList() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" role="cell">
                     <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
                       {report.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" role="cell">
                     {new Date(report.generated_at).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" role="cell">
                     {report.file_size_bytes
                       ? formatFileSize(report.file_size_bytes)
                       : '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" role="cell">
                     {report.delivery_status === 'sent' && (
                       <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full flex items-center w-fit">
                         <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -258,14 +290,14 @@ export function ReportHistoryList() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" role="cell">
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleDownload(report.id, report.name)}
                         className="text-indigo-600 hover:text-indigo-900 transition-colors"
-                        title="Download"
+                        aria-label={`Download report: ${report.name}`}
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -278,9 +310,9 @@ export function ReportHistoryList() {
                         <button
                           onClick={() => handleResend(report.id)}
                           className="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="Resend"
+                          aria-label={`Resend report: ${report.name}`}
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -293,9 +325,9 @@ export function ReportHistoryList() {
                       <button
                         onClick={() => handleDelete(report.id)}
                         className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Delete"
+                        aria-label={`Delete report: ${report.name}`}
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"

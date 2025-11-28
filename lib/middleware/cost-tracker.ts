@@ -15,6 +15,7 @@
 import { getServiceSupabase } from '../db/client';
 import { calculateChatCost } from '../rag/cost-calculator';
 import type { Database, Json } from '../db/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Type for usage_metrics table row
@@ -87,17 +88,20 @@ export async function trackChatCost(
     const { error } = await supabase.rpc('increment_usage_metrics', params as never);
 
     if (error) {
-      console.error('[Cost Tracker] Failed to track chat cost:', error);
+      logger.error('Failed to track chat cost', error, { component: 'cost-tracker', creatorId });
       throw new Error(`Failed to track chat cost: ${error.message}`);
     }
 
-    console.log(
-      `[Cost Tracker] Chat cost tracked: $${costBreakdown.total_cost.toFixed(6)} for creator ${creatorId}`,
-    );
+    logger.info('Chat cost tracked', {
+      component: 'cost-tracker',
+      creatorId,
+      cost: costBreakdown.total_cost.toFixed(6),
+      action: 'chat'
+    });
 
     return costBreakdown.total_cost;
   } catch (error) {
-    console.error('[Cost Tracker] Error tracking chat cost:', error);
+    logger.error('Error tracking chat cost', error as Error, { component: 'cost-tracker', creatorId });
     throw error;
   }
 }
@@ -146,17 +150,21 @@ export async function trackEmbeddingCost(
     const { error } = await supabase.rpc('increment_usage_metrics', params as never);
 
     if (error) {
-      console.error('[Cost Tracker] Failed to track embedding cost:', error);
+      logger.error('Failed to track embedding cost', error, { component: 'cost-tracker', creatorId });
       throw new Error(`Failed to track embedding cost: ${error.message}`);
     }
 
-    console.log(
-      `[Cost Tracker] Embedding cost tracked: $${totalCost.toFixed(6)} for creator ${creatorId}`,
-    );
+    logger.info('Embedding cost tracked', {
+      component: 'cost-tracker',
+      creatorId,
+      cost: totalCost.toFixed(6),
+      tokens,
+      action: 'embedding'
+    });
 
     return totalCost;
   } catch (error) {
-    console.error('[Cost Tracker] Error tracking embedding cost:', error);
+    logger.error('Error tracking embedding cost', error as Error, { component: 'cost-tracker', creatorId });
     throw error;
   }
 }
@@ -191,20 +199,21 @@ export async function trackTranscriptionCost(
     const { error } = await supabase.rpc('increment_usage_metrics', params as never);
 
     if (error) {
-      console.error(
-        '[Cost Tracker] Failed to track transcription cost:',
-        error,
-      );
+      logger.error('Failed to track transcription cost', error, { component: 'cost-tracker', creatorId, durationMinutes });
       throw new Error(`Failed to track transcription cost: ${error.message}`);
     }
 
-    console.log(
-      `[Cost Tracker] Transcription cost tracked: $${totalCost.toFixed(6)} for ${durationMinutes} minutes (creator ${creatorId})`,
-    );
+    logger.info('Transcription cost tracked', {
+      component: 'cost-tracker',
+      creatorId,
+      cost: totalCost.toFixed(6),
+      durationMinutes,
+      action: 'transcription'
+    });
 
     return totalCost;
   } catch (error) {
-    console.error('[Cost Tracker] Error tracking transcription cost:', error);
+    logger.error('Error tracking transcription cost', error as Error, { component: 'cost-tracker', creatorId, durationMinutes });
     throw error;
   }
 }
@@ -242,17 +251,21 @@ export async function trackStorageCost(
     const { error } = await supabase.rpc('increment_usage_metrics', params as never);
 
     if (error) {
-      console.error('[Cost Tracker] Failed to track storage cost:', error);
+      logger.error('Failed to track storage cost', error, { component: 'cost-tracker', creatorId });
       throw new Error(`Failed to track storage cost: ${error.message}`);
     }
 
-    console.log(
-      `[Cost Tracker] Storage tracked: ${gigabytes.toFixed(2)} GB (~$${monthlyCost.toFixed(6)}/month) for creator ${creatorId}`,
-    );
+    logger.info('Storage tracked', {
+      component: 'cost-tracker',
+      creatorId,
+      gigabytes: gigabytes.toFixed(2),
+      monthlyCost: monthlyCost.toFixed(6),
+      action: 'storage'
+    });
 
     return monthlyCost;
   } catch (error) {
-    console.error('[Cost Tracker] Error tracking storage cost:', error);
+    logger.error('Error tracking storage cost', error as Error, { component: 'cost-tracker', creatorId });
     throw error;
   }
 }
@@ -298,16 +311,21 @@ export async function trackVideoUpload(
     const { error } = await supabase.rpc('increment_usage_metrics', params as never);
 
     if (error) {
-      console.error('[Cost Tracker] Failed to track video upload:', error);
+      logger.error('Failed to track video upload', error, { component: 'cost-tracker', creatorId, videoId });
       throw new Error(`Failed to track video upload: ${error.message}`);
     }
 
     // Calculate storage cost
     const storageCost = await trackStorageCost(creatorId, fileSizeBytes);
 
-    console.log(
-      `[Cost Tracker] Video upload tracked: ${fileSizeMB.toFixed(2)} MB, ${(durationSeconds / 60).toFixed(2)} min for creator ${creatorId}`,
-    );
+    logger.info('Video upload tracked', {
+      component: 'cost-tracker',
+      creatorId,
+      videoId,
+      fileSizeMB: fileSizeMB.toFixed(2),
+      durationMinutes: (durationSeconds / 60).toFixed(2),
+      action: 'upload'
+    });
 
     return {
       storage_cost: storageCost,
@@ -315,7 +333,7 @@ export async function trackVideoUpload(
       file_size_mb: fileSizeMB,
     };
   } catch (error) {
-    console.error('[Cost Tracker] Error tracking video upload:', error);
+    logger.error('Error tracking video upload', error as Error, { component: 'cost-tracker', creatorId, videoId });
     throw error;
   }
 }
@@ -352,7 +370,7 @@ export async function getCurrentUsage(
       .maybeSingle();
 
     if (error) {
-      console.error('[Cost Tracker] Failed to get current usage:', error);
+      logger.error('Failed to get current usage', error, { component: 'cost-tracker', creatorId, targetDate });
       throw new Error(`Failed to get current usage: ${error.message}`);
     }
 
@@ -388,7 +406,7 @@ export async function getCurrentUsage(
       total_cost: totalCost,
     };
   } catch (error) {
-    console.error('[Cost Tracker] Error getting current usage:', error);
+    logger.error('Error getting current usage', error as Error, { component: 'cost-tracker', creatorId });
     throw error;
   }
 }

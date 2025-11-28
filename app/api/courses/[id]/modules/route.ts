@@ -10,6 +10,9 @@ import { getServiceSupabase } from '@/lib/db/client';
 
 export const runtime = 'nodejs';
 
+// Cache this route for 5 minutes (applies to GET requests)
+export const revalidate = 300;
+
 /**
  * POST /api/courses/[id]/modules
  *
