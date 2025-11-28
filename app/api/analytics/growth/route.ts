@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/db/client';
 
-// Cache this route for 5 minutes
-export const revalidate = 300;
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/analytics/growth
