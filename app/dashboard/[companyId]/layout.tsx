@@ -12,6 +12,7 @@ import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { whopsdk } from '@/lib/whop-sdk';
+import { getServiceSupabase } from '@/lib/db/client';
 import { DashboardNav } from '@/components/layout/DashboardNav';
 import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
 
@@ -87,9 +88,28 @@ export default async function CreatorDashboardLayout({
     }
   }
 
-  // Use the Whop user ID as the creator ID for our database
-  const creatorId = userId;
-  const tier = 'pro'; // TODO: Get from Whop membership validation
+  // Look up the internal creator ID by Whop company ID
+  let creatorId: string = userId; // Fallback
+  let tier: 'basic' | 'pro' | 'enterprise' = 'pro';
+
+  try {
+    const supabase = getServiceSupabase();
+    const { data: creator } = await supabase
+      .from('creators')
+      .select('id, subscription_tier')
+      .eq('whop_company_id', companyId)
+      .single();
+
+    if (creator) {
+      creatorId = creator.id;
+      tier = creator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+      console.log('[Creator Layout] Found creator:', { companyId, creatorId, tier });
+    } else {
+      console.warn('[Creator Layout] No creator found for company:', companyId);
+    }
+  } catch (error) {
+    console.error('[Creator Layout] Failed to lookup creator:', error);
+  }
 
   return (
     <AnalyticsProviderWithSuspense creatorId={creatorId} tier={tier}>

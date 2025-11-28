@@ -12,6 +12,7 @@ import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { whopsdk } from '@/lib/whop-sdk';
+import { getServiceSupabase } from '@/lib/db/client';
 import Link from 'next/link';
 import { BookOpen, MessageSquare, Home } from 'lucide-react';
 
@@ -87,7 +88,26 @@ export default async function StudentExperienceLayout({
       }
 
       // Get creator ID from experience's company
-      creatorId = (experience as any).company_id || userId;
+      // We need to look up our internal creator ID by the Whop company ID
+      const whopCompanyId = (experience as any).company_id;
+      if (whopCompanyId) {
+        const supabase = getServiceSupabase();
+        const { data: creator } = await supabase
+          .from('creators')
+          .select('id')
+          .eq('whop_company_id', whopCompanyId)
+          .single();
+
+        if (creator) {
+          creatorId = creator.id;
+          console.log('[Student Layout] Found creator:', { whopCompanyId, creatorId });
+        } else {
+          console.warn('[Student Layout] No creator found for company:', whopCompanyId);
+          creatorId = whopCompanyId; // Fallback to Whop ID (may cause issues)
+        }
+      } else {
+        creatorId = userId; // Fallback
+      }
     } catch (error) {
       console.error('[Student Layout] Failed to fetch user/experience data:', error);
       redirect(`/auth-error?reason=access_check_failed&error=${encodeURIComponent(String(error))}`);
