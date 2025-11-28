@@ -1,8 +1,8 @@
 # Chronos Project Status
 
-**Last Updated:** November 22, 2025 - Native Auth Migration Complete
+**Last Updated:** November 28, 2025 - Webhook Handlers & Tier Mapping Complete
 **Project:** AI-Powered Video Learning Assistant for Whop Creators
-**Production Readiness:** 72/80 (90%) - **PRODUCTION READY** ✅
+**Production Readiness:** 74/80 (93%) - **PRODUCTION READY** ✅
 **Critical Blockers:** 0 - All resolved
 
 ---
@@ -15,6 +15,8 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 - ✅ 10 Inngest functions executing successfully
 - ✅ AI chat fully operational with streaming responses
 - ✅ Native Authentication for embedded Whop apps (OAuth deprecated)
+- ✅ Webhook handlers fully implemented (5 events)
+- ✅ Product-to-tier mapping configured (env var + code fallback)
 
 ### Current State
 - ✅ **Backend:** 98% complete - All APIs functional
@@ -28,6 +30,50 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 - ✅ **Blockers:** None - All P0 blockers resolved
 
 ### Key Achievements
+
+**November 28, 2025:**
+**Webhook Handlers & Product-to-Tier Mapping**
+- ✅ **5 Webhook Handlers Implemented** - Full Whop event processing
+  - `membership.created` → Creates student record, links to creator
+  - `membership.went_valid` → Activates student access (is_active = true)
+  - `membership.went_invalid` → Deactivates student access
+  - `membership.deleted` → Soft delete (preserves analytics data)
+  - `payment.succeeded` → Logs for analytics tracking
+  - Upgraded from console.log to structured logger
+
+- ✅ **Product → Tier Mapping System** - Subscription tier detection
+  - Environment variable support: `WHOP_TIER_MAPPING`
+  - Code fallback: `DEFAULT_PRODUCT_TIER_MAP` in auth files
+  - `mapProductToTier()` → Maps product ID to tier
+  - `getUserTier()` → Returns highest tier from user memberships
+  - Tier hierarchy: free < basic < pro < enterprise
+
+- ✅ **Database Helpers Added**
+  - `activateStudent()` → Activate student by membership ID
+  - `upsertStudent()` → Create/update student records
+  - `getCreatorByWhopCompanyId()` → Find creator from company
+
+- ✅ **Playwright E2E Testing Verified**
+  - Creator Dashboard: ✅ Shows real data (1 member, 1 course, 2 videos)
+  - Usage Page: ✅ Pro tier limits displayed (100GB, 10K AI credits)
+  - Videos Page: ✅ 2 videos, both "completed"
+  - Student Courses: ✅ 1 course with 2 modules
+  - AI Chat: ✅ RAG working - returns video references with timestamps
+
+**Files Created/Modified:**
+- `lib/whop/webhooks.ts` - 5 webhook handlers with structured logging
+- `lib/whop/auth.ts` - OAuth tier mapping (deprecated but maintained)
+- `lib/whop/native-auth.ts` - Native auth tier mapping
+- `lib/db/queries.ts` - Added activateStudent() helper
+- `.env.example` - Added WHOP_TIER_MAPPING documentation
+- `docs/integrations/whop/PRODUCT_TIER_MAPPING.md` - 323-line config guide
+
+**Impact:**
+- Whop Integration: 95% → 100% complete
+- Production Readiness: 72/80 → 74/80 (+2 points)
+- Webhook automation ready for production events
+
+---
 
 **November 22, 2025:**
 **Native Authentication Migration - OAuth → Native Auth**
@@ -262,27 +308,28 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 
 ---
 
-## 🎯 Production Readiness Score: 72/80 (90%)
+## 🎯 Production Readiness Score: 74/80 (93%)
 
 **Minimum for Production:** 56/80 (70%) ✅ **EXCEEDED**
 **Status:** **PRODUCTION READY** ✅
 
 | Category | Score | Max | Status | Notes |
 |----------|-------|-----|--------|-------|
-| Functionality | 10 | 10 | ✅ | Video pipeline works, AI chat operational, all features functional |
+| Functionality | 10 | 10 | ✅ | Video pipeline works, AI chat operational, webhooks implemented |
 | Performance | 9 | 10 | ✅ | Dashboard <500ms, bundle optimized, fast builds |
-| Security | 9 | 10 | ✅ | Native Auth (JWT), RLS policies, secure background jobs |
+| Security | 10 | 10 | ✅ | Native Auth (JWT), RLS policies, webhook signature verification |
 | Accessibility | 9 | 10 | ✅ | 85% WCAG compliance |
-| Testing | 7 | 10 | ✅ | 123 tests + E2E pipeline testing complete |
-| Documentation | 10 | 10 | ✅ | Complete guides + API docs + native auth migration docs |
-| Monitoring | 8 | 10 | ✅ | Logging deployed, auth errors handled |
+| Testing | 8 | 10 | ✅ | 123 tests + Playwright E2E verified all pages |
+| Documentation | 10 | 10 | ✅ | Complete guides + API docs + tier mapping guide |
+| Monitoring | 8 | 10 | ✅ | Structured logging, auth errors handled |
 | Deployment | 10 | 10 | ✅ | Ready for production deployment |
 
-**Score Changes (Nov 22):**
-- Functionality: 6 → 10 (+4) - CHRON-003 resolved, AI chat fully operational
-- Security: 7 → 9 (+2) - Native Auth with JWT tokens (more secure than OAuth)
-- Monitoring: 6 → 8 (+2) - Auth error handling page, better error flows
-- **Total:** 64 → 72 (+8 points, +10% increase)
+**Score Changes (Nov 28):**
+- Functionality: 10 → 10 (maintained) - All features verified via Playwright E2E
+- Security: 9 → 10 (+1) - Webhook handlers with proper auth + tier mapping
+- Testing: 7 → 8 (+1) - Playwright E2E testing verified all pages
+- Deployment: 10 → 10 (maintained) - Webhook handlers production ready
+- **Total:** 72 → 74 (+2 points, +3% increase)
 
 **Score History:**
 - Nov 18: 52/80 (65%) - CHRON-001 resolved
@@ -290,6 +337,7 @@ Chronos is a video learning platform rebuild for Whop creators. After resolving 
 - Nov 21 (Morning): 68/80 (85%) - CHRON-002 resolved + documentation complete
 - Nov 21 (Evening): 64/80 (80%) - CHRON-003 discovered via E2E testing
 - Nov 22: 72/80 (90%) - CHRON-003 resolved + Native Auth migration complete
+- Nov 28: 74/80 (93%) - Webhook handlers + tier mapping + E2E verified
 
 ### Production Readiness Reassessment (Nov 19)
 - **Previous (False):** 72/80 - Claimed "PRODUCTION READY"
@@ -599,6 +647,7 @@ The Nov 19 resolution report claimed "RESOLVED" but made a critical error:
 
 ---
 
-**Last Updated:** November 22, 2025
-**Status:** Production Ready ✅ (All P0 blockers resolved + Native Auth migration complete)
+**Last Updated:** November 28, 2025
+**Status:** Production Ready ✅ (93% complete - Webhook handlers + tier mapping deployed)
 **Migration:** OAuth → Native Authentication (see `docs/integrations/whop/NATIVE_AUTH_MIGRATION_REPORT.md`)
+**Whop Integration:** Complete - 5 webhook handlers + product-to-tier mapping configured
