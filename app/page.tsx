@@ -2,8 +2,7 @@ import { redirect } from 'next/navigation';
 import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
-import { VideoDemo } from '@/components/landing/VideoDemo';
-import { InteractiveFAQ } from '@/components/landing/InteractiveFAQ';
+import { PricingSection } from '@/components/landing/PricingSection';
 import { CTASection } from '@/components/landing/CTASection';
 import { Footer } from '@/components/landing/Footer';
 
@@ -24,14 +23,11 @@ export default function Page() {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Features Grid */}
+      {/* Features Section */}
       <FeatureGrid />
 
-      {/* Video Demo */}
-      <VideoDemo />
-
-      {/* Interactive FAQ */}
-      <InteractiveFAQ />
+      {/* Pricing Section */}
+      <PricingSection />
 
       {/* Final CTA */}
       <CTASection />

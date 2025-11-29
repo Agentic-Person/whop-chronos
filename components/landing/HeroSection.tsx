@@ -3,7 +3,7 @@
 import { motion } from '@/components/motion';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Send } from 'lucide-react';
+import { Send, ChevronDown, Mouse } from 'lucide-react';
 import extractedChapters from '@/data/landing-page/chapters.json';
 
 interface Chapter {
@@ -103,31 +103,39 @@ export function HeroSection() {
       setInputValue('');
     }
   };
+
+  const scrollToFeatures = () => {
+    document.getElementById('features')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  };
+
   return (
-    <section className="relative min-h-screen bg-gray-1 pt-16 pb-12">
+    <section className="relative bg-gray-1 pt-20 pb-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Title and CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-10"
         >
           {/* Headline */}
           <h1
-            className="font-black mb-6 leading-none"
+            className="font-black mb-4 leading-none"
             style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#F03C09' }}
           >
             ChronosAI
           </h1>
 
           {/* Tagline */}
-          <p className="text-xl md:text-2xl text-gray-11 mb-4 font-semibold">
+          <p className="text-xl md:text-2xl text-gray-11 mb-3 font-semibold">
             Master Time. Master Your Business.
           </p>
 
           {/* Description */}
-          <p className="text-base md:text-lg text-gray-10 mb-8 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-10 mb-6 max-w-2xl mx-auto">
             Join hundreds of creators who've already reclaimed their time. Start building your AI-powered learning experience in minutes.
           </p>
 
@@ -158,12 +166,7 @@ export function HeroSection() {
               </span>
             </a>
             <button
-              onClick={() => {
-                document.getElementById('why-chronos')?.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'start'
-                });
-              }}
+              onClick={scrollToFeatures}
               type="button"
               className="px-6 text-sm font-semibold border-2 rounded-xl bg-transparent text-gray-12 hover:bg-gray-3 transition-all flex items-center justify-center"
               style={{ borderColor: '#F03C09', height: '40px' }}
@@ -178,7 +181,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto"
         >
           {/* Left: Video with Chapters */}
           <div className="flex flex-col space-y-4">
@@ -194,28 +197,28 @@ export function HeroSection() {
             </div>
 
             {/* Video Summary Sidebar */}
-            <div className="bg-gray-2 border border-gray-6 rounded-2xl p-6 shadow-xl">
-              <h3 className="text-lg font-semibold text-gray-12 mb-4 flex items-center gap-2">
+            <div className="bg-gray-2 border border-gray-6 rounded-2xl p-4 shadow-xl">
+              <h3 className="text-base font-semibold text-gray-12 mb-3 flex items-center gap-2">
                 <span className="text-orange-11">📺</span>
                 ChronosAI Video Summary
               </h3>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
                 {chapters.map((chapter, index) => (
                   <button
                     key={index}
                     type="button"
                     onClick={() => handleChapterClick(chapter.startSeconds, index)}
-                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                    className={`w-full text-left p-2.5 rounded-lg transition-all duration-200 ${
                       selectedChapter === index
                         ? 'bg-orange-a3 border border-orange-a7'
                         : 'bg-gray-3 border border-gray-6 hover:bg-gray-4 hover:border-orange-7'
                     }`}
                   >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <p className={`text-sm font-medium ${selectedChapter === index ? 'text-orange-11' : 'text-gray-12'}`}>
                         {chapter.title}
                       </p>
-                      <p className="text-xs text-gray-10 line-clamp-2">{chapter.summary}</p>
+                      <p className="text-xs text-gray-10 line-clamp-1">{chapter.summary}</p>
                       <span className={`text-xs font-mono ${selectedChapter === index ? 'text-orange-10' : 'text-orange-11'}`}>
                         {chapter.start} • {chapter.end}
                       </span>
@@ -230,35 +233,35 @@ export function HeroSection() {
           <div className="flex flex-col">
             <div className="bg-gray-2 border border-gray-6 rounded-2xl shadow-2xl overflow-hidden h-full flex flex-col">
               {/* Chat Header */}
-              <div className="bg-gradient-to-r from-orange-9 to-orange-10 px-6 py-4">
-                <h3 className="text-white font-semibold text-lg">Ask ChronosAI</h3>
+              <div className="bg-gradient-to-r from-orange-9 to-orange-10 px-5 py-3">
+                <h3 className="text-white font-semibold text-base">Ask ChronosAI</h3>
                 <p className="text-orange-2 text-sm">Get instant answers with timestamps</p>
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 p-6 space-y-6 overflow-y-auto bg-gray-1 max-h-[400px]">
+              <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-gray-1 max-h-[350px]">
                 {/* Initial Demo Q&A */}
                 <div className="flex gap-3 justify-end">
-                  <div className="max-w-[80%] rounded-2xl px-5 py-4 shadow-lg bg-gradient-to-br from-orange-9 to-orange-10 text-white">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 shadow-lg bg-gradient-to-br from-orange-9 to-orange-10 text-white">
                     <p className="text-sm leading-relaxed">What is the first step to get started?</p>
                   </div>
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-6 flex items-center justify-center text-xl">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-6 flex items-center justify-center text-lg">
                     👤
                   </div>
                 </div>
 
                 <div className="flex gap-3 justify-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-3 flex items-center justify-center p-1">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-3 flex items-center justify-center p-0.5">
                     <Image
                       src="/images/chronos_icon.png"
                       alt="Chronos AI"
-                      width={32}
-                      height={32}
+                      width={28}
+                      height={28}
                       className="object-contain"
                     />
                   </div>
-                  <div className="max-w-[80%] rounded-2xl px-5 py-4 shadow-lg bg-gray-3 border border-gray-6 text-gray-12">
-                    <p className="text-sm leading-relaxed mb-2">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 shadow-lg bg-gray-3 border border-gray-6 text-gray-12">
+                    <p className="text-sm leading-relaxed mb-1.5">
                       The first step is to create your account on Whop. The account setup process is incredibly simple and quick, taking just a few minutes. Once your account is created, you can immediately start setting up your store page and begin building your presence on the platform.
                     </p>
                     <div className="flex items-center gap-2 text-xs text-orange-11 font-mono">
@@ -313,17 +316,17 @@ export function HeroSection() {
                   return (
                     <div key={index} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       {message.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-3 flex items-center justify-center p-1">
+                        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-3 flex items-center justify-center p-0.5">
                           <Image
                             src="/images/chronos_icon.png"
                             alt="Chronos AI"
-                            width={32}
-                            height={32}
+                            width={28}
+                            height={28}
                             className="object-contain"
                           />
                         </div>
                       )}
-                      <div className={`max-w-[80%] rounded-2xl px-5 py-4 shadow-lg ${
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-lg ${
                         message.role === 'user'
                           ? 'bg-gradient-to-br from-orange-9 to-orange-10 text-white'
                           : 'bg-gray-3 border border-gray-6 text-gray-12'
@@ -331,7 +334,7 @@ export function HeroSection() {
                         {renderContent(message.content)}
                       </div>
                       {message.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-6 flex items-center justify-center text-xl">
+                        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-6 flex items-center justify-center text-lg">
                           👤
                         </div>
                       )}
@@ -341,14 +344,14 @@ export function HeroSection() {
 
                 {/* Show CTA after 2 questions */}
                 {questionsAsked >= 2 && (
-                  <div className="flex justify-center pt-4">
+                  <div className="flex justify-center pt-2">
                     <a
                       href="https://whop.com/agentic-personnel-llc/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative overflow-hidden px-6 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
+                      className="relative overflow-hidden px-5 rounded-xl font-semibold text-sm text-gray-12 transition-all hover:bg-gray-3 flex items-center justify-center"
                       style={{
-                        height: '40px',
+                        height: '36px',
                         background: 'linear-gradient(#1a1a1a, #1a1a1a) padding-box, linear-gradient(90deg, #F03C09, #000, #F03C09) border-box',
                         border: '2px solid transparent',
                         backgroundSize: 'auto, 200% 100%',
@@ -360,8 +363,8 @@ export function HeroSection() {
                         <Image
                           src="/images/whop-logo-transp.png"
                           alt="Whop"
-                          width={50}
-                          height={16}
+                          width={45}
+                          height={14}
                           className="object-contain brightness-110"
                         />
                       </span>
@@ -371,25 +374,25 @@ export function HeroSection() {
               </div>
 
               {/* Chat Input */}
-              <div className="border-t border-gray-6 p-4 bg-gray-2">
-                <form onSubmit={handleSubmit} className="flex gap-3">
+              <div className="border-t border-gray-6 p-3 bg-gray-2">
+                <form onSubmit={handleSubmit} className="flex gap-2">
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask anything about this video..."
                     disabled={questionsAsked >= 2}
-                    className="flex-1 bg-gray-3 border border-gray-6 rounded-xl px-4 py-3 text-gray-12 text-sm placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-orange-9 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 bg-gray-3 border border-gray-6 rounded-xl px-3 py-2.5 text-gray-12 text-sm placeholder:text-gray-9 focus:outline-none focus:ring-2 focus:ring-orange-9 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="submit"
                     disabled={questionsAsked >= 2 || !inputValue.trim()}
-                    className="bg-gradient-to-r from-orange-9 to-orange-10 text-white rounded-xl px-6 py-3 font-medium hover:from-orange-10 hover:to-orange-11 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-gradient-to-r from-orange-9 to-orange-10 text-white rounded-xl px-5 py-2.5 font-medium hover:from-orange-10 hover:to-orange-11 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </form>
-                <p className="text-xs text-gray-10 mt-2 text-center">
+                <p className="text-xs text-gray-10 mt-1.5 text-center">
                   {questionsAsked >= 2
                     ? "Demo limit reached • Sign in to unlock unlimited questions"
                     : `Demo mode • ${2 - questionsAsked} question${2 - questionsAsked === 1 ? '' : 's'} remaining`
@@ -398,6 +401,29 @@ export function HeroSection() {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="flex flex-col items-center mt-8"
+        >
+          <button
+            onClick={scrollToFeatures}
+            type="button"
+            className="flex flex-col items-center gap-1 text-gray-10 hover:text-gray-11 transition-colors group"
+          >
+            <div className="w-6 h-10 border-2 border-gray-7 rounded-full flex justify-center pt-2 group-hover:border-orange-9 transition-colors">
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-1.5 h-1.5 bg-orange-9 rounded-full"
+              />
+            </div>
+            <span className="text-xs font-medium">Scroll</span>
+          </button>
         </motion.div>
       </div>
     </section>
