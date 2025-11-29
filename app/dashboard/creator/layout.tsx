@@ -20,6 +20,7 @@ import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { whopsdk } from '@/lib/whop-sdk';
+import { getServiceSupabase } from '@/lib/db/client';
 import type { WhopSession } from '@/lib/whop/types';
 
 // Force dynamic rendering since we use headers for authentication
@@ -69,8 +70,61 @@ export default async function CreatorDashboardLayout({
     }
   }
 
-  const creatorId = userId;
-  const tier = 'pro'; // TODO: Get tier from Whop membership validation
+  // Look up or create creator record
+  let creatorId = userId;
+  let tier: 'basic' | 'pro' | 'enterprise' = 'pro';
+
+  try {
+    const supabase = getServiceSupabase();
+
+    // For static routes (no company context), look up by whop_user_id
+    const { data: existingCreator } = await supabase
+      .from('creators')
+      .select('id, subscription_tier')
+      .eq('whop_user_id', userId)
+      .single();
+
+    if (existingCreator) {
+      creatorId = existingCreator.id;
+      tier = existingCreator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+      console.log('[Creator Layout Static] Found existing creator:', { userId, creatorId, tier });
+
+      // Update last login timestamp
+      await supabase
+        .from('creators')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', creatorId);
+    } else if (TEST_MODE) {
+      // In test mode, auto-create a test creator
+      console.log('[Creator Layout Static] Creating test creator for:', userId);
+
+      const { data: newCreator, error: createError } = await supabase
+        .from('creators')
+        .insert({
+          whop_company_id: `test_company_${userId}`, // Fake company ID for test mode
+          whop_user_id: userId,
+          email: user.email || `${userId}@test.chronos.ai`,
+          name: user.name || user.username || 'Test Creator',
+          subscription_tier: 'pro',
+          is_active: true,
+          last_login_at: new Date().toISOString(),
+        })
+        .select('id, subscription_tier')
+        .single();
+
+      if (!createError && newCreator) {
+        creatorId = newCreator.id;
+        tier = newCreator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+        console.log('[Creator Layout Static] Created test creator:', { userId, creatorId });
+      } else {
+        console.error('[Creator Layout Static] Failed to create test creator:', createError);
+      }
+    } else {
+      console.warn('[Creator Layout Static] No creator found for user (use /dashboard/[companyId] for proper context):', userId);
+    }
+  } catch (error) {
+    console.error('[Creator Layout Static] Failed to lookup/create creator:', error);
+  }
 
   // Construct session object for AuthProvider (maintains compatibility)
   const session: WhopSession = {

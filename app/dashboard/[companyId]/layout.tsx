@@ -88,27 +88,70 @@ export default async function CreatorDashboardLayout({
     }
   }
 
-  // Look up the internal creator ID by Whop company ID
+  // Look up or create the creator record by Whop company ID
   let creatorId: string = userId; // Fallback
   let tier: 'basic' | 'pro' | 'enterprise' = 'pro';
 
   try {
     const supabase = getServiceSupabase();
-    const { data: creator } = await supabase
+
+    // First, try to find existing creator
+    const { data: existingCreator } = await supabase
       .from('creators')
       .select('id, subscription_tier')
       .eq('whop_company_id', companyId)
       .single();
 
-    if (creator) {
-      creatorId = creator.id;
-      tier = creator.subscription_tier as 'basic' | 'pro' | 'enterprise';
-      console.log('[Creator Layout] Found creator:', { companyId, creatorId, tier });
+    if (existingCreator) {
+      creatorId = existingCreator.id;
+      tier = existingCreator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+      console.log('[Creator Layout] Found existing creator:', { companyId, creatorId, tier });
+
+      // Update last login timestamp
+      await supabase
+        .from('creators')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', creatorId);
     } else {
-      console.warn('[Creator Layout] No creator found for company:', companyId);
+      // Creator doesn't exist - auto-create them
+      console.log('[Creator Layout] Creating new creator for company:', companyId);
+
+      const { data: newCreator, error: createError } = await supabase
+        .from('creators')
+        .insert({
+          whop_company_id: companyId,
+          whop_user_id: userId,
+          email: user.email || `${userId}@whop.user`,
+          name: user.name || user.username || company.title || 'Creator',
+          subscription_tier: 'pro', // Default to pro for new creators
+          is_active: true,
+          last_login_at: new Date().toISOString(),
+        })
+        .select('id, subscription_tier')
+        .single();
+
+      if (createError) {
+        console.error('[Creator Layout] Failed to create creator:', createError);
+        // Check if it was a race condition (creator was created by another request)
+        const { data: retryCreator } = await supabase
+          .from('creators')
+          .select('id, subscription_tier')
+          .eq('whop_company_id', companyId)
+          .single();
+
+        if (retryCreator) {
+          creatorId = retryCreator.id;
+          tier = retryCreator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+          console.log('[Creator Layout] Found creator on retry:', { companyId, creatorId });
+        }
+      } else if (newCreator) {
+        creatorId = newCreator.id;
+        tier = newCreator.subscription_tier as 'basic' | 'pro' | 'enterprise';
+        console.log('[Creator Layout] Created new creator:', { companyId, creatorId, tier });
+      }
     }
   } catch (error) {
-    console.error('[Creator Layout] Failed to lookup creator:', error);
+    console.error('[Creator Layout] Failed to lookup/create creator:', error);
   }
 
   return (

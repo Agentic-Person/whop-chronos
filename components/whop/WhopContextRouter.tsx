@@ -140,6 +140,34 @@ function WhopContextRouterInner({
     }
   }, [loading, urlData, error, isEmbedded, router, pathname, redirecting]);
 
+  // Debug panel component - shows what Whop is sending
+  const DebugPanel = ({ data }: { data: WhopUrlData | null }) => {
+    if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_DEBUG_WHOP_CONTEXT) {
+      return null;
+    }
+
+    return (
+      <div className="fixed bottom-4 right-4 max-w-md bg-gray-2 border border-gray-a4 rounded-lg p-4 shadow-lg z-50 text-xs font-mono">
+        <div className="font-bold text-gray-12 mb-2">🔍 Whop Context Debug</div>
+        <div className="space-y-1 text-gray-11">
+          <div><span className="text-purple-9">isEmbedded:</span> {isEmbedded ? '✅ true' : '❌ false'}</div>
+          <div><span className="text-purple-9">loading:</span> {loading ? '⏳' : '✅'}</div>
+          <div><span className="text-purple-9">error:</span> {error || 'none'}</div>
+          {data && (
+            <>
+              <div className="border-t border-gray-a4 pt-1 mt-1">
+                <div><span className="text-purple-9">viewType:</span> <span className="text-yellow-9 font-bold">{data.viewType}</span></div>
+                <div><span className="text-purple-9">companyRoute:</span> {data.companyRoute || 'null'}</div>
+                <div><span className="text-purple-9">experienceId:</span> {data.experienceId || 'null'}</div>
+                <div><span className="text-purple-9">extractedCompanyId:</span> {extractCompanyId(data.companyRoute) || 'null'}</div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Loading state
   if (loading || redirecting) {
     return (
@@ -151,6 +179,7 @@ function WhopContextRouterInner({
               {redirecting ? 'Redirecting to your dashboard...' : 'Connecting to Whop...'}
             </p>
           </div>
+          <DebugPanel data={urlData} />
         </div>
       )
     );
@@ -175,6 +204,7 @@ function WhopContextRouterInner({
               Go to Whop Hub
             </a>
           </div>
+          <DebugPanel data={urlData} />
         </div>
       )
     );
@@ -202,6 +232,7 @@ function WhopContextRouterInner({
               Try Again
             </button>
           </div>
+          <DebugPanel data={urlData} />
         </div>
       )
     );
