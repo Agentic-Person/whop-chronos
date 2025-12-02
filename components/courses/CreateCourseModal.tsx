@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { useAuth } from '@/lib/contexts/AuthContext';
+import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 
 interface CreateCourseModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface CreateCourseModalProps {
 }
 
 export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: CreateCourseModalProps) {
-  const { creatorId } = useAuth();
+  const { creatorId } = useAnalytics();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');

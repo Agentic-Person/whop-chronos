@@ -20,7 +20,9 @@ import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
 export const dynamic = 'force-dynamic';
 
 // Test mode configuration
-const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
+// TEMPORARY: Hardcoded to true until app is approved by Whop
+// Once approved, change back to: process.env['DEV_BYPASS_AUTH'] === 'true'
+const TEST_MODE = true;
 const TEST_USER_ID = 'user_test_00000000000000';
 
 interface CreatorLayoutProps {

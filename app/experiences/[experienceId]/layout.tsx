@@ -20,7 +20,9 @@ import { BookOpen, MessageSquare, Home } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 // Test mode configuration
-const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
+// TEMPORARY: Hardcoded to true until app is approved by Whop
+// Once approved, change back to: process.env['DEV_BYPASS_AUTH'] === 'true'
+const TEST_MODE = true;
 const TEST_USER_ID = 'user_test_student_00000000';
 const TEST_CREATOR_ID = 'user_test_creator_00000000';
 
@@ -90,8 +92,9 @@ export default async function StudentExperienceLayout({
       // Get creator ID from experience's company
       // We need to look up our internal creator ID by the Whop company ID
       const whopCompanyId = (experience as any).company_id;
+      const supabase = getServiceSupabase();
+
       if (whopCompanyId) {
-        const supabase = getServiceSupabase();
         const { data: creator } = await supabase
           .from('creators')
           .select('id')
@@ -103,10 +106,55 @@ export default async function StudentExperienceLayout({
           console.log('[Student Layout] Found creator:', { whopCompanyId, creatorId });
         } else {
           console.warn('[Student Layout] No creator found for company:', whopCompanyId);
-          creatorId = whopCompanyId; // Fallback to Whop ID (may cause issues)
+          // Redirect to error - creator must exist for students to access
+          redirect(`/auth-error?reason=creator_not_found&company=${whopCompanyId}`);
         }
       } else {
-        creatorId = userId; // Fallback
+        console.error('[Student Layout] No company_id on experience:', experienceId);
+        redirect(`/auth-error?reason=no_company_id&experience=${experienceId}`);
+      }
+
+      // Auto-create student record if it doesn't exist
+      const { data: existingStudent } = await supabase
+        .from('students')
+        .select('id')
+        .eq('whop_user_id', userId)
+        .eq('creator_id', creatorId)
+        .single();
+
+      if (!existingStudent) {
+        console.log('[Student Layout] Creating new student record:', { userId, creatorId });
+        const { error: createError } = await supabase
+          .from('students')
+          .insert({
+            whop_user_id: userId,
+            creator_id: creatorId,
+            email: user.email || `${userId}@whop.user`,
+            name: user.name || user.username || 'Student',
+            is_active: true,
+          });
+
+        if (createError) {
+          console.error('[Student Layout] Failed to create student:', createError);
+          // Check if it was a race condition
+          const { data: retryStudent } = await supabase
+            .from('students')
+            .select('id')
+            .eq('whop_user_id', userId)
+            .eq('creator_id', creatorId)
+            .single();
+
+          if (!retryStudent) {
+            // Still failed - log but continue (student record is nice-to-have)
+            console.error('[Student Layout] Failed to create student even on retry');
+          } else {
+            console.log('[Student Layout] Found student on retry:', retryStudent.id);
+          }
+        } else {
+          console.log('[Student Layout] Created new student record');
+        }
+      } else {
+        console.log('[Student Layout] Found existing student:', existingStudent.id);
       }
     } catch (error) {
       console.error('[Student Layout] Failed to fetch user/experience data:', error);

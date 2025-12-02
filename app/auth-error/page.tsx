@@ -40,6 +40,21 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
     description:
       "Your session has expired. Please refresh the page or navigate back to Whop to re-authenticate.",
   },
+  creator_not_found: {
+    title: "Creator Not Set Up",
+    description:
+      "The creator hasn't set up their account yet. Please ask them to open the app from their Whop dashboard first.",
+  },
+  no_company_id: {
+    title: "Missing Company Information",
+    description:
+      "We couldn't identify the company for this experience. Please try accessing the app again through Whop.",
+  },
+  no_experience_id: {
+    title: "Missing Experience Information",
+    description:
+      "We couldn't identify which experience you're trying to access. Please try again through Whop.",
+  },
   default: {
     title: "Authentication Error",
     description:

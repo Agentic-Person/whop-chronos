@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import CreateCourseModal from './CreateCourseModal';
-import { useAuth } from '@/lib/contexts/AuthContext';
+import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 
 interface Course {
   id: string;
@@ -24,7 +24,7 @@ interface CoursesGridProps {
 }
 
 export default function CoursesGrid({ courses, onCourseCreated, onCourseClick, onCourseDeleted }: CoursesGridProps) {
-  const { creatorId } = useAuth();
+  const { creatorId } = useAnalytics();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ courseId: string; courseName: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

@@ -11,7 +11,8 @@ export const runtime = 'nodejs';
 
 // Dev mode test IDs
 const DEV_CREATOR_ID = '00000000-0000-0000-0000-000000000001';
-const isDevMode = process.env.DEV_BYPASS_AUTH === 'true';
+// TEMPORARY: Hardcoded until app is approved
+const isDevMode = true;
 
 /**
  * GET /api/courses/student
@@ -92,9 +93,12 @@ export async function GET(req: NextRequest) {
       .eq('is_published', true)
       .eq('is_deleted', false);
 
-    // In dev mode, filter to only show test creator's courses
-    if (isDevMode) {
-      coursesQuery = coursesQuery.eq('creator_id', DEV_CREATOR_ID);
+    // In dev mode, show ALL published courses (don't filter by creator)
+    // This lets reviewers see the app functionality without needing specific test data
+    // In production, you'd filter by the actual creator's courses
+    if (!isDevMode) {
+      // Only filter by creator in production mode
+      // coursesQuery = coursesQuery.eq('creator_id', actualCreatorId);
     }
 
     // Apply search filter

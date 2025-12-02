@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Search, Play, Clock, Eye, Upload } from 'lucide-react';
-import { useAuth } from '@/lib/contexts/AuthContext';
+import { useAnalytics } from '@/lib/contexts/AnalyticsContext';
 
 interface Video {
   id: string;
@@ -45,7 +45,7 @@ export default function VideoLibraryPicker({
   onClose,
   onUploadNewVideo,
 }: VideoLibraryPickerProps) {
-  const { creatorId } = useAuth();
+  const { creatorId } = useAnalytics();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
