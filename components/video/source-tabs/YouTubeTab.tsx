@@ -60,26 +60,26 @@ export default function YouTubeTab({
     setError(null);
 
     try {
-      const response = await fetch('/api/video/metadata', {
+      // Use YouTube-specific preview endpoint (uses youtubei.js, not yt-dlp)
+      const response = await fetch('/api/video/youtube/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoUrl: url.trim() }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch video metadata');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch video metadata');
       }
 
-      const metadata = await response.json();
-
       setPreview({
-        videoId: extractYouTubeVideoId(url),
-        title: metadata.title || 'Untitled Video',
-        duration: metadata.duration || 0,
-        thumbnail: metadata.thumbnail || '',
-        channelName: metadata.channel || 'Unknown Channel',
-        description: metadata.description || '',
+        videoId: data.videoId,
+        title: data.title || 'Untitled Video',
+        duration: data.duration || 0,
+        thumbnail: data.thumbnail || '',
+        channelName: data.channelName || 'Unknown Channel',
+        description: data.description || '',
       });
     } catch (err) {
       console.error('Preview fetch error:', err);
