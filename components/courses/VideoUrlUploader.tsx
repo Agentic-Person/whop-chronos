@@ -121,21 +121,21 @@ export default function VideoUrlUploader({
     setError(null);
 
     try {
-      // Extract metadata without downloading
-      const response = await fetch('/api/video/metadata', {
+      // Use YouTube-specific preview endpoint (uses youtubei.js, works on Vercel)
+      const response = await fetch('/api/video/youtube/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoUrl: videoUrl.trim() }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch video metadata');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch video metadata');
       }
 
-      const metadata = await response.json();
-      setVideoTitle(metadata.title || '');
-      setVideoDuration(formatDuration(metadata.duration || 0));
+      setVideoTitle(data.title || '');
+      setVideoDuration(formatDuration(data.duration || 0));
       setStatus('idle');
     } catch (err) {
       console.error('Metadata fetch error:', err);
