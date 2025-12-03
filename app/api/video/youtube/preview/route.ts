@@ -3,7 +3,7 @@
  *
  * POST /api/video/youtube/preview
  * - Gets video metadata for preview without full transcript extraction
- * - Uses youtubei.js (no yt-dlp dependency)
+ * - Uses youtubei.js with oEmbed fallback
  * - Fast preview for UI display
  */
 
@@ -14,6 +14,27 @@ import { extractYouTubeVideoId, YouTubeProcessorError, YouTubeErrorCode, getErro
 async function getInnertube() {
   const { Innertube } = await import('youtubei.js');
   return Innertube;
+}
+
+// Fallback: YouTube oEmbed API (always works, no auth required)
+interface OEmbedResponse {
+  title: string;
+  author_name: string;
+  thumbnail_url: string;
+  thumbnail_width: number;
+  thumbnail_height: number;
+}
+
+async function getOEmbedData(videoId: string): Promise<OEmbedResponse | null> {
+  try {
+    const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+    const response = await fetch(oembedUrl);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('[YouTube Preview] oEmbed fallback failed:', error);
+    return null;
+  }
 }
 
 interface PreviewRequest {
@@ -69,49 +90,86 @@ export async function POST(req: NextRequest): Promise<NextResponse<PreviewRespon
 
     console.log('[YouTube Preview] Fetching metadata for:', videoId);
 
-    // Initialize YouTube client
-    const InnertubeClass = await getInnertube();
-    const youtube = await InnertubeClass.create();
-
-    // Fetch video info
-    const info = await youtube.getInfo(videoId);
-
-    if (!info || !info.basic_info) {
-      return NextResponse.json(
-        { success: false, error: 'Video not found or unavailable' },
-        { status: 404 }
-      );
-    }
-
-    const basicInfo = info.basic_info;
-
-    // Get best thumbnail
+    let title = '';
+    let duration = 0;
+    let channelName = '';
+    let description = '';
     let thumbnail = '';
-    if (basicInfo.thumbnail && Array.isArray(basicInfo.thumbnail)) {
-      const thumbnails = basicInfo.thumbnail;
-      const bestThumb = thumbnails.reduce((best: any, current: any) => {
-        if (!best || (current.width && current.width > (best.width || 0))) {
-          return current;
+
+    // Try youtubei.js first (provides duration)
+    try {
+      const InnertubeClass = await getInnertube();
+      const youtube = await InnertubeClass.create();
+      const info = await youtube.getInfo(videoId);
+
+      // Debug logging
+      console.log('[YouTube Preview] info keys:', info ? Object.keys(info) : 'null');
+
+      if (info?.basic_info) {
+        const basicInfo = info.basic_info;
+
+        console.log('[YouTube Preview] Extracted from youtubei.js:', {
+          title: basicInfo?.title,
+          duration: basicInfo?.duration,
+          author: basicInfo?.author,
+          hasThumbnail: !!basicInfo?.thumbnail,
+        });
+
+        title = basicInfo?.title || '';
+        duration = basicInfo?.duration || 0;
+        channelName = basicInfo?.author || '';
+        description = basicInfo?.short_description || '';
+
+        // Get thumbnail from basic_info
+        if (basicInfo?.thumbnail && Array.isArray(basicInfo.thumbnail) && basicInfo.thumbnail.length > 0) {
+          const sortedThumbs = [...basicInfo.thumbnail].sort((a: any, b: any) => (b.width || 0) - (a.width || 0));
+          thumbnail = sortedThumbs[0]?.url || '';
+          console.log('[YouTube Preview] Found thumbnail from youtubei.js:', thumbnail);
         }
-        return best;
-      }, null);
-      thumbnail = bestThumb?.url || '';
+      }
+    } catch (innertubeError) {
+      console.error('[YouTube Preview] youtubei.js failed:', innertubeError);
+      // Continue to oEmbed fallback
     }
 
-    // Fallback to standard YouTube thumbnail URL
+    // Always try oEmbed for reliable title/thumbnail (it's more reliable in serverless)
+    console.log('[YouTube Preview] Fetching oEmbed data for additional/fallback info');
+    const oembedData = await getOEmbedData(videoId);
+    if (oembedData) {
+      console.log('[YouTube Preview] oEmbed data:', oembedData);
+      // Use oEmbed title if we don't have one
+      if (!title) {
+        title = oembedData.title;
+      }
+      // Use oEmbed channel name if we don't have one
+      if (!channelName) {
+        channelName = oembedData.author_name;
+      }
+      // Use oEmbed thumbnail if we don't have one (or as backup)
+      if (!thumbnail && oembedData.thumbnail_url) {
+        thumbnail = oembedData.thumbnail_url;
+      }
+    }
+
+    // Final fallback for thumbnail
     if (!thumbnail) {
-      thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      thumbnail = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+      console.log('[YouTube Preview] Using fallback thumbnail:', thumbnail);
     }
 
-    return NextResponse.json({
-      success: true,
+    const response = {
+      success: true as const,
       videoId,
-      title: basicInfo.title || 'Untitled Video',
-      duration: basicInfo.duration || 0,
+      title: title || 'Untitled Video',
+      duration: duration,
       thumbnail,
-      channelName: basicInfo.author || 'Unknown Channel',
-      description: (basicInfo.short_description || '').slice(0, 500),
-    });
+      channelName: channelName || 'Unknown Channel',
+      description: description.slice(0, 500),
+    };
+
+    console.log('[YouTube Preview] Final response:', response);
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('[YouTube Preview] Error:', error);
