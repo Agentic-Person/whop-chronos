@@ -722,17 +722,12 @@ export async function validateInngestConnection(): Promise<boolean> {
     const responseTimeMs = Date.now() - startTime;
 
     throw new InngestConnectionError(
-      'Inngest Dev Server is not responding. Please ensure it is running at http://localhost:3007/api/inngest',
+      'Background processing system is not responding. Please contact support.',
       false,
       {
         clientConfigured: !!inngest,
         responseTimeMs,
         error: errorMessage,
-        troubleshooting: [
-          'Start Inngest Dev Server: npx inngest-cli dev -u http://localhost:3007/api/inngest',
-          'Verify dashboard at: http://localhost:8288',
-          'Check that port 3007 is not blocked',
-        ],
       }
     );
   }

@@ -27,7 +27,7 @@ interface StuckVideoInfo {
   creator_id: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = getServiceSupabase();
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // A video is considered "stuck" if it's been in a processing state for > 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-    const { data: videos, error } = await supabase
+    const { data: videos, error } = await (supabase as any)
       .from('videos')
       .select(`
         id,
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get chunk counts for each video
-    const videoIds = videos.map(v => v.id);
-    const { data: chunks, error: chunksError } = await supabase
+    const videoIds = videos.map((v: any) => v.id);
+    const { data: chunks, error: chunksError } = await (supabase as any)
       .from('video_chunks')
       .select('video_id')
       .in('video_id', videoIds);
@@ -78,12 +78,12 @@ export async function GET(request: NextRequest) {
 
     // Build chunk count map
     const chunkCounts = new Map<string, number>();
-    chunks?.forEach(chunk => {
+    chunks?.forEach((chunk: any) => {
       chunkCounts.set(chunk.video_id, (chunkCounts.get(chunk.video_id) || 0) + 1);
     });
 
     // Format stuck videos with diagnostic info
-    const stuckVideos: StuckVideoInfo[] = videos.map(video => {
+    const stuckVideos: StuckVideoInfo[] = videos.map((video: any) => {
       const createdAt = new Date(video.created_at);
       const now = new Date();
       const stuckDurationMs = now.getTime() - createdAt.getTime();

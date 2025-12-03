@@ -36,6 +36,9 @@ import { createSSEStream, createStreamingResponse } from '@/lib/ai/streaming';
 // Database
 import { getServiceSupabase } from '@/lib/db/client';
 
+// Authentication
+import { validateApiAuth, verifyCreatorOwnership } from '@/lib/whop/api-auth';
+
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
@@ -130,6 +133,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // SECURITY: Validate JWT token and verify creator ownership
+    console.log('[Chat API] Validating authentication...');
+    const auth = await validateApiAuth();
+
+    if (!auth.userId && !auth.isDevBypass) {
+      console.log('[Chat API] ❌ Authentication failed:', auth.error);
+      return Response.json(
+        { error: auth.error || 'Unauthorized - Invalid or missing authentication token' },
+        { status: 401 }
+      );
+    }
+
+    // SECURITY: Verify the authenticated user owns this creator
+    if (!auth.isDevBypass && creatorId) {
+      console.log('[Chat API] Verifying creator ownership...');
+      const ownership = await verifyCreatorOwnership(auth.userId!, creatorId, auth.isDevBypass);
+
+      if (!ownership.valid) {
+        console.log('[Chat API] ❌ Ownership verification failed:', ownership.error);
+        return Response.json(
+          { error: ownership.error || 'Forbidden - You do not have access to this creator' },
+          { status: 403 }
+        );
+      }
+    }
+
+    console.log(`[Chat API] ✅ Authentication and authorization passed for user ${auth.userId}`);
     console.log(`[Chat API] ✅ Validation passed. Processing message for creator ${creatorId}, session ${sessionId || 'NEW'}`);
 
     // Check API keys

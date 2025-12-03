@@ -18,7 +18,7 @@ interface RetryResult {
   error?: string;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = getServiceSupabase();
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     // A video is considered "stuck" if it's been in a processing state for > 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-    const { data: stuckVideos, error } = await supabase
+    const { data: stuckVideos, error } = await (supabase as any)
       .from('videos')
       .select('*')
       .in('status', ['pending', 'transcribing', 'processing', 'embedding'])
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Process each stuck video
     const results: RetryResult[] = [];
 
-    for (const video of stuckVideos) {
+    for (const video of stuckVideos as any[]) {
       try {
         // Determine which Inngest event to send based on video state
         let eventName = 'video/transcribe.requested';
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Clear error message
-        await supabase
+        await (supabase as any)
           .from('videos')
           .update({
             error_message: null,

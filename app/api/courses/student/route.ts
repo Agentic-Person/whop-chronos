@@ -9,10 +9,11 @@ import { getServiceSupabase } from '@/lib/db/client';
 
 export const runtime = 'nodejs';
 
-// Dev mode test IDs
-const DEV_CREATOR_ID = '00000000-0000-0000-0000-000000000001';
-// TEMPORARY: Hardcoded until app is approved
-const isDevMode = true;
+// Dev mode configuration
+// When DEV_BYPASS_AUTH=true, show all published courses for testing
+// In production, this should filter by the creator's courses based on Whop membership
+const isDev = process.env.NODE_ENV === 'development';
+const bypassAuth = process.env.DEV_BYPASS_AUTH === 'true';
 
 /**
  * GET /api/courses/student
@@ -93,12 +94,18 @@ export async function GET(req: NextRequest) {
       .eq('is_published', true)
       .eq('is_deleted', false);
 
-    // In dev mode, show ALL published courses (don't filter by creator)
-    // This lets reviewers see the app functionality without needing specific test data
-    // In production, you'd filter by the actual creator's courses
-    if (!isDevMode) {
-      // Only filter by creator in production mode
-      // coursesQuery = coursesQuery.eq('creator_id', actualCreatorId);
+    // In dev mode with DEV_BYPASS_AUTH=true, show ALL published courses for testing
+    // In production, filter by creator based on Whop membership validation
+    if (!isDev || !bypassAuth) {
+      // Production mode: Filter by the creator's courses based on Whop membership
+      // This would be implemented after Whop app approval when we have real memberships
+      // For now, in production without bypass, filter by a validated creator_id
+      // Example: coursesQuery = coursesQuery.eq('creator_id', validatedCreatorId);
+
+      // TODO: Implement proper creator filtering after Whop approval
+      // 1. Validate Whop membership token
+      // 2. Get creator_id from membership
+      // 3. Filter courses by that creator_id
     }
 
     // Apply search filter

@@ -15,16 +15,21 @@ import { whopsdk } from '@/lib/whop-sdk';
 import { getServiceSupabase } from '@/lib/db/client';
 import Link from 'next/link';
 import { BookOpen, MessageSquare, Home } from 'lucide-react';
+import {
+  TEST_STUDENT_ID,
+  TEST_CREATOR_ID,
+  TEST_STUDENT_USER,
+  TEST_EXPERIENCE,
+} from '@/lib/whop/test-constants';
 
 // Force dynamic rendering for authentication
 export const dynamic = 'force-dynamic';
 
 // Test mode configuration
-// TEMPORARY: Hardcoded to true until app is approved by Whop
-// Once approved, change back to: process.env['DEV_BYPASS_AUTH'] === 'true'
-const TEST_MODE = true;
-const TEST_USER_ID = 'user_test_student_00000000';
-const TEST_CREATOR_ID = 'user_test_creator_00000000';
+// Controlled by DEV_BYPASS_AUTH environment variable
+// When enabled, uses mock data from test-constants.ts to bypass Whop authentication
+// SECURITY: Must be disabled (or not set) in production
+const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
 
 interface StudentLayoutProps {
   children: ReactNode;
@@ -44,21 +49,14 @@ export default async function StudentExperienceLayout({
   let accessLevel: string;
 
   if (TEST_MODE) {
-    // Test mode - use mock data
+    // Test mode - use mock data from centralized test constants
     console.log('⚠️ [Student Layout] Test mode enabled');
-    userId = TEST_USER_ID;
+    userId = TEST_STUDENT_ID;
     creatorId = TEST_CREATOR_ID;
-    user = {
-      id: TEST_USER_ID,
-      email: 'student@test.chronos.ai',
-      username: 'test_student',
-      name: 'Test Student',
-      profile_pic_url: null,
-    } as Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
+    user = TEST_STUDENT_USER as Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
     experience = {
-      id: experienceId,
-      name: 'Test Experience',
-      company_id: 'biz_test_00000000',
+      ...TEST_EXPERIENCE,
+      id: experienceId, // Use the actual experienceId from the route params
     } as Awaited<ReturnType<typeof whopsdk.experiences.retrieve>>;
     accessLevel = 'customer';
   } else {

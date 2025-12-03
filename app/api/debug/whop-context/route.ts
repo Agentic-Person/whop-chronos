@@ -16,6 +16,14 @@ import { whopsdk } from '@/lib/whop-sdk';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  // Only allow in development
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json(
+      { error: 'This endpoint is only available in development' },
+      { status: 404 }
+    );
+  }
+
   const headersList = await headers();
 
   // Collect all headers

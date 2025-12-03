@@ -15,15 +15,16 @@ import { whopsdk } from '@/lib/whop-sdk';
 import { getServiceSupabase } from '@/lib/db/client';
 import { DashboardNav } from '@/components/layout/DashboardNav';
 import { AnalyticsProviderWithSuspense } from '@/lib/contexts/AnalyticsContext';
+import { TEST_USER_ID, TEST_CREATOR_USER, TEST_COMPANY } from '@/lib/whop/test-constants';
 
 // Force dynamic rendering for authentication
 export const dynamic = 'force-dynamic';
 
 // Test mode configuration
-// TEMPORARY: Hardcoded to true until app is approved by Whop
-// Once approved, change back to: process.env['DEV_BYPASS_AUTH'] === 'true'
-const TEST_MODE = true;
-const TEST_USER_ID = 'user_test_00000000000000';
+// Controlled by DEV_BYPASS_AUTH environment variable
+// When enabled, uses mock data from test-constants.ts to bypass Whop authentication
+// SECURITY: Must be disabled (or not set) in production
+const TEST_MODE = process.env['DEV_BYPASS_AUTH'] === 'true';
 
 interface CreatorLayoutProps {
   children: ReactNode;
@@ -42,20 +43,13 @@ export default async function CreatorDashboardLayout({
   let accessLevel: string;
 
   if (TEST_MODE) {
-    // Test mode - use mock data
+    // Test mode - use mock data from centralized test constants
     console.log('⚠️ [Creator Layout] Test mode enabled');
     userId = TEST_USER_ID;
-    user = {
-      id: TEST_USER_ID,
-      email: 'creator@test.chronos.ai',
-      username: 'test_creator',
-      name: 'Test Creator',
-      profile_pic_url: null,
-    } as Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
+    user = TEST_CREATOR_USER as Awaited<ReturnType<typeof whopsdk.users.retrieve>>;
     company = {
-      id: companyId,
-      title: 'Test Company',
-      image_url: null,
+      ...TEST_COMPANY,
+      id: companyId, // Use the actual companyId from the route params
     } as Awaited<ReturnType<typeof whopsdk.companies.retrieve>>;
     accessLevel = 'admin';
   } else {

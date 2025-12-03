@@ -89,24 +89,32 @@ export default function VideoDebugPage() {
 
           <div className="space-y-4 text-sm text-gray-11">
             <div>
-              <h3 className="font-medium text-gray-12 mb-2">1. Check Inngest Status</h3>
+              <h3 className="font-medium text-gray-12 mb-2">1. Check Background Processing Status</h3>
               <p>
-                If Inngest shows as disconnected, start the Inngest dev server:
+                If the background processing system shows as disconnected:
               </p>
-              <code className="block mt-2 px-3 py-2 bg-gray-3 rounded text-gray-12 font-mono text-xs">
-                npx inngest-cli dev -u http://localhost:3007/api/inngest
-              </code>
-              <p className="mt-2">
-                Access Inngest dashboard at:{' '}
-                <a
-                  href="http://localhost:8288"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-purple-11 hover:underline"
-                >
-                  http://localhost:8288
-                </a>
-              </p>
+              {process.env.NODE_ENV === 'development' ? (
+                <>
+                  <code className="block mt-2 px-3 py-2 bg-gray-3 rounded text-gray-12 font-mono text-xs">
+                    npx inngest-cli dev -u http://localhost:3007/api/inngest
+                  </code>
+                  <p className="mt-2">
+                    Access Inngest dashboard at:{' '}
+                    <a
+                      href="http://localhost:8288"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-11 hover:underline"
+                    >
+                      http://localhost:8288
+                    </a>
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-amber-11">
+                  Please contact support for assistance with background processing issues.
+                </p>
+              )}
             </div>
 
             <div>

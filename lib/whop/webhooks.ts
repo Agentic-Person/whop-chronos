@@ -30,8 +30,10 @@ export function verifyWebhookSignature(
   signature: string
 ): boolean {
   if (!WEBHOOK_SECRET) {
-    logger.error('WHOP_WEBHOOK_SECRET not configured', undefined, { component: 'webhook-verification' });
-    return false;
+    logger.error('WHOP_WEBHOOK_SECRET not configured', undefined, {
+      component: 'webhook-verification',
+    });
+    throw new Error('Webhook secret not configured');
   }
 
   try {

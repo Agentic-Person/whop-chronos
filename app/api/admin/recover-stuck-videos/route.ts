@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   // STEP 1: VERIFY AUTHORIZATION
   // =========================================
   const authHeader = request.headers.get('authorization');
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const adminApiKey = process.env['ADMIN_API_KEY'];
 
   if (!adminApiKey) {
     logger.error('ADMIN_API_KEY not configured', null, { component: 'admin-recovery' });
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
   // =========================================
   if (dryRun) {
     const dryRunResults = await Promise.all(
-      stuckVideos.map(async (video) => {
+      stuckVideos.map(async (video: any) => {
         const action = await determineRecoveryAction(video);
         const metadata = (video.metadata || {}) as any;
         const recoveryAttempts = metadata.recovery_attempts || 0;

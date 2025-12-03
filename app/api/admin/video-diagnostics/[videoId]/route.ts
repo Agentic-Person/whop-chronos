@@ -14,13 +14,13 @@ import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { videoId: string } }
+  { params }: { params: Promise<{ videoId: string }> }
 ) {
   // =========================================
   // STEP 1: VERIFY AUTHORIZATION
   // =========================================
   const authHeader = request.headers.get('authorization');
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const adminApiKey = process.env['ADMIN_API_KEY'];
 
   if (!adminApiKey) {
     logger.error('ADMIN_API_KEY not configured', null, { component: 'video-diagnostics' });
@@ -41,7 +41,7 @@ export async function GET(
   // =========================================
   // STEP 2: GET VIDEO DIAGNOSTICS
   // =========================================
-  const { videoId } = params;
+  const { videoId } = await params;
 
   try {
     const diagnostics = await getVideoDiagnostics(videoId);

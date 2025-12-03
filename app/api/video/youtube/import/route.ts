@@ -26,6 +26,7 @@ import {
   getErrorMessage
 } from '@/lib/video/youtube-processor';
 import { inngest } from '@/inngest/client';
+import { validateApiAuth, verifyCreatorOwnership } from '@/lib/whop/api-auth';
 
 /**
  * Request body schema
@@ -88,6 +89,40 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
 
     console.log('[YouTube Import API] Starting import for URL:', videoUrl);
     console.log('[YouTube Import API] Creator ID:', creatorId);
+
+    // SECURITY: Validate JWT token and verify creator ownership
+    console.log('[YouTube Import API] Validating authentication...');
+    const auth = await validateApiAuth();
+
+    if (!auth.userId && !auth.isDevBypass) {
+      console.log('[YouTube Import API] ❌ Authentication failed:', auth.error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: auth.error || 'Unauthorized - Invalid or missing authentication token',
+        },
+        { status: 401 }
+      );
+    }
+
+    // SECURITY: Verify the authenticated user owns this creator
+    if (!auth.isDevBypass && creatorId) {
+      console.log('[YouTube Import API] Verifying creator ownership...');
+      const ownership = await verifyCreatorOwnership(auth.userId!, creatorId, auth.isDevBypass);
+
+      if (!ownership.valid) {
+        console.log('[YouTube Import API] ❌ Ownership verification failed:', ownership.error);
+        return NextResponse.json(
+          {
+            success: false,
+            error: ownership.error || 'Forbidden - You do not have access to this creator',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    console.log(`[YouTube Import API] ✅ Authentication and authorization passed for user ${auth.userId}`);
 
     // Step 1: Process YouTube video (extract metadata + transcript)
     let youtubeData;
@@ -203,7 +238,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
         .from('videos')
         .update({
           status: 'failed',
-          error_message: 'Background processing system unavailable. Please ensure Inngest Dev Server is running at http://localhost:3007/api/inngest',
+          error_message: 'Background processing system unavailable. Please contact support.',
           metadata: {
             ...(video.metadata || {}),
             failed_at: new Date().toISOString(),
@@ -216,17 +251,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ImportRespons
       return NextResponse.json(
         {
           success: false,
-          error: 'Background processing system unavailable',
-          details: {
-            message: 'Video was imported but cannot be processed without Inngest Dev Server.',
-            troubleshooting: [
-              '1. Start Inngest Dev Server: npx inngest-cli dev -u http://localhost:3007/api/inngest',
-              '2. Verify the server is running at http://localhost:8288',
-              '3. Retry the video import',
-            ],
-            videoId: video.id,
-            videoTitle: video.title,
-          },
+          error: 'Background processing system unavailable. Please contact support or try again later.',
         },
         { status: 503 } // Service Unavailable
       );

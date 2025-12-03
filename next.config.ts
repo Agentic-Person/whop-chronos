@@ -1,6 +1,13 @@
 import { withWhopAppConfig } from "@whop/react/next.config";
 import type { NextConfig } from "next";
 
+// Production validation for critical URLs
+if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_APP_URL) {
+	console.warn(
+		"⚠️  Warning: NEXT_PUBLIC_APP_URL should be set in production for proper URL generation",
+	);
+}
+
 // Bundle analyzer for measuring bundle size
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
 	enabled: process.env.ANALYZE === "true",
@@ -20,8 +27,10 @@ const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	compress: true,
 
-	// TEMPORARY: Disable TypeScript build errors while investigating Vercel type resolution issue
-	// Local builds pass but Vercel fails - investigating root cause
+	// TEMPORARY: TypeScript build errors disabled during integration wave
+	// Type errors exist in multiple API routes due to untyped Supabase queries
+	// See docs/agent-reports/waves/agent-7-typescript-audit.md for full details
+	// TODO: Enable after fixing all identified type errors
 	typescript: {
 		ignoreBuildErrors: true,
 	},
@@ -40,7 +49,7 @@ const nextConfig: NextConfig = {
 	env: {
 		// biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for process.env
 		NEXT_PUBLIC_APP_URL:
-			process.env["NEXT_PUBLIC_APP_URL"] || "http://localhost:3000",
+			process.env["NEXT_PUBLIC_APP_URL"] || "http://localhost:3007",
 	},
 
 	// Webpack Configuration for Production Builds

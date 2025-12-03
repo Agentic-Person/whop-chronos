@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	metadataBase: new URL(process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3007'),
+	metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3007'),
 	title: "Chronos AI - Your AI Teaching Assistant | Transform Video Courses",
 	description: "Save 10+ hours/week in student support. AI-powered chat, automated transcription, and comprehensive analytics for Whop creators in education and coaching.",
 	keywords: [

@@ -230,14 +230,16 @@ export function VideoDebugPanel({
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                icon={<ExternalLink className="h-4 w-4" />}
-                onClick={() => window.open('http://localhost:8288', '_blank')}
-              >
-                Inngest Dashboard
-              </Button>
+              {process.env.NODE_ENV === 'development' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<ExternalLink className="h-4 w-4" />}
+                  onClick={() => window.open('http://localhost:8288', '_blank')}
+                >
+                  Inngest Dashboard
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -252,11 +254,13 @@ export function VideoDebugPanel({
           {!inngestHealth?.healthy && (
             <div className="mt-4 rounded-lg bg-amber-3 border border-amber-a4 p-3">
               <p className="text-sm text-amber-12 font-medium">
-                Inngest server is not running
+                Background processing system is not available
               </p>
-              <p className="text-sm text-amber-11 mt-1">
-                Start Inngest: <code className="bg-amber-4 px-2 py-1 rounded">npx inngest-cli dev -u http://localhost:3007/api/inngest</code>
-              </p>
+              {process.env.NODE_ENV === 'development' && (
+                <p className="text-sm text-amber-11 mt-1">
+                  Start Inngest: <code className="bg-amber-4 px-2 py-1 rounded">npx inngest-cli dev -u http://localhost:3007/api/inngest</code>
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -453,13 +457,15 @@ export function VideoDebugPanel({
                 Refresh Status
               </Button>
 
-              <Button
-                variant="outline"
-                icon={<ExternalLink className="h-4 w-4" />}
-                onClick={() => window.open('http://localhost:8288', '_blank')}
-              >
-                View Inngest Dashboard
-              </Button>
+              {process.env.NODE_ENV === 'development' && (
+                <Button
+                  variant="outline"
+                  icon={<ExternalLink className="h-4 w-4" />}
+                  onClick={() => window.open('http://localhost:8288', '_blank')}
+                >
+                  View Inngest Dashboard
+                </Button>
+              )}
             </div>
 
             {lastAction && (

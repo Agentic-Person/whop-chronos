@@ -63,15 +63,15 @@ export async function GET(request: NextRequest) {
     currentMonthStart.setHours(0, 0, 0, 0);
 
     const newThisMonth = (enrollmentData || []).filter(
-      (s) => new Date(s.created_at) >= currentMonthStart
+      (s: any) => new Date(s.created_at) >= currentMonthStart
     ).length;
 
     // Calculate growth rate (compare last 2 months)
     const lastTwoMonths = monthlyEnrollment.slice(-2);
     let growthRate = 0;
-    if (lastTwoMonths.length === 2 && lastTwoMonths[0].students > 0) {
+    if (lastTwoMonths.length === 2 && lastTwoMonths[0]?.students && lastTwoMonths[0].students > 0) {
       growthRate = Math.round(
-        ((lastTwoMonths[1].students - lastTwoMonths[0].students) / lastTwoMonths[0].students) * 100
+        ((lastTwoMonths[1]!.students - lastTwoMonths[0].students) / lastTwoMonths[0].students) * 100
       );
     }
 
