@@ -79,6 +79,31 @@ export default function DashboardEntryPage() {
         setDebugInfo(prev => ({ ...prev, urlData, step: 6 }));
         setStatus('Step 6: Got URL data!');
 
+        // Step 6.5: Get user token from SDK (CRITICAL for production auth)
+        setStatus('Step 6.5: Getting user token...');
+        try {
+          const userToken = await Promise.race([
+            sdk.getToken(),
+            new Promise<string>((_, reject) =>
+              setTimeout(() => reject(new Error('Token timeout after 10 seconds')), 10000)
+            )
+          ]) as string;
+
+          if (userToken) {
+            // Store token in cookie for server-side verification
+            document.cookie = `whop-user-token=${userToken}; path=/; secure; samesite=strict; max-age=3600`;
+            setDebugInfo(prev => ({ ...prev, tokenReceived: true, tokenLength: userToken.length }));
+            setStatus('Step 6.5: Got user token!');
+          } else {
+            setDebugInfo(prev => ({ ...prev, tokenReceived: false, tokenError: 'Empty token' }));
+            console.warn('[Dashboard] SDK returned empty token');
+          }
+        } catch (tokenErr) {
+          // Token fetch failed - log but continue (may work with header injection)
+          console.error('[Dashboard] Failed to get token:', tokenErr);
+          setDebugInfo(prev => ({ ...prev, tokenError: String(tokenErr) }));
+        }
+
         // Step 7: Redirect based on SDK response
         const data = urlData as { experienceId?: string; companyRoute?: string };
         const companyMatch = data.companyRoute?.match(/biz_[a-zA-Z0-9]+/);

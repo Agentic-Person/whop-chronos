@@ -10,7 +10,7 @@
 
 import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { whopsdk } from '@/lib/whop-sdk';
 import { getServiceSupabase } from '@/lib/db/client';
 import { DashboardNav } from '@/components/layout/DashboardNav';
@@ -55,7 +55,25 @@ export default async function CreatorDashboardLayout({
   } else {
     // Production - verify with Whop SDK
     try {
-      const result = await whopsdk.verifyUserToken(await headers());
+      // First try to get token from cookie (set by client-side SDK in entry page)
+      const cookieStore = await cookies();
+      const tokenFromCookie = cookieStore.get('whop-user-token')?.value;
+
+      // Get the headers
+      const headersList = await headers();
+
+      // If we have a token from cookie, create headers with it
+      let authHeaders: Headers;
+      if (tokenFromCookie) {
+        console.log('[Creator Layout] Using token from cookie');
+        authHeaders = new Headers(headersList);
+        authHeaders.set('x-whop-user-token', tokenFromCookie);
+      } else {
+        console.log('[Creator Layout] Using token from headers (proxy injection)');
+        authHeaders = headersList;
+      }
+
+      const result = await whopsdk.verifyUserToken(authHeaders);
       userId = result.userId;
     } catch (error) {
       console.error('[Creator Layout] Authentication failed:', error);
