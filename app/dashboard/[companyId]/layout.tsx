@@ -54,23 +54,26 @@ export default async function CreatorDashboardLayout({
     accessLevel = 'admin';
   } else {
     // Production - verify with Whop SDK
+    // Token can come from:
+    // 1. Cookie (set by entry page from initial Whop request)
+    // 2. Headers (if Whop proxy injects it directly)
     try {
-      // First try to get token from cookie (set by client-side SDK in entry page)
+      const headersList = await headers();
       const cookieStore = await cookies();
       const tokenFromCookie = cookieStore.get('whop-user-token')?.value;
+      const tokenFromHeader = headersList.get('x-whop-user-token');
 
-      // Get the headers
-      const headersList = await headers();
-
-      // If we have a token from cookie, create headers with it
+      // Create headers with the token (prefer cookie since it persists across navigations)
       let authHeaders: Headers;
       if (tokenFromCookie) {
         console.log('[Creator Layout] Using token from cookie');
         authHeaders = new Headers(headersList);
         authHeaders.set('x-whop-user-token', tokenFromCookie);
-      } else {
-        console.log('[Creator Layout] Using token from headers (proxy injection)');
+      } else if (tokenFromHeader) {
+        console.log('[Creator Layout] Using token from headers');
         authHeaders = headersList;
+      } else {
+        throw new Error('No Whop user token found in cookie or headers');
       }
 
       const result = await whopsdk.verifyUserToken(authHeaders);

@@ -58,7 +58,7 @@
 		"frosted-ui": "^0.0.1-canary.85",
 		"inngest": "^3.45.0",
 		"lucide-react": "^0.553.0",
-		"next": "16.0.0",
+		"next": "^16.0.8",
 		"openai": "^6.8.1",
 		"react": "19.2.0",
 		"react-countup": "^6.5.3",
