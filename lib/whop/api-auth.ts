@@ -27,6 +27,7 @@
 import { headers } from 'next/headers';
 import { whopsdk } from '@/lib/whop-sdk';
 import { getServiceSupabase } from '@/lib/db/client';
+import { TEST_STUDENT_ID, TEST_CREATOR_ID } from '@/lib/whop/test-constants';
 
 const DEV_BYPASS_AUTH = process.env['DEV_BYPASS_AUTH'] === 'true';
 
@@ -47,9 +48,10 @@ export interface AuthResult {
 export async function validateApiAuth(): Promise<AuthResult> {
   if (DEV_BYPASS_AUTH) {
     console.log('[API Auth] DEV_BYPASS_AUTH enabled - skipping authentication');
+    // Use consistent test IDs from test-constants.ts
     return {
-      userId: 'user_test_00000000000000',
-      creatorId: null, // Will be looked up or passed
+      userId: TEST_STUDENT_ID, // Whop user ID for test student
+      creatorId: TEST_CREATOR_ID, // UUID of creator with test content
       error: null,
       isDevBypass: true,
     };

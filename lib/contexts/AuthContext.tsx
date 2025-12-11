@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useRouter } from 'next/navigation';
 import type { WhopSession } from '@/lib/whop/types';
 import { type RoleDetectionResult, type UserRole } from '@/lib/whop/role-helpers';
+import { TEST_CREATOR_ID, TEST_STUDENT_ID } from '@/lib/whop/test-constants';
 
 export interface AuthContextType {
   // Existing auth fields
@@ -41,9 +42,9 @@ interface AuthProviderProps {
 export function AuthProvider({ children, session }: AuthProviderProps) {
   const router = useRouter();
 
-  // Dev mode: Use mock test user IDs when DEV_BYPASS_AUTH is true
-  const isDevMode = process.env.NODE_ENV === 'development' &&
-                    process.env['NEXT_PUBLIC_DEV_BYPASS_AUTH'] === 'true';
+  // Dev/Test mode: Use mock test user IDs when DEV_BYPASS_AUTH is true
+  // NOTE: This works in BOTH development AND production to allow testing before Whop approval
+  const isDevMode = process.env['NEXT_PUBLIC_DEV_BYPASS_AUTH'] === 'true';
 
   // Role detection state
   const [roleData, setRoleData] = useState<RoleDetectionResult | null>(null);
@@ -52,14 +53,15 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
 
   // Compute base auth values (memoized to prevent infinite re-renders)
   const baseAuthData = useMemo(() => {
-    // Dev mode takes priority - always use test IDs when DEV_BYPASS_AUTH is true
+    // Dev/Test mode takes priority - always use test IDs when DEV_BYPASS_AUTH is true
     if (isDevMode) {
-      // Mock auth values for development testing
+      // Mock auth values for development/production testing
       // creatorId = the creator whose content is being accessed
       // userId = the student/user accessing the content
+      // These IDs MUST match the test-constants.ts file
       return {
-        creatorId: '00000000-0000-0000-0000-000000000001', // TEST_CREATOR_ID from seed
-        userId: '00000000-0000-0000-0000-000000000002',    // TEST_STUDENT_ID from seed
+        creatorId: TEST_CREATOR_ID, // UUID of creator with test content
+        userId: TEST_STUDENT_ID,    // Whop user ID for test student
         isAuthenticated: true,
       };
     } else if (session) {
